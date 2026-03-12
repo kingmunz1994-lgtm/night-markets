@@ -1,109 +1,58 @@
-// NightMarketsEscrow.compact
-// Night Markets — Zero-Knowledge Escrow Contract
-// Compact 0.28.0 · Midnight Preprod
-//
-// Compile:
-//   compact compile contracts/NightMarketsEscrow.compact contracts/managed/night-markets-escrow
-//
-// Pattern: based on bboard DApp (Midnight Developer docs)
-// Corrections applied from community review:
-//   - Counter uses .increment(1) not arithmetic assignment
-//   - Opaque<"string"> ledger assignment requires disclose()
-//   - sellerPk / buyerPk circuits kept fully distinct
-
 pragma language_version 0.20;
 
 import CompactStandardLibrary;
 
-// ── Escrow state machine ─────────────────────────────────────
-enum EscrowState { OPEN, FUNDED, RELEASED, DISPUTED }
+enum EscrowState { OPEN, FUNDED, RELEASED, DISPUTED, REFUNDED }
 
-// ── Ledger (public on-chain state) ───────────────────────────
-export ledger seller_commitment : Bytes<32>;   // persistentHash of seller's secret key
-export ledger buyer_commitment  : Bytes<32>;   // persistentHash of buyer's secret key
-export ledger listing_ref       : Opaque<"string">; // IPFS CID — private listing metadata
-export ledger amount            : Uint<64>;    // escrow amount in microNIGHT (6 decimals)
-export ledger escrow_state      : EscrowState;
-export ledger round             : Counter;     // rotates on release for forward-privacy
+export ledger escrow_state: Map<Bytes<32>, EscrowState>;
+export ledger amount_night: Map<Bytes<32>, Uint<64>>;
+export ledger vote_for:     Map<Bytes<32>, Uint<64>>;
+export ledger vote_against: Map<Bytes<32>, Uint<64>>;
+export ledger vote_abstain: Map<Bytes<32>, Uint<64>>;
+export ledger has_voted:    Map<Bytes<32>, Boolean>;
 
-// ── Witness (private inputs — never leaves the prover) ───────
-witness localSecretKey(): Bytes<32>;
+witness voterNightBalance(): Uint<64>;
 
-// ── Commitment circuits ──────────────────────────────────────
-// Seller identity commitment — domain-separated from buyer
-circuit sellerPk(sk: Bytes<32>): Bytes<32> {
-  return persistentHash<Vector<3, Bytes<32>>>(
-    [ pad(32, "nightmarkets:escrow:seller"),
-      round as Bytes<32>,
-      sk ]);
+export circuit createListing(orderId: Bytes<32>, amountNight: Uint<64>): Boolean {
+  escrow_state.insert(disclose(orderId), EscrowState.OPEN);
+  amount_night.insert(disclose(orderId), disclose(amountNight));
+  return true;
 }
 
-// Buyer identity commitment — domain-separated from seller
-circuit buyerPk(sk: Bytes<32>): Bytes<32> {
-  return persistentHash<Vector<3, Bytes<32>>>(
-    [ pad(32, "nightmarkets:escrow:buyer"),
-      round as Bytes<32>,
-      sk ]);
+export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>): Boolean {
+  amount_night.insert(disclose(orderId), disclose(amountNight));
+  escrow_state.insert(disclose(orderId), EscrowState.FUNDED);
+  return true;
 }
 
-// ── Circuit: seller creates a listing ────────────────────────
-// Called by seller at listing time.
-// listing:       Opaque<"string"> IPFS CID of encrypted metadata
-// sellerPkBytes: caller passes disclose(sellerPk(localSecretKey()))
-export circuit createListing(
-  listing:       Opaque<"string">,
-  sellerPkBytes: Bytes<32>
-): [] {
-  assert escrow_state == EscrowState.OPEN "Escrow already active";
-  // Opaque<"string"> ledger assignment requires disclose() [Post circuit — bboard docs]
-  listing_ref       = disclose(some<Opaque<"string">>(listing));
-  seller_commitment = sellerPkBytes;
-  // state stays OPEN until buyer funds
+export circuit releaseEscrow(orderId: Bytes<32>): Boolean {
+  escrow_state.insert(disclose(orderId), EscrowState.RELEASED);
+  return true;
 }
 
-// ── Circuit: buyer funds the escrow ─────────────────────────
-// Called by buyer when purchasing.
-// buyerPkBytes: caller passes disclose(buyerPk(localSecretKey()))
-// amt:          purchase amount in microNIGHT
-export circuit fundEscrow(
-  buyerPkBytes: Bytes<32>,
-  amt:          Uint<64>
-): [] {
-  assert escrow_state == EscrowState.OPEN "Escrow not open";
-  buyer_commitment = buyerPkBytes;  // buyerPk — naming consistent
-  amount           = amt;
-  escrow_state     = EscrowState.FUNDED;
+export circuit disputeEscrow(orderId: Bytes<32>): Boolean {
+  escrow_state.insert(disclose(orderId), EscrowState.DISPUTED);
+  return true;
 }
 
-// ── Circuit: buyer releases escrow (goods received) ─────────
-// Proves caller knows the buyer's secret key without revealing it.
-// round.increment(1) rotates the commitment for forward-privacy.
-export circuit releaseEscrow(): [] {
-  assert escrow_state == EscrowState.FUNDED "Escrow not funded";
-  assert buyer_commitment ==
-    buyerPk(localSecretKey()) "Not the buyer";
-  escrow_state = EscrowState.RELEASED;
-  round.increment(1);  // Counter type: .increment(n) not arithmetic assignment
+export circuit refundEscrow(orderId: Bytes<32>): Boolean {
+  escrow_state.insert(disclose(orderId), EscrowState.REFUNDED);
+  return true;
 }
 
-// ── Circuit: seller raises a dispute ────────────────────────
-// Proves caller is the seller. Locks escrow for resolution.
-export circuit disputeEscrow(): [] {
-  assert escrow_state == EscrowState.FUNDED "Escrow not funded";
-  assert seller_commitment ==
-    sellerPk(localSecretKey()) "Not the seller";
-  escrow_state = EscrowState.DISPUTED;
-}
-
-// ── Circuit: admin resolves dispute (optional governance) ────
-// In production: replace with multi-sig or DAO vote circuit.
-// For preprod testing, seller can call this to self-resolve.
-export circuit resolveDispute(releaseToSeller: Boolean): [] {
-  assert escrow_state == EscrowState.DISPUTED "Not disputed";
-  assert seller_commitment ==
-    sellerPk(localSecretKey()) "Not the seller";
-  escrow_state = releaseToSeller
-    ? EscrowState.RELEASED
-    : EscrowState.OPEN;   // refund path: reopen for re-listing
-  round.increment(1);
+export circuit castVote(proposalId: Bytes<32>, choice: Uint<8>): Boolean {
+  const pid    = disclose(proposalId);
+  const ch     = disclose(choice);
+  const weight = disclose(voterNightBalance());
+  if (ch == (0 as Uint<8>)) {
+    vote_for.insert(pid, weight);
+  } else {
+    if (ch == (1 as Uint<8>)) {
+      vote_against.insert(pid, weight);
+    } else {
+      vote_abstain.insert(pid, weight);
+    }
+  }
+  has_voted.insert(pid, true);
+  return true;
 }
