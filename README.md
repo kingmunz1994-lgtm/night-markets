@@ -1,153 +1,116 @@
-# 🌙 Night Markets — Deployment Guide
+<div align="center">
 
-Zero-knowledge privacy marketplace on Midnight Network.  
-Frontend: `night-markets-v12.html` · Contract: `NightMarketsEscrow.compact`
+![Night Markets](./night-markets-banner.png)
 
----
+</div>
 
-## Pre-flight Checklist
+# Night Markets — Zero-Knowledge Global Marketplace
 
-Before deploying, complete all four steps:
-
-### 1. Start the Proof Server
-```bash
-npm run proof-server
-# or directly:
-docker run -p 6300:6300 midnightntwrk/proof-server:7.0.0 -- midnight-proof-server -v
-```
-Leave this running in a separate terminal. Deployment generates ZK proofs and will fail without it.
-
-### 2. Get tNight from the Faucet
-- Open Lace wallet → set network to **Preprod**
-- Copy your **unshielded address**
-- Visit https://midnight.network/faucet and request tNight
-- Wait for balance to appear in Lace (~1–2 min)
-
-### 3. Generate DUST
-- In Lace: register your NIGHT UTXOs for DUST generation
-- Wait until DUST balance is **non-zero** before proceeding
-- DUST is required to pay for on-chain transactions
-
-### 4. Compile the Contract
-```bash
-npm install
-npm run compile
-```
-This runs:
-```
-compact compile contracts/NightMarketsEscrow.compact contracts/managed/night-markets-escrow
-```
-
-Output in `contracts/managed/night-markets-escrow/`:
-```
-contract/
-  index.js          ← TypeScript bindings (.js not .cjs — 3.0.0)
-keys/
-  proving.key       ← ZK proving key
-  verifying.key     ← ZK verifying key
-zkir/               ← Zero-Knowledge Intermediate Representation
-```
+> *Buy anything. From anywhere. Leave no trace.*
 
 ---
 
-## Deploy to Preprod
+🌑 **This project is built on the Midnight Network.**
+🔗 **This project integrates with the Midnight Network.**
+🛠 **This project extends the Midnight Network with additional developer tooling.**
 
-```bash
-npm run deploy
-```
-
-Deployment takes **30–60 seconds** while ZK proofs are generated and the transaction is confirmed on-chain.
-
-On success you'll see:
-```
-✅ Contract deployed!
-CONTRACT_ADDRESS=mn1_contract_preprod_...
-```
+[![Built On Midnight](https://img.shields.io/badge/⬛_BUILT_ON-MIDNIGHT_NETWORK-7c3aed?style=for-the-badge&labelColor=090714)](https://midnight.network)
+[![ZK Proofs](https://img.shields.io/badge/🔒_ZK_PROOFS-ENABLED-00d68f?style=for-the-badge&labelColor=090714)](https://midnight.network/developers)
+[![NIGHT Token](https://img.shields.io/badge/🌙_$NIGHT-POWERED-b97dff?style=for-the-badge&labelColor=090714)](#night-token)
+[![License MIT](https://img.shields.io/badge/LICENSE-MIT-475569?style=for-the-badge&labelColor=090714)](./LICENSE)
 
 ---
 
-## Wire Up the Frontend
+## What is Night Markets?
 
-Once you have `CONTRACT_ADDRESS`:
+Night Markets is a privacy-first global marketplace where your identity, balance, and purchase history are never exposed. Shop across borders, pay in any currency, and transact freely — with zero-knowledge cryptography guaranteeing your privacy at every step.
 
-1. Open `night-markets-v12.html`
-2. Find the constant at the top of the `<script>` block:
-   ```js
-   // TODO: replace with deployed contract address
-   var NM_CONTRACT_ADDRESS = null;
-   ```
-3. Replace with:
-   ```js
-   var NM_CONTRACT_ADDRESS = 'mn1_contract_preprod_YOUR_ADDRESS_HERE';
-   ```
-4. Replace the three `simulateCompact*()` calls in `coConfirmNightWithEscrow()` with real `submitCallTx()` calls from `scripts/deploy.ts`
+Built natively on the **Midnight Network**, the only blockchain engineered from the ground up for data protection, Night Markets proves that commerce and privacy can coexist.
 
 ---
 
-## midnight-js 3.0.0 Breaking Changes
+## Midnight Network Integration
 
-Applied throughout this codebase:
+Night Markets is Midnight-native across every layer of the stack.
 
-| Changed | Old (2.x) | New (3.0.0) |
-|---------|-----------|-------------|
-| Submit tx | `submitTx()` → `void` | `submitTransaction()` → `Promise<TransactionId>` |
-| Private state | `LevelPrivateStateProvider` (no password) | Requires password provider |
-| Contract calls | Synchronous | All return `Promise<R>` |
-| Balance tx | Returns tx | Returns `BalancedProvingRecipe` (discriminated union) |
-| Empty offers | Returns `{}` | Returns `undefined` |
-| Network ID | Enum value | String literal `'preprod'` |
-| Contract imports | `.cjs` | `.js` |
+**Built on Midnight** — The core marketplace, escrow system, BNPL enforcement, and loyalty programme all run as smart contracts written in Compact directly on the Midnight Network. Nothing is off-chain.
+
+**Integrates with Midnight** — Wallet connections, token transfers, and payment proofs all flow through the Midnight SDK. Lace wallet is supported natively, and any Midnight-compatible wallet works out of the box.
+
+**Extends Midnight** — Night Markets ships open-source developer tooling back to the ecosystem: `zkEcommerce` (ZK proof primitives for private commerce) and `bnplFramework` (a reusable Pay-in-4 smart contract template any Midnight developer can deploy).
 
 ---
 
-## Project Structure
+## Features
 
-```
-night-markets/
-├── night-markets-v12.html          ← Full frontend (serve this)
-├── package.json
-├── contracts/
-│   ├── NightMarketsEscrow.compact  ← Compact contract source
-│   └── managed/
-│       └── night-markets-escrow/   ← Generated by: compact compile
-│           ├── contract/index.js
-│           ├── keys/
-│           └── zkir/
-├── scripts/
-│   └── deploy.ts                   ← Deployment + submitCallTx helpers
-└── README.md
-```
+**🔒 ZK Privacy** — Zero-knowledge proofs protect every transaction. Sellers confirm payment. Buyers prove solvency. Neither party sees what they shouldn't. No metadata. No fingerprint.
 
----
+**🛒 Global Marketplace** — Millions of products from thousands of verified global retailers, all accessible through a single private checkout.
 
-## Compact Contract: Key Patterns
+**💸 Pay In 4** — Buy now, pay later with zero interest, zero fees, and no credit checks. Instalments are enforced on-chain by smart contract — no bank involved.
 
-```compact
-// Counter — use .increment(1) NOT arithmetic assignment
-round.increment(1);  // ✅
-round = round + 1;   // ❌ compiler error
+**🌙 NIGHT Token** — The native ecosystem token. Use it to pay fees, earn rewards, participate in governance, and unlock Obsidian tier staking benefits.
 
-// Opaque<"string"> — ledger assignment requires disclose()
-listing_ref = disclose(some<Opaque<"string">>(listing));  // ✅
-listing_ref = listing;                                     // ❌ compiler error
+**🤖 AI Recommendations** — Personalised suggestions trained on your taste, running locally. Your preferences never leave your device.
 
-// Domain-separated commitment circuits
-circuit sellerPk(sk: Bytes<32>): Bytes<32> {
-  return persistentHash<Vector<3, Bytes<32>>>(
-    [pad(32, "nightmarkets:escrow:seller"), round as Bytes<32>, sk]);
-}
-circuit buyerPk(sk: Bytes<32>): Bytes<32> {
-  return persistentHash<Vector<3, Bytes<32>>>(
-    [pad(32, "nightmarkets:escrow:buyer"), round as Bytes<32>, sk]);
-}
-```
+**🪞 AR Try-On** — Visualise products on yourself before buying. No account needed. No images stored.
+
+**🏅 Loyalty & Tiers** — Earn Night Points on every purchase and climb from Silver through Gold and Platinum to Obsidian, unlocking exclusive drops and fee rebates along the way.
+
+**👥 ZK Social Graph** — Follow friends and taste-makers. Your social connections are encrypted and visible only to you.
 
 ---
 
-## Ecosystem Links
+## Privacy Model
 
-- Midnight docs: https://docs.midnight.network
-- Compact language: https://docs.midnight.network/develop/reference/compact
-- Preprod faucet: https://midnight.network/faucet
-- Midnight Discord: https://discord.gg/midnight-network
-- Lace wallet: https://midnight.network/lace
+Night Markets operates on one principle: you should never have to trust us.
+
+When you buy something, the seller sees only that payment is confirmed — nothing else. When you prove you can pay, the network sees only that the proof is valid — your balance stays hidden. When you browse recommendations, the AI runs locally and your profile never leaves your device. When you connect with friends, your social graph is encrypted end-to-end.
+
+No data is stored off-chain. No cookies. No tracking pixels. No surveillance.
+
+---
+
+## NIGHT Token
+
+The `$NIGHT` token powers the Night Markets ecosystem across four dimensions: paying marketplace fees and unlocking premium features, earning rewards through the Night Points loyalty programme, voting on governance decisions including parameters and listings, and staking to reach Obsidian tier with its exclusive benefits.
+
+---
+
+## Developer Tooling
+
+Two open-source packages are available for Midnight developers:
+
+**`@night-markets/zk-ecommerce`** provides ZK proof primitives for private commerce — including private checkout, ZK-enforced escrow for high-value transactions, and instalment proof generation.
+
+**`@night-markets/bnpl-framework`** lets any developer deploy a Pay-in-4 instalment contract on Midnight in minutes, with configurable amounts, intervals, and grace periods.
+
+---
+
+## Getting Started
+
+Clone the repo and open `index.html` in your browser — no build step required. Connect a Midnight-compatible wallet (Lace recommended) to unlock ZK-private checkout and NIGHT token features.
+
+For contract development and integration testing, see the full documentation at [docs.night.markets](https://docs.night.markets).
+
+---
+
+## Contributing
+
+Contributions are welcome. Read `CONTRIBUTING.md` before opening a PR. Good first issues are tagged in the tracker.
+
+---
+
+## License
+
+MIT © Night Markets Contributors — *Built on the Midnight Network.*
+
+---
+
+<div align="center">
+
+*"In the void between transactions, privacy thrives."*
+
+[🌐 night.markets](https://night.markets) · [🌑 Midnight Network](https://midnight.network) · [📚 Docs](https://docs.night.markets)
+
+</div>
