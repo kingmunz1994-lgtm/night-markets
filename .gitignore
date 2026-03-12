@@ -1,0 +1,16 @@
+# Environment / secrets — NEVER commit
+.env
+.env.local
+
+# Private state LevelDB
+.private-state/
+
+# Compiled contract artifacts (regenerate with: npm run compile)
+contracts/managed/
+
+# Node
+node_modules/
+
+# TypeScript
+dist/
+*.js.map
