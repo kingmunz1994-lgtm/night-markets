@@ -1,58 +1,122 @@
-pragma language_version 0.20;
+pragma language_version >= 0.20;
 
 import CompactStandardLibrary;
 
-enum EscrowState { OPEN, FUNDED, RELEASED, DISPUTED, REFUNDED }
+enum EscrowState {
+  OPEN,
+  FUNDED,
+  RELEASED,
+  DISPUTED,
+  REFUNDED
+}
 
-export ledger escrow_state: Map<Bytes<32>, EscrowState>;
-export ledger amount_night: Map<Bytes<32>, Uint<64>>;
+export ledger escrow_state:  Map<Bytes<32>, EscrowState>;
+export ledger seller_commit: Map<Bytes<32>, Bytes<32>>;
+export ledger buyer_commit:  Map<Bytes<32>, Bytes<32>>;
+export ledger amount_night:  Map<Bytes<32>, Uint<64>>;
+ledger round: Counter;
 export ledger vote_for:     Map<Bytes<32>, Uint<64>>;
 export ledger vote_against: Map<Bytes<32>, Uint<64>>;
 export ledger vote_abstain: Map<Bytes<32>, Uint<64>>;
-export ledger has_voted:    Map<Bytes<32>, Boolean>;
+ledger has_voted: Map<Bytes<32>, Boolean>;
 
+witness localSecretKey(): Bytes<32>;
 witness voterNightBalance(): Uint<64>;
 
-export circuit createListing(orderId: Bytes<32>, amountNight: Uint<64>): Boolean {
-  escrow_state.insert(disclose(orderId), EscrowState.OPEN);
-  amount_night.insert(disclose(orderId), disclose(amountNight));
-  return true;
+circuit callerCommitment(domain: Bytes<32>): Bytes<32> {
+  const sk = localSecretKey();
+  const contractAddr = kernel.self().bytes;
+  return persistentHash<Vector<3, Bytes<32>>>([domain, contractAddr, sk]);
 }
 
-export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>): Boolean {
-  amount_night.insert(disclose(orderId), disclose(amountNight));
-  escrow_state.insert(disclose(orderId), EscrowState.FUNDED);
-  return true;
+export circuit createListing(orderId: Bytes<32>, amountNight: Uint<64>): Bytes<32> {
+  const com = callerCommitment(pad(32, "seller"));
+  const oid = disclose(orderId);
+  const amt = disclose(amountNight);
+  const c   = disclose(com);
+  assert(escrow_state.member(oid) == false, "listing exists");
+  escrow_state.insert(oid, EscrowState.OPEN);
+  seller_commit.insert(oid, c);
+  amount_night.insert(oid, amt);
+  round.increment(1);
+  return c;
+}
+
+export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>): Bytes<32> {
+  const com = callerCommitment(pad(32, "buyer"));
+  const oid = disclose(orderId);
+  const amt = disclose(amountNight);
+  const c   = disclose(com);
+  const state = escrow_state.lookup(oid);
+  assert(state == EscrowState.OPEN, "not open");
+  buyer_commit.insert(oid, c);
+  amount_night.insert(oid, amt);
+  escrow_state.insert(oid, EscrowState.FUNDED);
+  round.increment(1);
+  return c;
 }
 
 export circuit releaseEscrow(orderId: Bytes<32>): Boolean {
-  escrow_state.insert(disclose(orderId), EscrowState.RELEASED);
+  const callerCom = callerCommitment(pad(32, "buyer"));
+  const oid = disclose(orderId);
+  const storedCom = buyer_commit.lookup(oid);
+  assert(disclose(callerCom) == storedCom, "not authorized");
+  const state = escrow_state.lookup(oid);
+  assert(state == EscrowState.FUNDED, "not funded");
+  escrow_state.insert(oid, EscrowState.RELEASED);
+  round.increment(1);
   return true;
 }
 
 export circuit disputeEscrow(orderId: Bytes<32>): Boolean {
-  escrow_state.insert(disclose(orderId), EscrowState.DISPUTED);
+  const callerCom = callerCommitment(pad(32, "buyer"));
+  const oid = disclose(orderId);
+  const storedCom = buyer_commit.lookup(oid);
+  assert(disclose(callerCom) == storedCom, "not authorized");
+  const state = escrow_state.lookup(oid);
+  assert(state == EscrowState.FUNDED, "not funded");
+  escrow_state.insert(oid, EscrowState.DISPUTED);
+  round.increment(1);
   return true;
 }
 
 export circuit refundEscrow(orderId: Bytes<32>): Boolean {
-  escrow_state.insert(disclose(orderId), EscrowState.REFUNDED);
+  const callerCom = callerCommitment(pad(32, "seller"));
+  const oid = disclose(orderId);
+  const storedCom = seller_commit.lookup(oid);
+  assert(disclose(callerCom) == storedCom, "not authorized");
+  const state = escrow_state.lookup(oid);
+  assert(state == EscrowState.OPEN || state == EscrowState.DISPUTED, "invalid state");
+  escrow_state.insert(oid, EscrowState.REFUNDED);
+  round.increment(1);
   return true;
 }
 
 export circuit castVote(proposalId: Bytes<32>, choice: Uint<8>): Boolean {
+  const sk = localSecretKey();
+  const contractAddr = kernel.self().bytes;
+  const voterCom = persistentHash<Vector<2, Bytes<32>>>([contractAddr, sk]);
+  const voterComPublic = disclose(voterCom);
+  assert(has_voted.member(voterComPublic) == false, "already voted");
   const pid    = disclose(proposalId);
   const ch     = disclose(choice);
-  const weight = disclose(voterNightBalance());
+  const rawWeight = voterNightBalance();
+  const maxWeight = 1000000000000 as Uint<64>;
+  const weight = disclose(rawWeight > maxWeight ? maxWeight : rawWeight);
+  assert(weight > (0 as Uint<64>), "zero weight");
   if (ch == (0 as Uint<8>)) {
-    vote_for.insert(pid, weight);
+    const prev = vote_for.member(pid) ? vote_for.lookup(pid) : (0 as Uint<64>);
+    vote_for.insert(pid, (prev + weight) as Uint<64>);
   } else {
     if (ch == (1 as Uint<8>)) {
-      vote_against.insert(pid, weight);
+      const prev = vote_against.member(pid) ? vote_against.lookup(pid) : (0 as Uint<64>);
+      vote_against.insert(pid, (prev + weight) as Uint<64>);
     } else {
-      vote_abstain.insert(pid, weight);
+      const prev = vote_abstain.member(pid) ? vote_abstain.lookup(pid) : (0 as Uint<64>);
+      vote_abstain.insert(pid, (prev + weight) as Uint<64>);
     }
   }
-  has_voted.insert(pid, true);
+  has_voted.insert(voterComPublic, true);
+  round.increment(1);
   return true;
 }
