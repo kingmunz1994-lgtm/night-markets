@@ -1,6 +1,6 @@
 <div align="center">
 
-![Night Markets](./night-markets-banner.png)
+![Night Markets](./night-markets-banner.svg)
 
 </div>
 
@@ -17,6 +17,7 @@
 [![Built On Midnight](https://img.shields.io/badge/⬛_BUILT_ON-MIDNIGHT_NETWORK-7c3aed?style=for-the-badge&labelColor=090714)](https://midnight.network)
 [![ZK Proofs](https://img.shields.io/badge/🔒_ZK_PROOFS-ENABLED-00d68f?style=for-the-badge&labelColor=090714)](https://midnight.network/developers)
 [![NIGHT Token](https://img.shields.io/badge/🌙_$NIGHT-POWERED-b97dff?style=for-the-badge&labelColor=090714)](#night-token)
+[![Live Demo](https://img.shields.io/badge/🌐_LIVE-DEMO-38bdf8?style=for-the-badge&labelColor=090714)](https://kingmunz1994-lgtm.github.io/night-markets)
 [![License MIT](https://img.shields.io/badge/LICENSE-MIT-475569?style=for-the-badge&labelColor=090714)](./LICENSE)
 
 ---
@@ -26,6 +27,8 @@
 Night Markets is a privacy-first global marketplace where your identity, balance, and purchase history are never exposed. Shop across borders, pay in any currency, and transact freely — with zero-knowledge cryptography guaranteeing your privacy at every step.
 
 Built natively on the **Midnight Network**, the only blockchain engineered from the ground up for data protection, Night Markets proves that commerce and privacy can coexist.
+
+**[→ Live Demo](https://kingmunz1994-lgtm.github.io/night-markets)**
 
 ---
 
@@ -71,33 +74,52 @@ No data is stored off-chain. No cookies. No tracking pixels. No surveillance.
 
 ---
 
+## Smart Contract
+
+The `NightMarketsEscrow.compact` contract is deployed on Midnight Preprod and implements:
+
+- **Escrow lifecycle** — `createListing` → `fundEscrow` → `releaseEscrow` / `disputeEscrow` / `refundEscrow`
+- **ZK auth** — caller commitment verification via hash of secret key + contract address + domain
+- **Governance voting** — weighted by NIGHT token balance with double-vote prevention via commitment tracking
+
+View the contract: [`contracts/NightMarketsEscrow.compact`](./contracts/NightMarketsEscrow.compact)
+
+---
+
 ## NIGHT Token
 
 The `$NIGHT` token powers the Night Markets ecosystem across four dimensions: paying marketplace fees and unlocking premium features, earning rewards through the Night Points loyalty programme, voting on governance decisions including parameters and listings, and staking to reach Obsidian tier with its exclusive benefits.
 
 ---
 
-## Developer Tooling
-
-Two open-source packages are available for Midnight developers:
-
-**`@night-markets/zk-ecommerce`** provides ZK proof primitives for private commerce — including private checkout, ZK-enforced escrow for high-value transactions, and instalment proof generation.
-
-**`@night-markets/bnpl-framework`** lets any developer deploy a Pay-in-4 instalment contract on Midnight in minutes, with configurable amounts, intervals, and grace periods.
-
----
-
 ## Getting Started
 
-Clone the repo and open `index.html` in your browser — no build step required. Connect a Midnight-compatible wallet (Lace recommended) to unlock ZK-private checkout and NIGHT token features.
+```bash
+# Clone the repo
+git clone https://github.com/kingmunz1994-lgtm/night-markets.git
+cd night-markets
 
-For contract development and integration testing, see the full documentation at [docs.night.markets](https://docs.night.markets).
+# Open the demo — no build step required
+open index.html
+```
 
----
+Connect a Midnight-compatible wallet (Lace recommended) to unlock ZK-private checkout and NIGHT token features.
 
-## Contributing
+**To compile and deploy contracts:**
 
-Contributions are welcome. Read `CONTRIBUTING.md` before opening a PR. Good first issues are tagged in the tracker.
+```bash
+# Install dependencies
+npm install
+
+# Start the proof server
+npm run proof-server
+
+# Compile Compact contracts
+npm run compile
+
+# Deploy to Midnight Preprod
+npm run deploy
+```
 
 ---
 
@@ -111,6 +133,6 @@ MIT © Night Markets Contributors — *Built on the Midnight Network.*
 
 *"In the void between transactions, privacy thrives."*
 
-[🌐 night.markets](https://night.markets) · [🌑 Midnight Network](https://midnight.network) · [📚 Docs](https://docs.night.markets)
+[🌐 Live Demo](https://kingmunz1994-lgtm.github.io/night-markets) · [🌑 Midnight Network](https://midnight.network) · [📄 Contract](./contracts/NightMarketsEscrow.compact)
 
 </div>

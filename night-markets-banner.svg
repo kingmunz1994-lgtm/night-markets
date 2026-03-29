@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400">
+  <defs>
+    <radialGradient id="glow1" cx="25%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#06040e" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="80%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#06040e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#9d5cf6"/>
+    </linearGradient>
+    <linearGradient id="textgrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ece8ff"/>
+      <stop offset="60%" stop-color="#b97dff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="400" fill="#06040e"/>
+  <rect width="1280" height="400" fill="url(#glow1)"/>
+  <rect width="1280" height="400" fill="url(#glow2)"/>
+
+  <!-- Subtle grid lines -->
+  <g stroke="#1e1a34" stroke-width="1" opacity="0.6">
+    <line x1="0" y1="100" x2="1280" y2="100"/>
+    <line x1="0" y1="200" x2="1280" y2="200"/>
+    <line x1="0" y1="300" x2="1280" y2="300"/>
+    <line x1="320" y1="0" x2="320" y2="400"/>
+    <line x1="640" y1="0" x2="640" y2="400"/>
+    <line x1="960" y1="0" x2="960" y2="400"/>
+  </g>
+
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="1280" height="2" fill="url(#accent)" opacity="0.6"/>
+
+  <!-- Logo mark -->
+  <rect x="80" y="152" width="56" height="56" rx="14" fill="url(#accent)"/>
+  <text x="108" y="190" font-family="Helvetica Neue, Arial, sans-serif" font-size="26" font-weight="900" fill="white" text-anchor="middle">N</text>
+
+  <!-- Brand name -->
+  <text x="154" y="175" font-family="Helvetica Neue, Arial, sans-serif" font-size="38" font-weight="800" fill="url(#textgrad)" letter-spacing="-1.5">Night</text>
+  <text x="154" y="218" font-family="Helvetica Neue, Arial, sans-serif" font-size="38" font-weight="800" fill="#ece8ff" letter-spacing="-1.5" opacity="0.9">Markets</text>
+
+  <!-- Divider -->
+  <line x1="370" y1="140" x2="370" y2="260" stroke="#2a2448" stroke-width="1"/>
+
+  <!-- Tagline -->
+  <text x="410" y="186" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#ece8ff" opacity="0.95">Buy anything. From anywhere.</text>
+  <text x="410" y="228" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#b97dff">Leave no trace.</text>
+
+  <!-- Badges row -->
+  <g transform="translate(80, 288)">
+    <!-- Badge 1 -->
+    <rect x="0" y="0" width="160" height="28" rx="6" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+    <circle cx="16" cy="14" r="4" fill="#7c3aed"/>
+    <text x="28" y="19" font-family="monospace" font-size="11" font-weight="700" fill="#b97dff" letter-spacing="0.5">MIDNIGHT NETWORK</text>
+
+    <!-- Badge 2 -->
+    <rect x="172" y="0" width="130" height="28" rx="6" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+    <text x="186" y="19" font-family="monospace" font-size="11" font-weight="700" fill="#00d68f" letter-spacing="0.5">ZK PROOFS ON</text>
+
+    <!-- Badge 3 -->
+    <rect x="314" y="0" width="120" height="28" rx="6" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+    <text x="328" y="19" font-family="monospace" font-size="11" font-weight="700" fill="#b97dff" letter-spacing="0.5">$NIGHT TOKEN</text>
+
+    <!-- Badge 4 -->
+    <rect x="446" y="0" width="90" height="28" rx="6" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+    <text x="460" y="19" font-family="monospace" font-size="11" font-weight="700" fill="#6b6390" letter-spacing="0.5">MIT LICENSE</text>
+  </g>
+
+  <!-- Right side — feature pills -->
+  <g transform="translate(900, 120)" opacity="0.85">
+    <rect x="0" y="0" width="300" height="1" fill="#2a2448"/>
+
+    <g transform="translate(0, 20)">
+      <rect x="0" y="0" width="140" height="36" rx="8" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+      <text x="20" y="23" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" fill="#ece8ff">🔒 ZK Privacy</text>
+
+      <rect x="152" y="0" width="148" height="36" rx="8" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+      <text x="172" y="23" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" fill="#ece8ff">💸 Pay In 4</text>
+    </g>
+
+    <g transform="translate(0, 66)">
+      <rect x="0" y="0" width="140" height="36" rx="8" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+      <text x="20" y="23" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" fill="#ece8ff">🤖 On-device AI</text>
+
+      <rect x="152" y="0" width="148" height="36" rx="8" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+      <text x="172" y="23" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" fill="#ece8ff">🏅 Loyalty Tiers</text>
+    </g>
+
+    <g transform="translate(0, 112)">
+      <rect x="0" y="0" width="140" height="36" rx="8" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+      <text x="20" y="23" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" fill="#ece8ff">🪞 AR Try-On</text>
+
+      <rect x="152" y="0" width="148" height="36" rx="8" fill="#110e22" stroke="#2a2448" stroke-width="1"/>
+      <text x="172" y="23" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" fill="#ece8ff">🗳 DAO Governance</text>
+    </g>
+
+    <rect x="0" y="158" width="300" height="1" fill="#2a2448"/>
+  </g>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="398" width="1280" height="2" fill="url(#accent)" opacity="0.3"/>
+</svg>
