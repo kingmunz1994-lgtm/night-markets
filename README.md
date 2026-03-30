@@ -76,7 +76,16 @@ No data is stored off-chain. No cookies. No tracking pixels. No surveillance.
 
 ## Smart Contract
 
-The `NightMarketsEscrow.compact` contract is deployed on Midnight Preprod and implements:
+The `NightMarketsEscrow.compact` contract is **live on Midnight Preprod**:
+
+| | |
+|---|---|
+| **Contract address** | `7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711` |
+| **Deploy block** | 127,350 |
+| **Deploy tx** | `00e988f9d9e0509ec06a3beee4be6a60c178e5324209dbe6d5e6cd7b344a9de92c` |
+| **Network** | Midnight Preprod |
+
+The contract implements:
 
 - **Escrow lifecycle** — `createListing` → `fundEscrow` → `releaseEscrow` / `disputeEscrow` / `refundEscrow`
 - **ZK auth** — caller commitment verification via hash of secret key + contract address + domain
