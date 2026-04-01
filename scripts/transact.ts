@@ -219,11 +219,43 @@ async function main() {
   );
   const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
   const dust  = state.dust.walletBalance(new Date());
-  console.log(`✓\n  DUST:     ${fmt(dust)}`);
+  const { unshieldedToken } = await import('@midnight-ntwrk/ledger-v7');
+  const tNight = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
+  console.log(`✓\n  tNight:   ${fmt(tNight)}\n  DUST:     ${fmt(dust)}`);
 
-  if (dust === 0n) {
-    console.error('\n  ❌ No DUST. Run npm run deploy first to register for DUST generation.');
+  if (tNight === 0n && dust === 0n) {
+    console.error('\n  ❌ Wallet has no tNight. Fund it at: https://faucet.preprod.midnight.network/');
+    console.error(`     Address: ${ctx.unshieldedKeystore.getBech32Address()}`);
     process.exit(1);
+  }
+
+  // Register NIGHT UTXOs for DUST generation if needed
+  if (dust === 0n) {
+    console.log('\n  Registering NIGHT for DUST generation...');
+    const nightUtxos = state.unshielded.availableCoins.filter(
+      (coin: any) => coin.meta?.registeredForDustGeneration !== true,
+    );
+    if (nightUtxos.length > 0) {
+      const recipe = await ctx.wallet.registerNightUtxosForDustGeneration(
+        nightUtxos,
+        ctx.unshieldedKeystore.getPublicKey(),
+        (payload: Uint8Array) => ctx.unshieldedKeystore.signData(payload),
+      );
+      const finalized = await ctx.wallet.finalizeRecipe(recipe);
+      await ctx.wallet.submitTransaction(finalized);
+      console.log('  ✓ Registered — waiting for DUST to accrue (up to 5 min)...');
+    } else {
+      console.log('  Already registered — waiting for DUST to accrue...');
+    }
+    await Rx.firstValueFrom(
+      ctx.wallet.state().pipe(
+        Rx.throttleTime(10_000),
+        Rx.filter((s: any) => s.isSynced),
+        Rx.filter((s: any) => s.dust.walletBalance(new Date()) > 0n),
+      ),
+    );
+    const s2 = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
+    console.log(`  ✓ DUST ready: ${fmt(s2.dust.walletBalance(new Date()))}`);
   }
 
   // 3. Providers
