@@ -568,7 +568,7 @@ function showScore(addr, score, actions, date) {
   `).join('');
 
   // Share text
-  const shareText = `🪪 Night Builder Credential\n\nAddress: ${shortAddr}\nScore: ${score} pts\nLevel: ${level.name}\nNetwork: Midnight Preprod\nVerified: ${date.toLocaleDateString('en-AU')}\n\nVerify: kingmunz1994-lgtm.github.io/night-identity.html\nBuilt on Midnight Network 🌙`;
+  const shareText = `🪪 Night Builder Credential\n\nAddress: ${shortAddr}\nScore: ${score} pts\nLevel: ${level.name}\nNetwork: Midnight Preprod\nVerified: ${date.toLocaleDateString('en-AU')}\n\nVerify: kingmunz1994-lgtm.github.io/night-markets/night-identity.html\nBuilt on Midnight Network 🌙`;
   document.getElementById('share-text').textContent = shareText;
 
   // Show score section
@@ -590,7 +590,7 @@ function shareToX() {
   const addr = document.getElementById('addr-input').value.trim();
   const score = document.getElementById('cf-score').textContent;
   const level = document.getElementById('cf-level').textContent;
-  const text = encodeURIComponent(`Just verified my Night Builder Credential on Midnight Network 🪪\n\nScore: ${score}\nLevel: ${level}\n\nProof of work. Not a pitch deck.\n\nhttps://kingmunz1994-lgtm.github.io/night-identity.html 🌙 #Midnight #ZeroKnowledge #Privacy`);
+  const text = encodeURIComponent(`Just verified my Night Builder Credential on Midnight Network 🪪\n\nScore: ${score}\nLevel: ${level}\n\nProof of work. Not a pitch deck.\n\nhttps://kingmunz1994-lgtm.github.io/night-markets/night-identity.html 🌙 #Midnight #ZeroKnowledge #Privacy`);
   window.open('https://x.com/intent/tweet?text=' + text, '_blank');
 }
 
