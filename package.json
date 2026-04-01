@@ -7,6 +7,7 @@
     "compile": "compact compile contracts/NightMarketsEscrow.compact contracts/managed/night-markets-escrow",
     "deploy": "node --env-file=.env --import tsx scripts/deploy.ts",
     "transact": "node --env-file=.env --import tsx scripts/transact.ts",
+    "full-flow": "node --env-file=.env --import tsx scripts/full-flow.ts",
     "probe": "node --env-file=.env --import tsx scripts/probe.ts",
     "serve": "npx serve . -p 3000",
     "proof-server": "docker run -p 6300:6300 midnightntwrk/proof-server:7.0.0 -- midnight-proof-server -v"
