@@ -184,7 +184,7 @@ const createProviders = async (ctx: Awaited<ReturnType<typeof buildWallet>>) => 
     proofProvider:       httpClientProofProvider(CONFIG.proofServer, zkConfigProvider),
     zkConfigProvider,
     privateStateProvider: levelPrivateStateProvider({
-      privateStateStoreName: 'night-markets-state',
+      privateStateStoreName: 'night-markets-transact-state',
       walletProvider: walletAndMidnightProvider,
     }),
   };
@@ -258,7 +258,13 @@ async function main() {
     console.log(`  ✓ DUST ready: ${fmt(s2.dust.walletBalance(new Date()))}`);
   }
 
-  // 3. Providers
+  // 3. Clear stale private state DB (encrypted with a different wallet key = decrypt failure)
+  const dbPath = path.resolve(__dirname, '..', 'midnight-level-db');
+  if (fs.existsSync(dbPath)) {
+    fs.rmSync(dbPath, { recursive: true, force: true });
+  }
+
+  // 4. Providers
   process.stdout.write('  Wiring providers... ');
   const providers = await createProviders(ctx);
   console.log('✓');
@@ -270,8 +276,8 @@ async function main() {
     .make('night-markets-escrow', NightMarketsEscrow.Contract)
     .pipe(
       CompiledContract.withWitnesses({
-        localSecretKey:    () => new Uint8Array(32).fill(1),
-        voterNightBalance: () => 0n,
+        localSecretKey:    ({ privateState }: any) => [privateState, new Uint8Array(32).fill(1)],
+        voterNightBalance: ({ privateState }: any) => [privateState, 0n],
       }),
       CompiledContract.withCompiledFileAssets(zkConfigPath),
     );
