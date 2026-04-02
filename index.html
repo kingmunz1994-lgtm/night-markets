@@ -1636,6 +1636,43 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 /* Launch form */
 .nf-launch-card{background:var(--surface);border:1px solid var(--rim2);border-radius:18px;padding:32px;margin-bottom:32px;}
 
+/* ─── sUSD / STATERA VAULT ─── */
+.susd-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;font-family:var(--mono);color:var(--green);}
+.susd-price-tag{font-size:11px;font-family:var(--mono);color:var(--green);background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.15);border-radius:5px;padding:2px 7px;margin-left:6px;}
+
+.vault-card{background:linear-gradient(135deg,rgba(0,214,143,.06),rgba(34,211,238,.04));border:1px solid rgba(0,214,143,.2);border-radius:18px;padding:26px;margin-bottom:20px;position:relative;overflow:hidden;}
+.vault-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green),var(--cyan),transparent);}
+.vault-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.vault-title{font-size:14px;font-weight:800;letter-spacing:-.01em;}
+.vault-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.vault-stat{background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:10px;padding:14px;}
+.vs-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono);margin-bottom:5px;}
+.vs-val{font-size:20px;font-weight:800;font-family:var(--mono);}
+.vs-sub{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+
+.hf-bar-wrap{margin-bottom:18px;}
+.hf-bar-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.hf-bar-label{font-size:11px;font-family:var(--mono);color:var(--muted);}
+.hf-bar-val{font-size:14px;font-weight:800;font-family:var(--mono);}
+.hf-bar-track{height:10px;background:var(--rim2);border-radius:5px;overflow:hidden;}
+.hf-bar-fill{height:100%;border-radius:5px;transition:width .8s ease,background .4s;}
+
+.vault-input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.vault-input-group{display:flex;flex-direction:column;gap:6px;}
+.vault-input-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);}
+.vault-input{background:var(--surface);border:1px solid var(--rim2);border-radius:10px;padding:12px 14px;font-size:15px;font-weight:700;font-family:var(--mono);color:var(--text);outline:none;width:100%;}
+.vault-input:focus{border-color:var(--green);}
+
+.circuit-trace{background:var(--depth);border:1px solid var(--rim);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11px;line-height:1.9;color:var(--muted);margin-bottom:16px;}
+.ct-step{display:flex;align-items:center;gap:8px;}
+.ct-step.active{color:var(--cyan);}
+.ct-step.done{color:var(--green);}
+.ct-step.wait{color:var(--faint);}
+.ct-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.ct-dot.active{background:var(--cyan);animation:pulse 1s infinite;}
+.ct-dot.done{background:var(--green);}
+.ct-dot.wait{background:var(--faint);}
+
 /* Night Save page */
 #page-nightsave .page-inner{max-width:900px;margin:0 auto;padding:40px 24px;}
 .ns-banks-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--rim);border-radius:16px;overflow:hidden;margin-bottom:32px;}
@@ -2959,28 +2996,99 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 <div class="page" id="page-nightsave">
   <div class="page-inner">
     <div style="text-align:center;margin-bottom:40px;">
-      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(245,197,24,.08);color:var(--gold);border-color:rgba(245,197,24,.2);">💎 Night Save — We Are the Banks</span></div>
-      <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:12px;">Your savings account.<br><em>No bank required.</em></h1>
-      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">Earn interest set by the community. Not by a bank. No identity required. No application. Your savings balance IS your credit score.</p>
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(0,214,143,.08);color:var(--green);border-color:rgba(0,214,143,.2);">🟢 Night Save — Powered by Statera Protocol</span></div>
+      <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:12px;">Your money.<br><em>Private. Stable. Yours.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:580px;margin:0 auto;line-height:1.8;font-weight:300;">Deposit NIGHT tokens as collateral. Mint sUSD — a private USD stablecoin. Spend anywhere on Night Markets. No bank. No identity. No credit check. <strong style="color:var(--green)">Your collateral stays invisible on Midnight.</strong></p>
     </div>
 
-    <!-- Account preview -->
-    <div class="ns-account-card">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <!-- Vault card -->
+    <div class="vault-card">
+      <div class="vault-header">
         <div>
-          <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Your Night Save account</div>
-          <div class="ns-balance" id="ns-balance">0.00</div>
-          <div class="ns-label">NIGHT saved</div>
+          <div class="vault-title">🟢 sUSD Collateral Vault</div>
+          <div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:3px;">Statera Protocol · MIT · Midnight Preprod</div>
         </div>
-        <div style="text-align:right;">
-          <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Interest rate</div>
-          <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--green);">Community vote</div>
-          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);">Your bank pays 0.5%</div>
+        <div class="susd-badge">⊘ Over-collateralised · ZK private</div>
+      </div>
+      <div class="vault-stats">
+        <div class="vault-stat">
+          <div class="vs-label">Collateral</div>
+          <div class="vs-val" id="vs-collateral" style="color:var(--green);">0</div>
+          <div class="vs-sub">NIGHT deposited</div>
+        </div>
+        <div class="vault-stat">
+          <div class="vs-label">sUSD minted</div>
+          <div class="vs-val" id="vs-susd" style="color:var(--cyan);">$0.00</div>
+          <div class="vs-sub">available to spend</div>
+        </div>
+        <div class="vault-stat">
+          <div class="vs-label">Health factor</div>
+          <div class="vs-val" id="vs-hf" style="color:var(--green);">—</div>
+          <div class="vs-sub">min 1.0 · liq at 0.95</div>
         </div>
       </div>
-      <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" onclick="openNightSave()">Open savings account →</button>
-        <button class="btn btn-ghost btn-sm" onclick="showPage('governance')">Vote on interest rate →</button>
+      <!-- Health factor bar -->
+      <div class="hf-bar-wrap">
+        <div class="hf-bar-hdr">
+          <div class="hf-bar-label">calculateHFactor(collateral, debt, liquidationThreshold=80)</div>
+          <div class="hf-bar-val" id="hf-bar-val" style="color:var(--green);">Safe</div>
+        </div>
+        <div class="hf-bar-track"><div class="hf-bar-fill" id="hf-bar-fill" style="width:0%;background:var(--green);"></div></div>
+      </div>
+      <!-- Inputs -->
+      <div class="vault-input-row">
+        <div class="vault-input-group">
+          <div class="vault-input-label">Deposit collateral (NIGHT)</div>
+          <input class="vault-input" id="vault-collateral" type="number" placeholder="e.g. 10000" oninput="updateVaultCalc()"/>
+        </div>
+        <div class="vault-input-group">
+          <div class="vault-input-label">Mint sUSD (max 80% LVT)</div>
+          <input class="vault-input" id="vault-mint" type="number" placeholder="e.g. 400" oninput="updateVaultCalc()"/>
+        </div>
+      </div>
+      <div id="vault-calc-result" style="font-size:12px;font-family:var(--mono);color:var(--muted);margin-bottom:16px;min-height:18px;"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="flex:1;background:linear-gradient(135deg,rgba(0,214,143,.9),rgba(34,211,238,.8));" onclick="vaultDeposit()">depositToCollateralPool()</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="vaultMint()">mint_sUSD()</button>
+        <button class="btn btn-ghost" style="flex:1;" onclick="vaultRepay()">repay()</button>
+      </div>
+    </div>
+
+    <!-- Circuit trace panel -->
+    <div id="vault-circuit-panel" style="display:none;margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Statera Circuit Execution</div>
+      <div class="circuit-trace" id="vault-circuit-trace"></div>
+    </div>
+
+    <!-- Stability pool -->
+    <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:16px;padding:24px;margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:14px;font-weight:800;margin-bottom:3px;">💎 Stability Pool</div>
+          <div style="font-size:11px;font-family:var(--mono);color:var(--muted);">depositToStabilityPool() · earn liquidation rewards</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--gold);" id="pool-apy">8.4% APY</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);">checkStakeReward() · withdrawStakeReward()</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;">POOL TOTAL</div>
+          <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--gold);">$2.4M sUSD</div>
+        </div>
+        <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;">YOUR STAKE</div>
+          <div style="font-size:16px;font-weight:700;font-family:var(--mono);" id="pool-stake">$0</div>
+        </div>
+        <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;">REWARDS EARNED</div>
+          <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--green);" id="pool-rewards">0 NIGHT</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary btn-sm" style="flex:1;background:linear-gradient(135deg,rgba(245,197,24,.8),rgba(245,197,24,.6));color:#000;" onclick="vaultStake()">depositToStabilityPool()</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="vaultClaimReward()">withdrawStakeReward()</button>
       </div>
     </div>
 
@@ -2988,50 +3096,48 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
     <div class="ns-banks-grid">
       <div class="ns-col bank">
         <div class="ns-col-title">✗ Your bank</div>
-        <div class="ns-item"><span style="color:var(--red);">✗</span>0.5% interest — they keep the rest</div>
-        <div class="ns-item"><span style="color:var(--red);">✗</span>They control the rate</div>
-        <div class="ns-item"><span style="color:var(--red);">✗</span>Identity + bank account required</div>
-        <div class="ns-item"><span style="color:var(--red);">✗</span>Credit check to access credit</div>
-        <div class="ns-item"><span style="color:var(--red);">✗</span>You never vote on anything</div>
+        <div class="ns-item"><span style="color:var(--red);">✗</span>0.5% interest — they keep 95%</div>
+        <div class="ns-item"><span style="color:var(--red);">✗</span>Identity + documents required</div>
+        <div class="ns-item"><span style="color:var(--red);">✗</span>Credit check to borrow</div>
+        <div class="ns-item"><span style="color:var(--red);">✗</span>Bank knows your every transaction</div>
         <div class="ns-item"><span style="color:var(--red);">✗</span>1.4 billion people excluded</div>
       </div>
       <div class="ns-col night">
-        <div class="ns-col-title">✓ Night Save</div>
-        <div class="ns-item"><span style="color:var(--green);">✓</span>Interest rate set by governance vote</div>
-        <div class="ns-item"><span style="color:var(--green);">✓</span>You vote on the rate</div>
+        <div class="ns-col-title">✓ Night Save + sUSD</div>
+        <div class="ns-item"><span style="color:var(--green);">✓</span>8.4% APY from stability pool</div>
         <div class="ns-item"><span style="color:var(--green);">✓</span>No identity — ZK proof only</div>
-        <div class="ns-item"><span style="color:var(--green);">✓</span>Your savings IS your credit score</div>
-        <div class="ns-item"><span style="color:var(--green);">✓</span>Always vote — governance built in</div>
+        <div class="ns-item"><span style="color:var(--green);">✓</span>Collateral = your credit score</div>
+        <div class="ns-item"><span style="color:var(--green);">✓</span>All balances private on Midnight</div>
         <div class="ns-item"><span style="color:var(--green);">✓</span>Works for anyone, anywhere</div>
       </div>
     </div>
 
     <!-- Tiers -->
-    <div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Save more — unlock more</div></div>
+    <div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Collateral tier — mint more sUSD</div></div>
     <div class="ns-tier-grid">
-      <div class="ns-tier" onclick="toast('Starter tier — 1,000 NIGHT to activate','info')">
+      <div class="ns-tier" onclick="document.getElementById('vault-collateral').value=1000;updateVaultCalc()">
         <div class="ns-tier-icon">⬜</div>
         <div class="ns-tier-name">Starter</div>
         <div class="ns-tier-amount">1,000 NIGHT</div>
-        <div class="ns-tier-unlock">Listings up to $50</div>
+        <div class="ns-tier-unlock">Mint up to $40 sUSD</div>
       </div>
-      <div class="ns-tier" onclick="toast('Silver tier — BNPL unlocked','success')">
+      <div class="ns-tier" onclick="document.getElementById('vault-collateral').value=5000;updateVaultCalc()">
         <div class="ns-tier-icon">🥈</div>
         <div class="ns-tier-name">Silver</div>
         <div class="ns-tier-amount">5,000 NIGHT</div>
-        <div class="ns-tier-unlock">BNPL unlocked · $500</div>
+        <div class="ns-tier-unlock">Mint up to $200 sUSD</div>
       </div>
-      <div class="ns-tier" onclick="toast('Gold tier — featured placement','success')">
+      <div class="ns-tier" onclick="document.getElementById('vault-collateral').value=50000;updateVaultCalc()">
         <div class="ns-tier-icon">🥇</div>
         <div class="ns-tier-name">Gold</div>
         <div class="ns-tier-amount">50,000 NIGHT</div>
-        <div class="ns-tier-unlock">Featured · $5,000</div>
+        <div class="ns-tier-unlock">Mint up to $2,000 sUSD</div>
       </div>
-      <div class="ns-tier" onclick="toast('Obsidian tier — full governance','success')">
+      <div class="ns-tier" onclick="document.getElementById('vault-collateral').value=200000;updateVaultCalc()">
         <div class="ns-tier-icon">💎</div>
         <div class="ns-tier-name">Obsidian</div>
         <div class="ns-tier-amount">200,000 NIGHT</div>
-        <div class="ns-tier-unlock">Unlimited · Governance</div>
+        <div class="ns-tier-unlock">Mint up to $8,000 sUSD</div>
       </div>
     </div>
   </div>
@@ -4807,6 +4913,7 @@ function renderCoStep(){
     var methods = [
       {id:'pm-p4',    method:'p4',    icon:'💳', name:'Pay in 4',    sub:'4 × A$'+inst+' · no interest'},
       {id:'pm-full',  method:'full',  icon:'💰', name:'Pay in Full', sub:'A$'+coTotal.toLocaleString()},
+      {id:'pm-susd',  method:'susd',  icon:'🟢', name:'sUSD',        sub:'Private stablecoin · Statera'},
       {id:'pm-night', method:'night', icon:'🌑', name:'NIGHT Token', sub:'Pay with Midnight'}
     ];
 
@@ -4830,7 +4937,39 @@ function renderCoStep(){
     var payDiv = document.createElement('div');
     payDiv.style.cssText = 'margin-bottom:16px;';
 
-    if(coMethod === 'night'){
+    if(coMethod === 'susd'){
+      // sUSD payment — Statera Protocol over-collateralised stablecoin
+      var susdBal = walletState && walletState.susd ? walletState.susd : '0';
+      var hasEnough = walletState && walletState.connected && parseFloat(susdBal) >= coTotal;
+      payDiv.innerHTML = '<div style="background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);border-radius:14px;padding:20px;margin-bottom:12px;">'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'
+        + '<div style="font-size:28px;">🟢</div>'
+        + '<div><div style="font-weight:800;font-size:15px;">sUSD — Private Stablecoin</div>'
+        + '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);">Statera Protocol · Midnight Network · MIT</div></div>'
+        + '</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'
+        + '<div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:8px;padding:10px;">'
+        + '<div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:3px;">YOUR sUSD BALANCE</div>'
+        + '<div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--green);">$' + (walletState && walletState.connected ? parseFloat(susdBal).toFixed(2) : '—') + '</div>'
+        + '</div>'
+        + '<div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:8px;padding:10px;">'
+        + '<div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:3px;">ORDER TOTAL</div>'
+        + '<div style="font-size:18px;font-weight:800;font-family:var(--mono);">$' + coTotal.toLocaleString() + '</div>'
+        + '</div>'
+        + '</div>'
+        + '<div style="font-size:11px;font-family:var(--mono);color:var(--muted);line-height:1.7;margin-bottom:12px;">'
+        + '⊘ sUSD is minted via <strong style="color:var(--green)">depositToCollateralPool()</strong> + <strong style="color:var(--green)">mint_sUSD()</strong> on Midnight. '
+        + 'Your collateral stays private. Health factor calculated by <strong style="color:var(--cyan)">calculateHFactor()</strong> ZK circuit.'
+        + '</div>'
+        + (walletState && walletState.connected
+          ? (hasEnough
+            ? '<div style="text-align:center;padding:10px;background:rgba(0,214,143,.08);border-radius:8px;color:var(--green);font-weight:700;font-size:13px;">✓ Ready — $' + coTotal.toLocaleString() + ' sUSD'
+            : '<div style="text-align:center;padding:10px;background:rgba(245,197,24,.06);border-radius:8px;color:var(--gold);font-size:12px;font-family:var(--mono);">⚠ Insufficient sUSD — <span style="cursor:pointer;text-decoration:underline;" onclick="closeModal(\'ov-co\');showPage(\'nightsave\')">mint more in Night Save →</span>'
+            ) + '</div>'
+          : '<div style="text-align:center;"><button class="btn btn-primary btn-sm" onclick="openWalletModal()">Connect wallet to use sUSD</button></div>'
+        );
+
+    } else if(coMethod === 'night'){
       if(walletState && walletState.connected){
         payDiv.innerHTML = '<div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:14px;padding:20px;margin-bottom:12px;">'
           + '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Connected wallet</div>'
@@ -4838,6 +4977,7 @@ function renderCoStep(){
           + '<div style="display:flex;gap:20px;font-size:13px;">'
           + '<span>🌑 NIGHT: <strong>' + (walletState.night||'0') + '</strong></span>'
           + '<span>💧 DUST: <strong>' + (walletState.dust||'0') + '</strong></span>'
+          + '<span>🟢 sUSD: <strong>$' + (walletState.susd||'0') + '</strong></span>'
           + '</div>'
           + '</div>'
           + '<div style="font-size:13px;color:var(--green);text-align:center;padding:10px;background:rgba(0,214,143,.06);border-radius:10px;">'
@@ -4955,7 +5095,12 @@ function coNext(){
   if(coStep === 1){
     if(coMethod === 'night'){
       if(!walletState || !walletState.connected){
-        toast('Please connect your Lace wallet to pay with NIGHT','error');
+        toast('Please connect your wallet to pay with NIGHT','error');
+        return;
+      }
+    } else if(coMethod === 'susd'){
+      if(!walletState || !walletState.connected){
+        toast('Please connect your wallet to pay with sUSD','error');
         return;
       }
     } else {
@@ -4998,15 +5143,102 @@ function runKycProof(){
 
 
 function coPlaceOrder(){
-  // If NIGHT payment, do the real Midnight transfer
-  if(coMethod === 'night'){
-    if(!walletState || !walletState.connected){
-      openWalletModal();
-      return;
-    }
+  if(coMethod === 'susd'){
+    if(!walletState || !walletState.connected){ openWalletModal(); return; }
+    coConfirmSUSD();
+  } else if(coMethod === 'night'){
+    if(!walletState || !walletState.connected){ openWalletModal(); return; }
     coConfirmNight();
   } else {
     coConfirm();
+  }
+}
+
+// ── sUSD Payment — Statera Protocol ────────────────────────────────────────────
+async function coConfirmSUSD(){
+  closeModal('ov-co');
+  document.getElementById('ov-co').classList.add('open');
+  document.getElementById('co-steps-bar').innerHTML = '';
+
+  const susdSteps = [
+    { pct:12, label:'Connecting to Statera Protocol…',       sub:'mint_sUSD() · Midnight Network · MIT' },
+    { pct:28, label:'Checking collateral health factor…',    sub:'calculateHFactor(collateral, debt, liquidationThreshold)' },
+    { pct:48, label:'Generating ZK proof for repay()…',      sub:'secrete_key() witness · private state preserved' },
+    { pct:65, label:'Calling repay() on-chain…',             sub:'Compact circuit · Midnight Preprod' },
+    { pct:82, label:'Verifying sUSD transfer…',              sub:'Zswap shielded token · sUSDTokenType confirmed' },
+    { pct:95, label:'Releasing seller escrow…',              sub:'releaseEscrow() · Night Markets contract' },
+  ];
+
+  var si = 0;
+  function showSUSDStep(i){
+    var s = susdSteps[Math.min(i, susdSteps.length-1)];
+    document.getElementById('co-body').innerHTML =
+      '<div class="proc-wrap">'
+      + '<span class="proc-sym"><span class="proc-spin">🟢</span></span>'
+      + '<div class="proc-title">' + s.label + '</div>'
+      + '<div class="proc-sub">' + s.sub + '</div>'
+      + '<div class="progress-bar"><div class="progress-fill" id="pbar" style="width:' + s.pct + '%;transition:width .7s ease"></div></div>'
+      + '<div class="circuit-trace" style="margin-top:20px;text-align:left;">'
+      + susdSteps.map(function(step, idx){
+          var state = idx < i ? 'done' : idx === i ? 'active' : 'wait';
+          return '<div class="ct-step ' + state + '">'
+            + '<div class="ct-dot ' + state + '"></div>'
+            + step.sub
+            + '</div>';
+        }).join('')
+      + '</div>'
+      + '</div>';
+  }
+
+  showSUSDStep(0);
+  try {
+    var ordId = 'NM-' + uid();
+    for(var step = 0; step < susdSteps.length; step++){
+      showSUSDStep(step);
+      await new Promise(function(r){ setTimeout(r, step === 2 ? 900 : 600); });
+    }
+    var pb = document.getElementById('pbar');
+    if(pb) pb.style.width = '100%';
+
+    // Deduct sUSD from wallet state
+    if(walletState && walletState.susd){
+      walletState.susd = Math.max(0, parseFloat(walletState.susd) - coTotal).toFixed(2);
+    }
+
+    var nightEarned = Math.max(2, Math.floor(coTotal / 30));
+    var ord = {
+      id: ordId,
+      items: cart.length ? [...cart] : [{...curProduct, qty:1}],
+      total: coTotal, method: 'susd', status: 'Confirmed',
+      createdAt: new Date().toISOString(),
+      txHash: '0x' + Math.random().toString(16).slice(2,18).toUpperCase(),
+      payments: [{ label:'sUSD · Statera Protocol · ZK private', amt:coTotal, status:'Paid', date:new Date().toISOString() }]
+    };
+    orders.unshift(ord); saveOrders();
+    cart = []; saveCart(); updateBadge();
+
+    document.getElementById('co-body').innerHTML =
+      '<div style="text-align:center;padding:32px 20px;">'
+      + '<div style="font-size:52px;margin-bottom:16px;">✅</div>'
+      + '<div style="font-size:20px;font-weight:800;margin-bottom:8px;">Order confirmed!</div>'
+      + '<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Paid $' + coTotal.toLocaleString() + ' sUSD · private stablecoin · Statera Protocol</div>'
+      + '<div class="night-reward-banner" style="text-align:left;margin-bottom:12px;">'
+      + '<div class="nrb-icon">🟢</div>'
+      + '<div><div class="nrb-title">sUSD payment settled on Midnight</div>'
+      + '<div class="nrb-sub">repay() · Zswap shielded transfer · +' + nightEarned + ' NIGHT earned</div></div>'
+      + '</div>'
+      + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:20px;word-break:break-all;">TX: ' + ord.txHash + '</div>'
+      + '<button class="btn btn-primary" onclick="closeModal(\'ov-co\');showPage(\'orders\')">View my orders</button>'
+      + '</div>';
+
+  } catch(err){
+    document.getElementById('co-body').innerHTML =
+      '<div style="text-align:center;padding:32px 20px;">'
+      + '<div style="font-size:40px;margin-bottom:12px;">⚠️</div>'
+      + '<div style="font-weight:700;color:#ef4444;margin-bottom:8px;">sUSD payment failed</div>'
+      + '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">' + (err.message||'Unknown error') + '</div>'
+      + '<button class="btn btn-primary btn-sm" onclick="closeModal(\'ov-co\')">Close</button>'
+      + '</div>';
   }
 }
 
@@ -6217,9 +6449,12 @@ var walletState = {
   unshielded:  null,
   dust:        null,
   night:       null,
+  susd:        null,    // sUSD balance — Statera Protocol private stablecoin
   api:         null,
   config:      null,
-  demo:        false
+  demo:        false,
+  walletName:  null,
+  walletRdns:  null
 };
 
 // ── Escrow state (in-memory; replace with on-chain state once
@@ -6584,13 +6819,16 @@ function connectDemo(){
     unshielded:  'mn_addr_preview1_demo_nightmarkets_0xDEMO',
     dust:        '50.0000',
     night:       '1200.0000',
+    susd:        '4500.00',   // Demo sUSD — minted via Statera depositToCollateralPool + mint_sUSD
     api:         null,
-    config:      { networkId: 'preview', indexerUri: 'https://indexer.preview.midnight.network' },  // networkId: string literal in 3.0.0 (not enum)
-    demo:        true
+    config:      { networkId: 'preprod', indexerUri: 'https://indexer.preprod.midnight.network/api/v3/graphql' },
+    demo:        true,
+    walletName:  'Demo',
+    walletRdns:  'demo'
   };
   updateWalletUI();
   closeWalletModal();
-  toast('Demo mode — ZK escrow simulated', 'success');
+  toast('Demo mode — sUSD $4,500 · NIGHT 1,200 · ZK escrow simulated', 'success');
 }
 
 // ── Update nav wallet button ───────────────────────────────────
@@ -8275,7 +8513,196 @@ function launchNightFun() {
   toast('🌙 Night Fun launching '+name.value+' ('+symbol.value+') — deploying Midnight contract + merch store...', 'success');
 }
 
-// Night Save
+// ── Night Save — Statera vault functions ──────────────────────────────────────
+
+// Internal vault state
+var _vaultState = {
+  collateral: 0,   // NIGHT deposited
+  debt: 0,         // sUSD minted
+  staked: 0,       // sUSD in stability pool
+  rewards: 0,      // NIGHT rewards accrued
+};
+
+// NIGHT → USD price (demo: 1 NIGHT = $0.04)
+var NIGHT_USD = 0.04;
+var LTV_MAX   = 0.80;  // 80% LVT
+var LIQ_THRESHOLD = 80; // liquidationThreshold param
+
+function calculateHFactor(collateral, debt, liquidationThreshold){
+  if(!debt || debt === 0) return Infinity;
+  return (collateral * NIGHT_USD * liquidationThreshold) / (debt * 100);
+}
+
+function updateVaultCalc(){
+  var col  = parseFloat(document.getElementById('vault-collateral').value) || 0;
+  var mint = parseFloat(document.getElementById('vault-mint').value)       || 0;
+  var res  = document.getElementById('vault-calc-result');
+  if(!col && !mint){ res.textContent = ''; return; }
+
+  var colUSD   = col * NIGHT_USD;
+  var maxMint  = colUSD * LTV_MAX;
+  var hf       = calculateHFactor(col, mint || 0.001, LIQ_THRESHOLD);
+  var safeHF   = isFinite(hf) && hf >= 1.0;
+  var warnHF   = isFinite(hf) && hf >= 1.0 && hf < 1.5;
+  var badHF    = isFinite(hf) && hf < 1.0;
+
+  // Stat cards
+  document.getElementById('vs-collateral').textContent = col.toLocaleString() + ' NIGHT';
+  document.getElementById('vs-susd').textContent = '$' + (mint || 0).toFixed(2);
+
+  var hfColor = badHF ? 'var(--red)' : warnHF ? 'var(--gold)' : 'var(--green)';
+  var hfDisplay = isFinite(hf) ? hf.toFixed(2) : '∞';
+  document.getElementById('vs-hf').textContent = hfDisplay;
+  document.getElementById('vs-hf').style.color = hfColor;
+
+  // Bar
+  var barPct = isFinite(hf) ? Math.min(hf / 3 * 100, 100) : 100;
+  document.getElementById('hf-bar-fill').style.width = barPct + '%';
+  document.getElementById('hf-bar-fill').style.background = hfColor;
+  var barLabel = badHF ? '⚠ Liquidation risk' : warnHF ? '⚡ Caution' : 'Safe';
+  document.getElementById('hf-bar-val').textContent = barLabel;
+  document.getElementById('hf-bar-val').style.color = hfColor;
+
+  // Calc result line
+  var lines = [];
+  lines.push('Collateral value: $' + colUSD.toFixed(2) + ' · Max mint: $' + maxMint.toFixed(2));
+  if(mint > maxMint) lines.push('⚠ Exceeds max LTV — reduce sUSD amount');
+  else if(mint > 0) lines.push('hFactor = (' + col + ' × $' + NIGHT_USD + ' × ' + LIQ_THRESHOLD + ') / (' + mint + ' × 100) = ' + hfDisplay);
+  res.textContent = lines.join('  ·  ');
+}
+
+function _vaultCircuit(steps, onDone){
+  var panel = document.getElementById('vault-circuit-panel');
+  var trace = document.getElementById('vault-circuit-trace');
+  panel.style.display = 'block';
+  trace.innerHTML = steps.map(function(s,i){
+    return '<div class="ct-step" id="vcs-'+i+'"><span class="ct-dot wait"></span><span class="ct-label">'+s.label+'</span><span class="ct-sub"> · '+s.sub+'</span></div>';
+  }).join('');
+
+  var i = 0;
+  function next(){
+    if(i > 0){
+      var prev = document.getElementById('vcs-'+(i-1));
+      if(prev){ prev.querySelector('.ct-dot').className = 'ct-dot done'; }
+    }
+    if(i >= steps.length){ if(onDone) onDone(); return; }
+    var cur = document.getElementById('vcs-'+i);
+    if(cur){ cur.querySelector('.ct-dot').className = 'ct-dot active'; }
+    i++;
+    setTimeout(next, steps[i-1].ms || 900);
+  }
+  next();
+}
+
+function vaultDeposit(){
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  var col = parseFloat(document.getElementById('vault-collateral').value) || 0;
+  if(col <= 0){ toast('Enter a collateral amount first', 'info'); return; }
+
+  _vaultCircuit([
+    { label:'depositToCollateralPool()', sub:'secrete_key() witness · private state init', ms:850 },
+    { label:'Generating ZK proof…', sub:'Compact circuit · Midnight Preprod', ms:1100 },
+    { label:'Submitting transaction…', sub:'Midnight Network · shielded UTXO', ms:900 },
+    { label:'Collateral confirmed', sub:'calculateHFactor() updated on-chain', ms:600 },
+  ], function(){
+    _vaultState.collateral += col;
+    document.getElementById('vault-collateral').value = '';
+    updateVaultCalc();
+    toast('✓ '+col.toLocaleString()+' NIGHT deposited · depositToCollateralPool() confirmed', 'success');
+  });
+}
+
+function vaultMint(){
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  var col  = _vaultState.collateral;
+  var mint = parseFloat(document.getElementById('vault-mint').value) || 0;
+  if(mint <= 0){ toast('Enter an sUSD amount to mint', 'info'); return; }
+  if(col <= 0){ toast('Deposit collateral first', 'info'); return; }
+
+  var maxMint = col * NIGHT_USD * LTV_MAX;
+  if(mint > maxMint){
+    toast('⚠ Exceeds 80% LTV — max $'+maxMint.toFixed(2)+' sUSD for your collateral', 'info');
+    return;
+  }
+  var hf = calculateHFactor(col, mint, LIQ_THRESHOLD);
+  if(hf < 1.0){ toast('⚠ Health factor below 1.0 — would be liquidated', 'info'); return; }
+
+  _vaultCircuit([
+    { label:'mint_sUSD()', sub:'Statera Protocol · MIT · mint_metadata updated', ms:800 },
+    { label:'Verifying health factor…', sub:'calculateHFactor('+col+', '+mint+', '+LIQ_THRESHOLD+') = '+hf.toFixed(2), ms:1000 },
+    { label:'Generating ZK proof…', sub:'Compact circuit · private state: { collateral, debt }', ms:1100 },
+    { label:'sUSD minted', sub:'Zswap shielded token · sUSDTokenType confirmed', ms:650 },
+  ], function(){
+    _vaultState.debt += mint;
+    if(walletState) walletState.susd = (parseFloat(walletState.susd||0) + mint).toFixed(2);
+    document.getElementById('vault-mint').value = '';
+    document.getElementById('vs-susd').textContent = '$'+_vaultState.debt.toFixed(2);
+    if(document.getElementById('pool-stake')) document.getElementById('pool-stake').textContent = '$'+walletState.susd;
+    toast('✓ $'+mint.toFixed(2)+' sUSD minted · available in wallet', 'success');
+  });
+}
+
+function vaultRepay(){
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  if(_vaultState.debt <= 0){ toast('No sUSD debt to repay', 'info'); return; }
+
+  var repayAmt = _vaultState.debt;
+  _vaultCircuit([
+    { label:'repay()', sub:'Statera Protocol · returning sUSD to protocol', ms:750 },
+    { label:'Burning sUSD…', sub:'sUSDTokenType · Zswap shielded burn', ms:950 },
+    { label:'Updating mint_metadata…', sub:'private state: debt → 0 · secrete_key() witness', ms:850 },
+    { label:'Collateral unlocked', sub:'withdrawCollateral() now available', ms:600 },
+  ], function(){
+    var prev = _vaultState.debt;
+    _vaultState.debt = 0;
+    if(walletState) walletState.susd = Math.max(0, parseFloat(walletState.susd||0) - prev).toFixed(2);
+    document.getElementById('vs-susd').textContent = '$0.00';
+    document.getElementById('vs-hf').textContent = '∞';
+    document.getElementById('vs-hf').style.color = 'var(--green)';
+    document.getElementById('hf-bar-fill').style.width = '100%';
+    document.getElementById('vault-calc-result').textContent = '';
+    toast('✓ $'+prev.toFixed(2)+' sUSD repaid · collateral unlocked', 'success');
+  });
+}
+
+function vaultStake(){
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  var avail = parseFloat(walletState && walletState.susd || 0);
+  if(avail <= 0){ toast('Mint sUSD first to stake in stability pool', 'info'); return; }
+
+  var stakeAmt = avail;
+  _vaultCircuit([
+    { label:'depositToStabilityPool()', sub:'Statera Protocol · stability pool entry', ms:800 },
+    { label:'Generating ZK proof…', sub:'Compact circuit · shielded stake position', ms:1050 },
+    { label:'Stake confirmed', sub:'checkStakeReward() · 8.4% APY · liquidation rewards', ms:700 },
+  ], function(){
+    _vaultState.staked += stakeAmt;
+    if(walletState) walletState.susd = '0.00';
+    document.getElementById('pool-stake').textContent = '$'+_vaultState.staked.toFixed(2);
+    toast('✓ $'+stakeAmt.toFixed(2)+' sUSD staked · earning 8.4% APY', 'success');
+  });
+}
+
+function vaultClaimReward(){
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  if(_vaultState.staked <= 0){ toast('No active stake — depositToStabilityPool() first', 'info'); return; }
+
+  // Simulate accrued reward: 8.4% APY prorated over demo session (~30 days)
+  var accrued = _vaultState.staked * 0.084 / 12;
+  var nightReward = Math.ceil(accrued / NIGHT_USD);
+  _vaultState.rewards += nightReward;
+
+  _vaultCircuit([
+    { label:'withdrawStakeReward()', sub:'checkStakeReward() · computing reward delta', ms:750 },
+    { label:'Generating ZK proof…', sub:'Compact circuit · private reward state', ms:1000 },
+    { label:'Reward transferred', sub:'NIGHT tokens · Midnight shielded wallet', ms:650 },
+  ], function(){
+    if(walletState) walletState.night = String((parseInt(walletState.night||'0',10) + nightReward));
+    document.getElementById('pool-rewards').textContent = _vaultState.rewards+' NIGHT';
+    toast('✓ '+nightReward+' NIGHT claimed · withdrawStakeReward() confirmed', 'success');
+  });
+}
+
 function openNightSave() {
   if(!walletState || !walletState.connected) { openWalletModal(); return; }
   toast('💎 Night Save account opening — deploying on Midnight mainnet', 'success');
