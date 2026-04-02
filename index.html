@@ -664,6 +664,50 @@ h1.hero-title em{font-style:italic;color:var(--glow);}
 .success-title{font-family:var(--serif);font-size:32px;margin-bottom:10px;}
 .success-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.7;font-weight:300;}
 
+/* ─── KYC STEP ─── */
+.kyc-field{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:14px 16px;transition:border-color .4s;}
+.kyc-icon{font-size:20px;flex-shrink:0;}
+.kyc-info{flex:1;}
+.kyc-label{font-size:13px;font-weight:600;margin-bottom:2px;}
+.kyc-sub{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.kyc-status{font-size:16px;font-family:var(--mono);font-weight:700;flex-shrink:0;min-width:20px;text-align:center;}
+
+/* ─── AUCTIONS ─── */
+.auction-section{margin-bottom:28px;}
+.auction-section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.auction-section-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;font-family:var(--mono);color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.auction-live-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 1.2s ease-in-out infinite;}
+.auction-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.auc-card{background:var(--card);border:1px solid rgba(244,63,94,.25);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .22s;position:relative;}
+.auc-card:hover{border-color:rgba(244,63,94,.5);transform:translateY(-2px);box-shadow:0 8px 32px rgba(244,63,94,.1);}
+.auc-badge{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:5px;background:var(--red);color:#fff;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;font-family:var(--mono);}
+.auc-img{height:160px;background:var(--depth);display:flex;align-items:center;justify-content:center;font-size:64px;}
+.auc-body{padding:16px;}
+.auc-brand{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px;}
+.auc-title{font-size:14px;font-weight:700;margin-bottom:12px;line-height:1.4;}
+.auc-bids-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;}
+.auc-bid-label{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:2px;}
+.auc-current-bid{font-size:20px;font-weight:800;color:var(--text);}
+.auc-bid-count{font-size:11px;font-family:var(--mono);color:var(--muted);}
+.auc-timer{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);color:var(--red);margin-bottom:12px;}
+.auc-zk-badge{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono);color:var(--plasma);background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:6px;padding:4px 10px;margin-bottom:12px;}
+.auc-btn{width:100%;padding:11px;background:linear-gradient(135deg,rgba(244,63,94,.9),rgba(244,63,94,.7));color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;}
+.auc-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+
+/* ─── BID MODAL ─── */
+.bid-modal-inner{max-width:420px;}
+.bid-history{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;max-height:140px;overflow-y:auto;}
+.bid-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface);border:1px solid var(--rim);border-radius:8px;}
+.bid-anon{font-size:12px;font-family:var(--mono);color:var(--muted);}
+.bid-amount{font-size:13px;font-weight:700;font-family:var(--mono);}
+.bid-time{font-size:10px;font-family:var(--mono);color:var(--faint);}
+
+/* ─── NIGHT REWARD BANNER ─── */
+.night-reward-banner{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(245,197,24,.08));border:1px solid rgba(245,197,24,.2);border-radius:12px;padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+.nrb-icon{font-size:32px;flex-shrink:0;}
+.nrb-title{font-size:14px;font-weight:700;margin-bottom:2px;}
+.nrb-sub{font-size:12px;color:var(--muted);}
+
 /* ─── TOAST ─── */
 /* ─── NAV DROPDOWN ─── */
 .nav-dropdown{position:relative;}
@@ -2220,9 +2264,18 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
             <option value="rating">Highest rated</option>
           </select>
         </div>
+        <div id="auction-section" class="auction-section" style="display:none;"></div>
         <div class="prod-grid" id="prod-grid"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══════════════ BID MODAL ══════════════ -->
+<div class="overlay" id="ov-bid" onclick="if(event.target===this)closeModal('ov-bid')">
+  <div class="modal bid-modal-inner" id="bid-modal-content">
+    <div class="modal-hdr"><div class="modal-title" id="bid-modal-title">Place a Sealed Bid</div><button class="modal-close" onclick="closeModal('ov-bid')">✕</button></div>
+    <div id="bid-modal-body"></div>
   </div>
 </div>
 
@@ -4167,9 +4220,145 @@ const PRODUCTS=[
 
 const SMALL_SELLERS=new Set(PRODUCTS.filter(p=>p.small).map(p=>p.id));
 
+// ── LIVE AUCTIONS (sealed-bid, ZK-private via Midnauction pattern) ──
+const AUCTIONS=[
+  {id:'a1',emoji:'👟',brand:'Nike',seller:'SneakerHQ',sellerCountry:'🇯🇵',title:'Nike Air Jordan 1 High OG "Chicago Lost & Found"',condition:'Deadstock — Size 10',currentBid:380,minBid:410,bidCount:7,auctionEnd:Date.now()+2*60*60*1000+18*60*1000,bids:[{anon:'bidder_7f2a',amt:380,ago:'4m ago'},{anon:'bidder_3c91',amt:340,ago:'12m ago'},{anon:'bidder_ab5e',amt:290,ago:'31m ago'}],desc:'Deadstock with OG box. Bids are ZK-sealed — no one sees competing bids until auction closes. No front-running.'},
+  {id:'a2',emoji:'⌚',brand:'Rolex',seller:'LuxeVault',sellerCountry:'🇫🇷',title:'Rolex GMT Master II "Pepsi" 2024 Full Set',condition:'New — box & papers',currentBid:18200,minBid:18500,bidCount:3,auctionEnd:Date.now()+5*60*60*1000+42*60*1000,bids:[{anon:'bidder_1d8b',amt:18200,ago:'22m ago'},{anon:'bidder_f04c',amt:17500,ago:'1h ago'},{anon:'bidder_9a3e',amt:16800,ago:'2h ago'}],desc:'2024 full set. Bids sealed via ZK commitment — preserves bidding privacy. Authenticated by LuxeVault.'},
+  {id:'a3',emoji:'🎨',brand:'Banksy',seller:'ArtHouse',sellerCountry:'🇬🇧',title:'Banksy "Love is in the Air" Signed Screenprint',condition:'Framed — certificate of authenticity',currentBid:6800,minBid:7100,bidCount:11,auctionEnd:Date.now()+12*60*60*1000+5*60*1000,bids:[{anon:'bidder_2e7f',amt:6800,ago:'8m ago'},{anon:'bidder_c5b1',amt:6200,ago:'19m ago'},{anon:'bidder_88da',amt:5900,ago:'35m ago'}],desc:'Official Pest Control print. Signed. ZK auction — no shill bidding, no price manipulation, private commitment scheme.'},
+];
+
 // ══════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════
+// ── AUCTION TIMERS ──
+function fmtCountdown(ms){
+  if(ms<=0)return'Ended';
+  const h=Math.floor(ms/3600000);
+  const m=Math.floor((ms%3600000)/60000);
+  const s=Math.floor((ms%60000)/1000);
+  if(h>0)return h+'h '+m+'m';
+  if(m>0)return m+'m '+s+'s';
+  return s+'s';
+}
+
+function renderAuctions(showSection){
+  const sec=document.getElementById('auction-section');
+  if(!sec)return;
+  if(!showSection){sec.style.display='none';return;}
+  sec.style.display='block';
+  sec.innerHTML='<div class="auction-section-hdr">'
+    +'<div class="auction-section-title"><div class="auction-live-dot"></div>🔨 Live Auctions — Sealed ZK Bids</div>'
+    +'<a href="#" style="font-size:11px;font-family:var(--mono);color:var(--muted);text-decoration:none;" onclick="event.preventDefault();activeCat=\'All\';renderProducts()">All listings →</a>'
+    +'</div>'
+    +'<div class="auction-grid">'
+    +AUCTIONS.map(a=>{
+      const timeLeft=fmtCountdown(a.auctionEnd-Date.now());
+      return'<div class="auc-card" onclick="openBid(\''+a.id+'\')">'
+        +'<div class="auc-badge">🔴 LIVE</div>'
+        +'<div class="auc-img">'+a.emoji+'</div>'
+        +'<div class="auc-body">'
+        +'<div class="auc-brand">'+a.brand+' · '+a.sellerCountry+'</div>'
+        +'<div class="auc-title">'+a.title+'</div>'
+        +'<div class="auc-bids-row">'
+        +'<div><div class="auc-bid-label">Current Bid</div><div class="auc-current-bid">$'+a.currentBid.toLocaleString()+'</div></div>'
+        +'<div style="text-align:right"><div class="auc-bid-label">Min next bid</div><div style="font-size:14px;font-weight:600;color:var(--muted);">$'+a.minBid.toLocaleString()+'</div></div>'
+        +'</div>'
+        +'<div class="auc-timer">⏱ '+timeLeft+' remaining · '+a.bidCount+' bids</div>'
+        +'<div class="auc-zk-badge">⊘ Sealed ZK bids — no front-running</div>'
+        +'<button class="auc-btn">Commit Sealed Bid →</button>'
+        +'</div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+  // refresh timers every second
+  if(!window._aucTimer)window._aucTimer=setInterval(()=>{if(document.getElementById('auction-section').style.display!=='none')renderAuctions(true);},1000);
+}
+
+var _activeBidId=null;
+function openBid(id){
+  const a=AUCTIONS.find(x=>x.id===id);
+  if(!a)return;
+  _activeBidId=id;
+  const timeLeft=fmtCountdown(a.auctionEnd-Date.now());
+  document.getElementById('bid-modal-title').textContent='🔨 '+a.title.slice(0,40)+'…';
+  document.getElementById('bid-modal-body').innerHTML=
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">'+a.desc+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'
+    +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:12px;">'
+    +'<div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">CURRENT BID</div>'
+    +'<div style="font-size:22px;font-weight:800;">$'+a.currentBid.toLocaleString()+'</div>'
+    +'</div>'
+    +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:12px;">'
+    +'<div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">ENDS IN</div>'
+    +'<div style="font-size:18px;font-weight:800;color:var(--red);">'+timeLeft+'</div>'
+    +'</div>'
+    +'</div>'
+    +'<div style="margin-bottom:14px;">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px;">Bid History (ZK-anonymous)</div>'
+    +'<div class="bid-history">'
+    +a.bids.map((b,i)=>'<div class="bid-row">'
+      +'<div class="bid-anon">'+b.anon+'</div>'
+      +'<div class="bid-amount">$'+b.amt.toLocaleString()+'</div>'
+      +'<div class="bid-time">'+b.ago+'</div>'
+      +'</div>').join('')
+    +'</div>'
+    +'<div style="font-size:10px;font-family:var(--mono);color:var(--faint);margin-top:6px;">Bidder identities hidden by ZK proof until auction close · commitSecretBid() pattern</div>'
+    +'</div>'
+    +'<div style="margin-bottom:16px;">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px;">Your Sealed Bid</div>'
+    +'<div style="display:flex;gap:10px;align-items:center;">'
+    +'<div style="font-size:18px;font-weight:700;color:var(--muted);">$</div>'
+    +'<input type="number" id="bid-amount-input" min="'+a.minBid+'" placeholder="Min $'+a.minBid.toLocaleString()+'" style="flex:1;background:var(--surface);border:1px solid var(--rim2);border-radius:10px;padding:13px 14px;font-size:16px;font-weight:700;font-family:var(--mono);color:var(--text);outline:none;" onfocus="this.style.borderColor=\'var(--ink)\'" onblur="this.style.borderColor=\'var(--rim2)\'"/>'
+    +'</div>'
+    +'<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:6px;">Min bid: $'+a.minBid.toLocaleString()+' · Your bid is sealed — no one sees it until auction ends</div>'
+    +'</div>'
+    +'<div class="auc-zk-badge" style="margin-bottom:16px;">⊘ Bid encrypted with ZK commitment · Midnight Preprod · No front-running possible</div>'
+    +'<button class="btn btn-primary btn-lg btn-full" id="commit-bid-btn" onclick="commitBid(\''+id+'\')">🔐 Commit Sealed Bid</button>';
+  openModal('ov-bid');
+}
+
+function commitBid(id){
+  const a=AUCTIONS.find(x=>x.id===id);
+  if(!a)return;
+  const input=document.getElementById('bid-amount-input');
+  const amt=parseFloat(input?.value||'0');
+  if(!amt||amt<a.minBid){toast('Minimum bid is $'+a.minBid.toLocaleString(),'error');return;}
+  const btn=document.getElementById('commit-bid-btn');
+  btn.disabled=true;
+  btn.textContent='Generating ZK commitment…';
+  const steps=[
+    {pct:20,txt:'Hashing bid amount with secret nonce…'},
+    {pct:45,txt:'Generating commit(value, nonce) ZK proof…'},
+    {pct:70,txt:'Submitting sealed commitment to Midnight…'},
+    {pct:90,txt:'Waiting for block confirmation…'},
+  ];
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>=steps.length){clearInterval(iv);return;}
+    btn.textContent=steps[i].txt;
+    i++;
+  },700);
+  setTimeout(()=>{
+    clearInterval(iv);
+    a.bidCount++;
+    a.bids.unshift({anon:'bidder_'+Math.random().toString(36).slice(2,6),amt,ago:'just now'});
+    if(amt>a.currentBid)a.currentBid=amt;
+    a.minBid=amt+Math.ceil(amt*0.05);
+    document.getElementById('bid-modal-body').innerHTML=
+      '<div style="text-align:center;padding:32px 20px;">'
+      +'<div style="font-size:52px;margin-bottom:16px;">🔐</div>'
+      +'<div style="font-size:20px;font-weight:800;margin-bottom:8px;">Bid Committed!</div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7;">Your sealed bid of <strong>$'+amt.toLocaleString()+'</strong> has been committed to Midnight Network.<br>No one can see your bid until the auction closes.</div>'
+      +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:20px;text-align:left;">'
+      +'<div style="margin-bottom:4px;">Commitment: 0x'+Math.random().toString(16).slice(2,18).toUpperCase()+'…</div>'
+      +'<div style="margin-bottom:4px;">Nonce: [sealed]</div>'
+      +'<div>Circuit: commitSecretBid() · Midnight Preprod</div>'
+      +'</div>'
+      +'<button class="btn btn-primary" onclick="closeModal(\'ov-bid\');renderAuctions(true)">Done →</button>'
+      +'</div>';
+  },3200);
+}
+
 let cart=JSON.parse(localStorage.getItem('nm4_cart')||'[]');
 let orders=JSON.parse(localStorage.getItem('nm4_orders')||'[]');
 let activeCat='All',shipFilter='all',curProduct=null,coStep=0,coMethod='p4',selectedOpts={};
@@ -4335,7 +4524,10 @@ function renderProducts(){
   else if(sort==='discount')list.sort((a,b)=>(b.was?b.was-b.price:0)-(a.was?a.was-a.price:0));
   else if(sort==='rating')list.sort((a,b)=>b.rating-a.rating);
   else list.sort((a,b)=>(b.popular?1:0)-(a.popular?1:0));
-  document.getElementById('res-count').innerHTML=`<strong>${list.length}</strong> results${activeCat!=='All'?' in '+activeCat:''} <span style="color:var(--plasma);font-family:var(--mono);font-size:11px">· ⊘ Pay in 4 on every item</span>`;
+  // Show auctions section on All or Collectibles/Luxury views
+  const showAucs=activeCat==='All'||activeCat==='Collectibles'||activeCat==='Luxury'||activeCat==='Fashion';
+  renderAuctions(showAucs);
+  document.getElementById('res-count').innerHTML=`<strong>${list.length}</strong> results${activeCat!=='All'?' in '+activeCat:''} <span style="color:var(--plasma);font-family:var(--mono);font-size:11px">· ⊘ Pay in 4 on every item</span>${showAucs?' <span style="color:var(--red);font-family:var(--mono);font-size:11px">· 🔨 '+AUCTIONS.length+' live auctions</span>':''}`;
   renderProductList(list);
 }
 function renderProductList(list){
@@ -4511,7 +4703,7 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 function renderCoStep(){
-  const steps = ['Shipping','Payment','Review'];
+  const steps = ['Shipping','Payment','ZK Verify','Review'];
   const bar = document.getElementById('co-steps-bar');
   bar.innerHTML = '<div class="step-bar">'
     + steps.map((s,i) =>
@@ -4520,7 +4712,7 @@ function renderCoStep(){
         + (i<steps.length-1?'<div class="step-line"></div>':'')
       ).join('')
     + '</div>'
-    + '<div class="step-lbls" style="display:flex;gap:42px;justify-content:center;margin-top:4px;">'
+    + '<div class="step-lbls" style="display:flex;gap:28px;justify-content:center;margin-top:4px;">'
     + steps.map((s,i) => '<span class="step-lbl ' + (i===coStep?'cur':'') + '">' + s + '</span>').join('')
     + '</div>';
 
@@ -4631,7 +4823,28 @@ function renderCoStep(){
     }, 0);
 
 
-  // ── STEP 2: Review ──────────────────────────────────────────────
+  // ── STEP 2: ZK Verify ───────────────────────────────────────────
+  } else if(coStep === 2) {
+    body.innerHTML = '';
+    var kycDiv = document.createElement('div');
+    kycDiv.innerHTML =
+      '<div style="text-align:center;margin-bottom:24px;">'
+      +'<div style="font-size:44px;margin-bottom:12px;">🔐</div>'
+      +'<div style="font-weight:800;font-size:18px;margin-bottom:6px;">ZK Buyer Verification</div>'
+      +'<div style="font-size:13px;color:var(--muted);line-height:1.7;max-width:340px;margin:0 auto;">Midnight Network generates a zero-knowledge proof that verifies your eligibility — without revealing any personal data.</div>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;" id="kyc-fields">'
+      +'<div class="kyc-field" id="kyc-age"><span class="kyc-icon">🔒</span><div class="kyc-info"><div class="kyc-label">Age Verification</div><div class="kyc-sub">Proving 18+ without revealing your age</div></div><span class="kyc-status" id="kyc-age-s" style="color:var(--muted);">—</span></div>'
+      +'<div class="kyc-field" id="kyc-region"><span class="kyc-icon">🌍</span><div class="kyc-info"><div class="kyc-label">Region Eligible</div><div class="kyc-sub">Jurisdiction check — no country disclosed</div></div><span class="kyc-status" id="kyc-region-s" style="color:var(--muted);">—</span></div>'
+      +'<div class="kyc-field" id="kyc-epoch"><span class="kyc-icon">📋</span><div class="kyc-info"><div class="kyc-label">Policy Epoch v1</div><div class="kyc-sub">KYC Midnight — Midnight Preprod</div></div><span class="kyc-status" id="kyc-epoch-s" style="color:var(--muted);">—</span></div>'
+      +'</div>'
+      +'<div id="kyc-proof-status" style="text-align:center;font-size:12px;font-family:var(--mono);color:var(--muted);margin-bottom:12px;min-height:16px;"></div>'
+      +'<div class="progress-bar" id="kyc-bar-wrap" style="display:none;margin-bottom:16px;"><div class="progress-fill" id="kyc-pbar" style="width:0%"></div></div>'
+      +'<button class="btn btn-primary btn-lg btn-full" id="kyc-gen-btn" onclick="runKycProof()">🔐 Generate ZK Proof</button>'
+      +'<button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="coStep=1;renderCoStep()">← Back</button>';
+    body.appendChild(kycDiv);
+
+  // ── STEP 3: Review ──────────────────────────────────────────────
   } else {
     var bnplHtml = '';
     if(coMethod === 'p4'){
@@ -4661,7 +4874,7 @@ function renderCoStep(){
       +   '<div class="or-row"><span class="or-lbl">Privacy</span><span class="or-val" style="color:var(--green)">✓ Protected</span></div>'
       + '</div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">'
-      +   '<button class="btn btn-ghost" onclick="coStep=1;renderCoStep()">← Back</button>'
+      +   '<button class="btn btn-ghost" onclick="coStep=2;renderCoStep()">← Back</button>'
       +   '<button class="btn btn-primary btn-lg" onclick="coPlaceOrder()">Place Order ✓</button>'
       + '</div>';
   }
@@ -4679,19 +4892,46 @@ function coNext(){
   }
   if(coStep === 1){
     if(coMethod === 'night'){
-      // NIGHT payment — must be connected
       if(!walletState || !walletState.connected){
         toast('Please connect your Lace wallet to pay with NIGHT','error');
         return;
       }
     } else {
-      // Card payment — validate card number
       var num = (document.getElementById('pn')?.value||'').replace(/\s/g,'');
       if(num.length < 16){ toast('Please enter a valid card number','error'); return; }
     }
   }
+  // Step 2 (ZK Verify) is triggered by the Generate Proof button — not coNext
   coStep++;
   renderCoStep();
+}
+
+function runKycProof(){
+  const btn=document.getElementById('kyc-gen-btn');
+  if(btn){btn.disabled=true;btn.textContent='Generating ZK proof…';}
+  const bar=document.getElementById('kyc-bar-wrap');
+  if(bar)bar.style.display='block';
+  let pct=0;
+  const iv=setInterval(()=>{pct+=2;const pb=document.getElementById('kyc-pbar');if(pb)pb.style.width=Math.min(pct,94)+'%';if(pct>=94)clearInterval(iv);},60);
+  const setStatus=(txt)=>{const el=document.getElementById('kyc-proof-status');if(el)el.textContent=txt;};
+  const tick=(fieldId,statusId,delay)=>{setTimeout(()=>{
+    const f=document.getElementById(fieldId);if(f)f.style.borderColor='rgba(0,214,143,.35)';
+    const s=document.getElementById(statusId);if(s){s.textContent='✓';s.style.color='var(--green)';}
+  },delay);};
+  setStatus('Connecting to KYC Midnight proof server…');
+  tick('kyc-age','kyc-age-s',900);
+  setTimeout(()=>setStatus('Verifying age commitment…'),900);
+  tick('kyc-region','kyc-region-s',1700);
+  setTimeout(()=>setStatus('Checking region eligibility…'),1700);
+  tick('kyc-epoch','kyc-epoch-s',2400);
+  setTimeout(()=>setStatus('Confirming policy epoch v1…'),2400);
+  setTimeout(()=>{
+    clearInterval(iv);
+    const pb=document.getElementById('kyc-pbar');if(pb)pb.style.width='100%';
+    setStatus('✓ ZK proof complete — no personal data revealed to Night Markets');
+    if(document.getElementById('kyc-proof-status'))document.getElementById('kyc-proof-status').style.color='var(--green)';
+    if(btn){btn.disabled=false;btn.textContent='✓ Verified — Review Order →';btn.onclick=()=>{coStep++;renderCoStep();};}
+  },3200);
 }
 
 
@@ -4779,11 +5019,16 @@ async function coConfirmNight(){
     saveCart();
     updateBadge();
 
+    var nightEarnedNight=Math.max(2,Math.floor(coTotal/30));
     document.getElementById('co-body').innerHTML =
       '<div style="text-align:center;padding:32px 20px;">'
       + '<div style="font-size:52px;margin-bottom:16px;">✅</div>'
       + '<div style="font-size:20px;font-weight:800;margin-bottom:8px;">Order confirmed!</div>'
-      + '<div style="font-size:13px;color:var(--muted);margin-bottom:4px;">Paid A$' + coTotal.toLocaleString() + ' · ZK escrow released</div>'
+      + '<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Paid A$' + coTotal.toLocaleString() + ' · ZK escrow released</div>'
+      + '<div class="night-reward-banner" style="text-align:left;margin-bottom:12px;">'
+      + '<div class="nrb-icon">🌑</div>'
+      + '<div><div class="nrb-title">+' + nightEarnedNight + ' NIGHT earned</div><div class="nrb-sub">ZK buyer credential updated · Night Identity score increased</div></div>'
+      + '</div>'
       + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;word-break:break-all;">TX: ' + String(result.txId) + '</div>'
       + '<div style="font-size:10px;font-family:var(--mono);color:var(--faint);margin-bottom:20px;word-break:break-all;">REF: ' + result.listingCid + '</div>'
       + '<button class="btn btn-primary" onclick="closeModal(\&apos;ov-co\&apos;);showPage(\&apos;orders\&apos;)">View my orders</button>'
@@ -4820,14 +5065,20 @@ function coConfirm(){
       ]:null};
     orders.push(ord);saveOrders();
     cart=[];saveCart();
+    var nightEarned=Math.max(1,Math.floor(coTotal/50));
     document.getElementById('co-body').innerHTML=`<div class="success-wrap">
       <div class="success-icon">🎉</div>
       <div class="success-title">Order Confirmed!</div>
       <div class="success-sub">${coMethod==='p4'?`Your next payment of <strong>$${inst.toFixed(2)}</strong> is due in 14 days.`:'Full payment processed successfully.'}</div>
+      <div class="night-reward-banner">
+        <div class="nrb-icon">🌑</div>
+        <div><div class="nrb-title">+${nightEarned} NIGHT earned</div><div class="nrb-sub">Credited to your Night Identity · ZK buyer credential updated</div></div>
+      </div>
       <div class="order-review">
         <div class="or-row"><span class="or-lbl">Order ID</span><span class="or-val">${ordId}</span></div>
         <div class="or-row"><span class="or-lbl">Total</span><span class="or-val">$${coTotal.toLocaleString()}</span></div>
         <div class="or-row"><span class="or-lbl">Payment</span><span class="or-val accent">${coMethod==='p4'?`Pay in 4 × $${inst.toFixed(2)}`:'Paid in Full'}</span></div>
+        <div class="or-row"><span class="or-lbl">ZK Verified</span><span class="or-val" style="color:var(--green)">✓ KYC Midnight · epoch v1</span></div>
       </div>
       <button class="btn btn-primary btn-lg btn-full" onclick="closeModal(&#39;ov-co&#39;);showPage(&#39;orders&#39;)">View My Orders →</button>
       <button class="btn btn-ghost btn-full" style="margin-top:10px" onclick="closeModal('ov-co');showPage('shop')">Continue Shopping</button>

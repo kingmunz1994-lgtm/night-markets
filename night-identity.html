@@ -268,6 +268,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
             <div class="cf-value green" id="cf-contracts">0</div>
           </div>
           <div class="cred-field">
+            <div class="cf-label">NIGHT Earned</div>
+            <div class="cf-value gold" id="cf-night">0 NIGHT</div>
+          </div>
+          <div class="cred-field">
             <div class="cf-label">Verified Since</div>
             <div class="cf-value" id="cf-date">—</div>
           </div>
@@ -279,6 +283,15 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
             <div class="cf-label">Privacy</div>
             <div class="cf-value green">ZK Proof</div>
           </div>
+          <div class="cred-field">
+            <div class="cf-label">Epoch</div>
+            <div class="cf-value" style="color:var(--cyan)">v1 · KYC Midnight</div>
+          </div>
+        </div>
+        <!-- DID -->
+        <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:10px;padding:12px;margin-bottom:4px;">
+          <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:6px;">Decentralised Identifier</div>
+          <div id="cf-did" style="font-size:11px;font-family:var(--mono);color:var(--glow);word-break:break-all;">—</div>
         </div>
 
         <!-- Score bar -->
@@ -591,6 +604,13 @@ function showScore(addr, score, actions, date) {
   // Short address
   const shortAddr = addr.slice(0, 20) + '...' + addr.slice(-8);
 
+  // DID — deterministic from address
+  const didSuffix = addr.replace(/^mn_addr_preprod1/, '').slice(0, 20);
+  const did = 'did:midnight:preprod:' + didSuffix;
+
+  // NIGHT token rewards (1 NIGHT per 10 pts)
+  const nightReward = Math.floor(score / 10);
+
   // Level
   const level = getLevel(score);
   const nextLevel = LEVELS.find(l => l.min > score) || LEVELS[LEVELS.length-1];
@@ -600,7 +620,9 @@ function showScore(addr, score, actions, date) {
   document.getElementById('cf-score').textContent = score + ' pts';
   document.getElementById('cf-level').textContent = level.name;
   document.getElementById('cf-contracts').textContent = actions.filter(a => a.name.includes('Contract') || a.name.includes('Night Markets')).length;
+  document.getElementById('cf-night').textContent = nightReward + ' NIGHT';
   document.getElementById('cf-date').textContent = date.toLocaleDateString('en-AU');
+  document.getElementById('cf-did').textContent = did;
   document.getElementById('cred-sub').textContent = shortAddr + ' · Midnight Preprod';
 
   // Score bar
@@ -628,7 +650,7 @@ function showScore(addr, score, actions, date) {
   `).join('');
 
   // Share text
-  const shareText = `🪪 Night Builder Credential\n\nAddress: ${shortAddr}\nScore: ${score} pts\nLevel: ${level.name}\nNetwork: Midnight Preprod\nVerified: ${date.toLocaleDateString('en-AU')}\n\nVerify: kingmunz1994-lgtm.github.io/night-markets/night-identity.html\nBuilt on Midnight Network 🌙`;
+  const shareText = `🪪 Night Builder Credential\n\nDID: ${did}\nScore: ${score} pts\nLevel: ${level.name}\nNIGHT Earned: ${nightReward} NIGHT\nNetwork: Midnight Preprod\nVerified: ${date.toLocaleDateString('en-AU')}\nEpoch: v1 · KYC Midnight\n\nVerify: kingmunz1994-lgtm.github.io/night-markets/night-identity.html\nBuilt on Midnight Network 🌙`;
   document.getElementById('share-text').textContent = shareText;
 
   // Show score section
