@@ -298,6 +298,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
       <div class="share-card">
         <div class="share-title">Actions Verified On-Chain</div>
         <div class="actions-list" id="actions-list"></div>
+        <a id="explorer-link" href="https://explorer.preprod.midnight.network/contracts/7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:11px;font-family:var(--mono);color:var(--muted);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--glow)'" onmouseout="this.style.color='var(--muted)'">
+          ⛓️ View Night Markets contract on Midnight Explorer →
+        </a>
       </div>
 
       <!-- Share -->
@@ -333,10 +336,26 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
       <div class="info-body">Share your credential on Discord, X, grant applications, or investor decks.</div>
     </div>
   </div>
+
+  <!-- Live activity feed -->
+  <div style="margin-top:32px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;">Live Contract Activity</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div id="feed-dot" style="width:6px;height:6px;border-radius:50%;background:var(--muted);"></div>
+        <div id="feed-status" style="font-size:10px;font-family:var(--mono);color:var(--muted);">connecting...</div>
+      </div>
+    </div>
+    <div id="activity-feed" style="display:flex;flex-direction:column;gap:6px;min-height:60px;">
+      <div style="font-size:12px;font-family:var(--mono);color:var(--muted);padding:16px;background:var(--surface);border:1px solid var(--rim);border-radius:10px;text-align:center;">Loading on-chain events...</div>
+    </div>
+    <a href="https://explorer.preprod.midnight.network/contracts/7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711" target="_blank" style="display:block;text-align:center;margin-top:10px;font-size:10px;font-family:var(--mono);color:var(--muted);text-decoration:none;" onmouseover="this.style.color='var(--glow)'" onmouseout="this.style.color='var(--muted)'">View all activity on Midnight Explorer →</a>
+  </div>
 </div>
 
 <script>
 const INDEXER = 'https://indexer.preprod.midnight.network/api/v3/graphql';
+const INDEXER_WS = 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws';
 const NIGHT_CONTRACT = '7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711';
 
 // Score config
@@ -732,6 +751,95 @@ async function connectWallet() {
   }
 }
 
+// ─── Live Activity Feed ────────────────────────────────────────────────────────
+
+const ACTION_LABELS = {
+  ContractDeploy:    { icon: '🚀', label: 'Contract Deployed',   color: 'var(--glow)' },
+  ContractCall:      { icon: '⚡', label: 'Circuit Call',        color: 'var(--cyan)' },
+  ContractUpdate:    { icon: '🔄', label: 'Contract Updated',    color: 'var(--plasma)' },
+};
+
+let feedEvents = [];
+
+function timeAgo(isoString) {
+  const secs = Math.floor((Date.now() - new Date(isoString)) / 1000);
+  if (secs < 60)  return secs + 's ago';
+  if (secs < 3600) return Math.floor(secs / 60) + 'm ago';
+  if (secs < 86400) return Math.floor(secs / 3600) + 'h ago';
+  return Math.floor(secs / 86400) + 'd ago';
+}
+
+function renderFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (feedEvents.length === 0) {
+    feed.innerHTML = '<div style="font-size:12px;font-family:var(--mono);color:var(--muted);padding:16px;background:var(--surface);border:1px solid var(--rim);border-radius:10px;text-align:center;">No recent events — contract is live and waiting 🌙</div>';
+    return;
+  }
+  feed.innerHTML = feedEvents.slice(0, 8).map(ev => {
+    const meta = ACTION_LABELS[ev.type] || { icon: '📋', label: ev.type, color: 'var(--text2)' };
+    const blockNum = ev.block ? '#' + ev.block : '';
+    const time = ev.timestamp ? timeAgo(ev.timestamp) : '';
+    return `<div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:11px 14px;">
+      <div style="font-size:18px;flex-shrink:0;">${meta.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:600;color:${meta.color};">${meta.label}</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-top:2px;">Night Markets Escrow ${blockNum ? '· Block ' + blockNum : ''}</div>
+      </div>
+      <div style="font-size:10px;font-family:var(--mono);color:var(--muted);flex-shrink:0;">${time}</div>
+    </div>`;
+  }).join('');
+}
+
+async function fetchFeedEvents() {
+  const dot    = document.getElementById('feed-dot');
+  const status = document.getElementById('feed-status');
+  try {
+    const query = `
+      query GetContractActivity($addr: HexEncoded!) {
+        contractActions(contractAddress: $addr, first: 12) {
+          nodes {
+            __typename
+            ... on ContractDeploy {
+              transaction { hash block { height timestamp } }
+            }
+            ... on ContractCall {
+              transaction { hash block { height timestamp } }
+            }
+            ... on ContractUpdate {
+              transaction { hash block { height timestamp } }
+            }
+          }
+        }
+      }
+    `;
+    const res  = await fetch(INDEXER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables: { addr: NIGHT_CONTRACT } }),
+    });
+    const data = await res.json();
+    const nodes = data?.data?.contractActions?.nodes ?? [];
+
+    feedEvents = nodes.map(n => ({
+      type:      n.__typename,
+      block:     n.transaction?.block?.height,
+      timestamp: n.transaction?.block?.timestamp,
+      hash:      n.transaction?.hash,
+    }));
+
+    dot.style.background    = 'var(--green)';
+    dot.style.animation     = 'pulse 2s ease-in-out infinite';
+    status.textContent      = 'live · ' + feedEvents.length + ' events';
+    status.style.color      = 'var(--green)';
+    renderFeed();
+  } catch(err) {
+    dot.style.background = 'var(--red)';
+    dot.style.animation  = '';
+    status.textContent   = 'indexer offline';
+    status.style.color   = 'var(--muted)';
+  }
+}
+
 // Enter key support
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addr-input').addEventListener('keydown', e => {
@@ -740,6 +848,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check for wallet on load and after a short delay (extension may inject after DOM ready)
   updateConnectBtn();
   setTimeout(updateConnectBtn, 1500);
+  // Start live feed
+  fetchFeedEvents();
+  setInterval(fetchFeedEvents, 30_000);
 });
 </script>
 </body>
