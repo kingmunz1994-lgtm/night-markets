@@ -221,10 +221,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
 
       <!-- Wallet connect -->
       <div class="input-label">Connect Wallet</div>
-      <div class="wallet-status" id="wallet-status">Lace wallet not detected — install from <a href="https://midnight.network/lace" target="_blank" style="color:var(--glow)">midnight.network/lace</a> or enter address manually</div>
-      <div class="wallet-connect-row">
-        <button class="btn-wallet" id="connect-btn" onclick="connectWallet()">
-          <span id="connect-btn-text">⊘ Connect Lace Wallet</span>
+      <div class="wallet-status" id="wallet-status">Scanning for wallets…</div>
+      <div class="wallet-connect-row" id="wallet-btn-row">
+        <button class="btn-wallet" id="connect-btn" onclick="connectWallet()" disabled>
+          <span id="connect-btn-text">⊘ Detecting wallets…</span>
         </button>
       </div>
 
@@ -347,6 +347,41 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
       <div class="info-icon">🌍</div>
       <div class="info-title">Works Anywhere</div>
       <div class="info-body">Share your credential on Discord, X, grant applications, or investor decks.</div>
+    </div>
+  </div>
+
+  <!-- Credential Issuance — Brick Towers identity-api pattern -->
+  <div style="margin-top:32px;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(34,211,238,.04));border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:28px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--purple),var(--cyan),transparent);"></div>
+    <div style="display:flex;align-items:flex-start;gap:16px;">
+      <div style="font-size:36px;flex-shrink:0;">🏛️</div>
+      <div style="flex:1;">
+        <div style="font-size:16px;font-weight:800;margin-bottom:6px;">Credential Issuance API</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Night Identity uses the <strong style="color:var(--glow);">Brick Towers identity-api</strong> pattern — an HTTP credential issuance server that signs and anchors your ZK credentials on Midnight. Your DID, builder score, and verified actions become portable across the entire ecosystem.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:10px;padding:12px;">
+            <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px;">Issuer</div>
+            <div style="font-size:12px;font-weight:600;font-family:var(--mono);color:var(--glow);">Night Markets Protocol</div>
+          </div>
+          <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:10px;padding:12px;">
+            <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px;">Standard</div>
+            <div style="font-size:12px;font-weight:600;font-family:var(--mono);color:var(--cyan);">W3C DID · Midnight ZK</div>
+          </div>
+          <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:10px;padding:12px;">
+            <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px;">Signing Key</div>
+            <div style="font-size:12px;font-weight:600;font-family:var(--mono);color:var(--text2);">EC P-256 · ZK verified</div>
+          </div>
+          <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:10px;padding:12px;">
+            <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px;">Privacy</div>
+            <div style="font-size:12px;font-weight:600;font-family:var(--mono);color:var(--green);">Zero personal data</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:8px;padding:6px 12px;font-size:11px;font-family:var(--mono);color:var(--green);">✓ Age proof (Brick Towers)</div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:6px 12px;font-size:11px;font-family:var(--mono);color:var(--glow);">✓ Midnames DID anchoring</div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.2);border-radius:8px;padding:6px 12px;font-size:11px;font-family:var(--mono);color:var(--cyan);">✓ KYC Midnight epoch v1</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -693,83 +728,130 @@ function resetForm() {
   hideStatus();
 }
 
-// ─── Wallet Connect ────────────────────────────────────────────────────────────
+// ─── Multi-Wallet Connect — DApp Connector v4 ──────────────────────────────────
+// Supports: Lace (mnLace legacy), 1AM (midnight#ready UUID), GSD (io.shielded.gsd),
+//           Nocturne, and any future wallet that implements the spec.
 
 let connectedWalletApi = null;
+let _niDetectedWallets = {}; // key → InitialAPI
 
-function detectWallet() {
-  // Check for any Midnight wallet injected into window.midnight
-  if (typeof window.midnight === 'undefined') return null;
-  // Prefer Lace, then any other injected wallet
-  const walletId = window.midnight.mnLace ? 'mnLace'
-    : Object.keys(window.midnight).find(k => window.midnight[k]?.connect);
-  return walletId ? window.midnight[walletId] : null;
+function niDetectAllWallets() {
+  const found = [];
+  if (!window.midnight) return found;
+  // Legacy: Lace uses static key
+  if (window.midnight.mnLace && typeof window.midnight.mnLace.connect === 'function') {
+    _niDetectedWallets['mnLace'] = window.midnight.mnLace;
+    found.push({ key: 'mnLace', name: window.midnight.mnLace.name || 'Lace', rdns: 'network.midnight.mnLace' });
+  }
+  // UUID-based wallets (GSD, 1AM, Nocturne etc.)
+  Object.keys(window.midnight).forEach(k => {
+    if (k === 'mnLace') return;
+    const w = window.midnight[k];
+    if (w && typeof w.connect === 'function') {
+      _niDetectedWallets[k] = w;
+      found.push({ key: k, name: w.name || 'Midnight Wallet', rdns: w.rdns || k });
+    }
+  });
+  return found;
 }
 
+// Listen for wallets injected after load (1AM, GSD fire midnight#ready)
+window.addEventListener('midnight#ready', (event) => {
+  const uuid = event?.detail?.uuid;
+  if (!uuid || !window.midnight?.[uuid]) return;
+  _niDetectedWallets[uuid] = window.midnight[uuid];
+  updateConnectBtn();
+});
+
 function updateConnectBtn() {
-  const wallet = detectWallet();
+  const wallets = niDetectAllWallets();
   const statusEl = document.getElementById('wallet-status');
+  const row = document.getElementById('wallet-btn-row');
   const btn = document.getElementById('connect-btn');
-  if (wallet) {
-    const name = wallet.name || 'Lace';
-    statusEl.textContent = wallet.name + ' detected — click to connect';
-    statusEl.className = 'wallet-status ok';
-    btn.disabled = false;
-  } else {
-    statusEl.innerHTML = 'Lace wallet not detected — install from <a href="https://midnight.network/lace" target="_blank" style="color:var(--glow)">midnight.network/lace</a> or enter address manually';
+  if (!statusEl || !btn) return;
+
+  if (wallets.length === 0) {
+    statusEl.innerHTML = 'No wallet detected — install '
+      + '<a href="https://midnight.network/lace" target="_blank" style="color:var(--glow)">Lace</a>, '
+      + '<a href="https://1am.xyz" target="_blank" style="color:var(--glow)">1AM</a>, or '
+      + '<a href="https://chromewebstore.google.com/detail/nocturne/ijfdfgajlffijenjneoppbfnhjkdibna" target="_blank" style="color:var(--glow)">Nocturne</a>';
     statusEl.className = 'wallet-status';
     btn.disabled = true;
+    document.getElementById('connect-btn-text').textContent = '⊘ No wallet found';
+    return;
+  }
+
+  if (wallets.length === 1) {
+    // Single wallet — show its name
+    statusEl.textContent = wallets[0].name + ' detected — click to connect';
+    statusEl.className = 'wallet-status ok';
+    btn.disabled = false;
+    document.getElementById('connect-btn-text').textContent = '⊘ Connect ' + wallets[0].name;
+  } else {
+    // Multiple wallets — render individual buttons
+    statusEl.textContent = wallets.length + ' wallets detected — choose one:';
+    statusEl.className = 'wallet-status ok';
+    btn.style.display = 'none'; // hide the single button
+    // Clear old dynamic buttons
+    document.querySelectorAll('.ni-wallet-dyn-btn').forEach(el => el.remove());
+    wallets.forEach(w => {
+      const b = document.createElement('button');
+      b.className = 'btn-wallet ni-wallet-dyn-btn';
+      b.style.flex = '0 0 auto';
+      b.textContent = '⊘ ' + w.name;
+      b.onclick = () => doConnect(w.key);
+      row.appendChild(b);
+    });
   }
 }
 
 async function connectWallet() {
-  const wallet = detectWallet();
-  if (!wallet) {
-    document.getElementById('wallet-status').textContent = 'No Midnight wallet found. Install Lace from midnight.network/lace';
+  const wallets = niDetectAllWallets();
+  if (wallets.length === 0) {
+    document.getElementById('wallet-status').textContent = 'No Midnight wallet found — install Lace, 1AM, or Nocturne';
     document.getElementById('wallet-status').className = 'wallet-status err';
     return;
   }
+  await doConnect(wallets[0].key);
+}
 
+async function doConnect(key) {
+  const walletEntry = _niDetectedWallets[key] || window.midnight?.[key];
+  if (!walletEntry) { document.getElementById('wallet-status').textContent = 'Wallet not found'; return; }
+  const wName = walletEntry.name || 'Midnight Wallet';
   const btn = document.getElementById('connect-btn');
-  btn.disabled = true;
-  document.getElementById('connect-btn-text').innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Connecting...';
-  document.getElementById('wallet-status').textContent = 'Waiting for wallet approval...';
+  if (btn) { btn.disabled = true; }
+  document.getElementById('connect-btn-text').innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Connecting…';
+  document.getElementById('wallet-status').textContent = 'Approve in ' + wName + '…';
   document.getElementById('wallet-status').className = 'wallet-status';
 
   try {
-    // Connect to preprod network
-    const api = await wallet.connect('preprod');
+    let api = null;
+    for (const net of ['mainnet', 'preprod', 'undeployed']) {
+      try { api = await walletEntry.connect(net); if (api) break; } catch(e) {}
+    }
+    if (!api) throw new Error('Connection rejected — please approve in ' + wName);
     connectedWalletApi = api;
 
-    // Try to get the unshielded (Night) address
     let address = null;
-    try {
-      address = await api.getUnshieldedAddress();
-    } catch(e) {
-      // Fallback — some wallet versions return shielded addresses
-      try {
-        const shielded = await api.getShieldedAddresses();
-        if (shielded && shielded.length > 0) address = shielded[0];
-      } catch(e2) { /* ignore */ }
+    try { address = await api.getUnshieldedAddress(); } catch(e) {}
+    if (!address) {
+      try { const sr = await api.getShieldedAddresses(); address = sr?.shieldedAddress || null; } catch(e) {}
     }
+    if (!address) throw new Error('Could not retrieve address from ' + wName);
 
-    if (address) {
-      document.getElementById('addr-input').value = address;
-      btn.className = 'btn-wallet connected';
-      document.getElementById('connect-btn-text').textContent = '✓ Wallet Connected';
-      document.getElementById('wallet-status').textContent = 'Connected — address auto-filled below';
-      document.getElementById('wallet-status').className = 'wallet-status ok';
-      btn.disabled = false;
-      // Auto-verify after connecting
-      setTimeout(() => verifyAddress(), 400);
-    } else {
-      throw new Error('Could not retrieve address from wallet');
-    }
+    document.getElementById('addr-input').value = address;
+    if (btn) { btn.className = 'btn-wallet connected'; btn.disabled = false; }
+    document.getElementById('connect-btn-text').textContent = '✓ ' + wName + ' Connected';
+    document.getElementById('wallet-status').textContent = '✓ Connected — address auto-filled';
+    document.getElementById('wallet-status').className = 'wallet-status ok';
+    setTimeout(() => verifyAddress(), 400);
   } catch(err) {
-    document.getElementById('wallet-status').textContent = 'Connection failed: ' + (err.message || String(err));
+    document.getElementById('wallet-status').textContent = 'Failed: ' + (err.message || String(err));
     document.getElementById('wallet-status').className = 'wallet-status err';
-    document.getElementById('connect-btn-text').textContent = '⊘ Connect Lace Wallet';
-    btn.disabled = false;
+    if (btn) { btn.disabled = false; }
+    document.getElementById('connect-btn-text').textContent = '⊘ Try again';
+    updateConnectBtn();
   }
 }
 

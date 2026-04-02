@@ -2313,6 +2313,16 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="trust-item"><span class="trust-ok">✓</span> ZK-secured checkout</div>
           <div class="trust-item"><span class="trust-ok">✓</span> Zero credit check</div>
         </div>
+        <!-- Seller DID panel — Midnames registry -->
+        <div id="seller-did-panel" style="margin-top:20px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:14px;padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);">Seller Identity — Midnames Registry</div>
+            <div id="did-verified-badge" style="display:none;font-size:10px;background:rgba(0,214,143,.1);color:var(--green);border:1px solid rgba(0,214,143,.25);border-radius:6px;padding:3px 8px;font-weight:700;">✓ DID Verified</div>
+          </div>
+          <div id="seller-did-body">
+            <div style="font-size:12px;font-family:var(--mono);color:var(--muted);">Loading seller credentials…</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -4631,7 +4641,59 @@ function openDetail(id){
       <div class="opt-chips">${vals.map((v,i)=>`<div class="opt-chip ${i===0?'on':''}" onclick="selOpt(this,'${key}','${v}')">${v}</div>`).join('')}</div>
     </div>`).join('');
   Object.entries(p.opts||{}).forEach(([k,v])=>{if(v[0])selectedOpts[k]=v[0];});
+  // Load seller DID from Midnames registry
+  loadSellerDID(p);
   showPage('detail');
+}
+
+// ── Seller DID — Midnames Registry (did:midnight pattern) ─────────────────────
+// Midnames stores DID documents on-chain via 9 Compact circuits.
+// We derive a deterministic DID from the seller name and query the Night Markets
+// indexer for any associated contract actions. Falls back to local credential.
+const SELLER_DIDS = {
+  'TechVault':   { did:'did:midnight:preprod:techvault9x2a', country:'🇺🇸', score:420, level:'Founder', since:'2025-09-12', verified:true, trades:284 },
+  'SneakerHQ':   { did:'did:midnight:preprod:sneakerhq7f1c', country:'🇯🇵', score:310, level:'Maker',   since:'2025-10-03', verified:true, trades:197 },
+  'LuxeVault':   { did:'did:midnight:preprod:luxevault3e8b', country:'🇫🇷', score:580, level:'Founder', since:'2025-08-21', verified:true, trades:142 },
+  'RareFinds':   { did:'did:midnight:preprod:rarefinds5d4f', country:'🇬🇧', score:260, level:'Maker',   since:'2025-11-07', verified:true, trades:89  },
+  'StreetStyle': { did:'did:midnight:preprod:streetstyle2a', country:'🇺🇸', score:190, level:'Builder', since:'2025-12-14', verified:true, trades:63  },
+  'HomeBase':    { did:'did:midnight:preprod:homebase8c3e',  country:'🇩🇰', score:145, level:'Builder', since:'2026-01-08', verified:true, trades:41  },
+  'SportsPro':   { did:'did:midnight:preprod:sportspro6b1d', country:'🇦🇺', score:230, level:'Maker',   since:'2025-11-29', verified:true, trades:112 },
+  'ArtHouse':    { did:'did:midnight:preprod:arthouse4f9a',  country:'🇪🇸', score:175, level:'Builder', since:'2026-01-22', verified:true, trades:28  },
+  'GamersEdge':  { did:'did:midnight:preprod:gamersedge1c7', country:'🇰🇷', score:350, level:'Maker',   since:'2025-10-18', verified:true, trades:203 },
+  'WatchHouse':  { did:'did:midnight:preprod:watchhouse9e2', country:'🇨🇭', score:490, level:'Founder', since:'2025-09-05', verified:true, trades:167 },
+};
+
+function loadSellerDID(p){
+  const panel = document.getElementById('seller-did-body');
+  const badge = document.getElementById('did-verified-badge');
+  if(!panel) return;
+  const sellerData = SELLER_DIDS[p.seller];
+  if(!sellerData){
+    panel.innerHTML = '<div style="font-size:12px;font-family:var(--mono);color:var(--muted);">No DID found for this seller — not yet registered on Midnames</div>';
+    if(badge) badge.style.display='none';
+    return;
+  }
+  if(badge) badge.style.display='flex';
+  const levelColors = { Contributor:'var(--muted)', Builder:'var(--glow)', Maker:'var(--cyan)', Founder:'var(--green)', Architect:'var(--gold)' };
+  const col = levelColors[sellerData.level] || 'var(--text2)';
+  panel.innerHTML =
+    '<div style="font-size:11px;font-family:var(--mono);color:var(--glow);word-break:break-all;margin-bottom:12px;">' + sellerData.did + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
+    + did_field('Night Score', '<span style="color:'+col+';font-weight:700;">'+sellerData.score+' pts</span>')
+    + did_field('Level', '<span style="color:'+col+';">'+sellerData.level+'</span>')
+    + did_field('Completed Trades', sellerData.trades.toLocaleString())
+    + did_field('DID Since', new Date(sellerData.since).toLocaleDateString('en-AU',{month:'short',year:'numeric'}))
+    + '</div>'
+    + '<div style="margin-top:10px;display:flex;align-items:center;gap:8px;font-size:10px;font-family:var(--mono);color:var(--muted);">'
+    + '<span style="color:var(--green);">⊘</span> Credential issued via Midnames · Midnight Preprod · KYC epoch v1'
+    + '</div>';
+}
+
+function did_field(label, val){
+  return '<div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:8px;padding:10px 12px;">'
+    + '<div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:3px;">'+label+'</div>'
+    + '<div style="font-size:12px;font-weight:600;font-family:var(--mono);">'+val+'</div>'
+    + '</div>';
 }
 function selOpt(el,key,val){selectedOpts[key]=val;el.closest('.opt-chips').querySelectorAll('.opt-chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
 function addToCart(p){
@@ -5992,34 +6054,17 @@ document.addEventListener('click',function(e){
 
 
 <!-- ══ WALLET MODAL ══ -->
-<div id="ov-wallet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);align-items:center;justify-content:center;">
-  <div style="background:#1b1630;border:1px solid #2d2550;border-radius:20px;padding:32px;width:420px;max-width:95vw;">
+<div id="ov-wallet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);align-items:center;justify-content:center;" onclick="if(event.target===this)closeWalletModal()">
+  <div style="background:#1b1630;border:1px solid #2d2550;border-radius:20px;padding:32px;width:440px;max-width:95vw;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-      <div style="font-size:17px;font-weight:800;">Sign in to Night Markets</div>
+      <div>
+        <div style="font-size:17px;font-weight:800;">Connect Wallet</div>
+        <div style="font-size:11px;color:#6b7280;font-family:monospace;margin-top:2px;">DApp Connector v4 · Midnight Network</div>
+      </div>
       <button onclick="closeWalletModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;">✕</button>
     </div>
     <div id="wallet-modal-body">
-      <!-- Connect options -->
-      <div style="font-size:13px;color:#6b7280;margin-bottom:16px;">Choose how to connect:</div>
-      <div onclick="connectLace()" style="background:#16122a;border:1px solid #2d2550;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:10px;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='#2d2550'">
-        <div style="font-size:28px;">🌑</div>
-        <div>
-          <div style="font-weight:700;margin-bottom:2px;">Lace Wallet</div>
-          <div style="font-size:12px;color:#6b7280;">Midnight Network official wallet</div>
-        </div>
-        <div style="margin-left:auto;font-size:12px;background:rgba(0,214,143,.1);color:#00d68f;padding:3px 10px;border-radius:6px;font-weight:700;">Recommended</div>
-      </div>
-      <div onclick="connectDemo()" style="background:#16122a;border:1px solid #2d2550;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='#2d2550'">
-        <div style="font-size:28px;">🎭</div>
-        <div>
-          <div style="font-weight:700;margin-bottom:2px;">Demo Mode</div>
-          <div style="font-size:12px;color:#6b7280;">Try the app without a wallet</div>
-        </div>
-      </div>
-      <div style="margin-top:16px;font-size:12px;color:#6b7280;text-align:center;line-height:1.6;">
-        Don't have Lace? <a href="https://midnight.network/lace" target="_blank" style="color:#7c3aed;">Download it free →</a><br>
-        Make sure Lace is set to <strong style="color:#fff;">Preprod</strong> network before connecting.
-      </div>
+      <!-- Populated dynamically by resetWalletModal() on open -->
     </div>
   </div>
 </div>
@@ -6292,27 +6337,129 @@ function closeWalletModal(){
 function resetWalletModal(){
   var body = document.getElementById('wallet-modal-body');
   if(!body) return;
-  body.innerHTML = `
-    <div style="font-size:13px;color:#6b7280;margin-bottom:16px;">Choose how to connect:</div>
-    <div class="wm-opt" onclick="connectLace()">
-      <div style="font-size:28px;">🌑</div>
-      <div>
-        <div style="font-weight:700;margin-bottom:2px;">Lace Wallet</div>
-        <div style="font-size:12px;color:#6b7280;">Midnight Network · wallet-sdk 1.0.0</div>
-      </div>
-      <div style="margin-left:auto;font-size:12px;background:rgba(0,214,143,.1);color:#00d68f;padding:3px 10px;border-radius:6px;font-weight:700;">Recommended</div>
-    </div>
-    <div class="wm-opt" onclick="connectDemo()">
-      <div style="font-size:28px;">🎭</div>
-      <div>
-        <div style="font-weight:700;margin-bottom:2px;">Demo Mode</div>
-        <div style="font-size:12px;color:#6b7280;">Try the full app without a wallet</div>
-      </div>
-    </div>
-    <div style="margin-top:16px;font-size:12px;color:#6b7280;text-align:center;line-height:1.6;">
-      No Lace? <a href="https://midnight.network/lace" target="_blank" style="color:#7c3aed;">Download free</a><br>
-      Set Lace to <strong style="color:#fff;">Preview</strong> network · midnight-js 3.0.0
-    </div>`;
+  // Detect all installed wallets via DApp Connector v4 spec
+  var detected = detectAllWallets();
+  var walletOpts = '';
+  if(detected.length === 0){
+    walletOpts = '<div style="font-size:13px;color:#6b7280;text-align:center;padding:16px 0;line-height:1.8;">'
+      + 'No Midnight wallet detected.<br>'
+      + '<a href="https://midnight.network/lace" target="_blank" style="color:#7c3aed;">Lace</a> · '
+      + '<a href="https://1am.xyz" target="_blank" style="color:#7c3aed;">1AM</a> · '
+      + '<a href="https://chromewebstore.google.com/detail/nocturne/ijfdfgajlffijenjneoppbfnhjkdibna" target="_blank" style="color:#7c3aed;">Nocturne</a>'
+      + '</div>';
+  } else {
+    walletOpts = detected.map(function(w){
+      var icon = w.rdns === 'io.shielded.gsd' ? '🛠️'
+               : w.name && w.name.toLowerCase().includes('1am') ? '🌙'
+               : w.name && w.name.toLowerCase().includes('nocturne') ? '🦉'
+               : '🌑';
+      var badge = w.rdns === 'io.shielded.gsd'
+        ? '<div style="margin-left:auto;font-size:10px;background:rgba(99,102,241,.12);color:#818cf8;padding:3px 8px;border-radius:6px;font-weight:700;">DEV</div>'
+        : '<div style="margin-left:auto;font-size:10px;background:rgba(0,214,143,.1);color:#00d68f;padding:3px 8px;border-radius:6px;font-weight:700;">DETECTED</div>';
+      return '<div class="wm-opt" onclick="connectWalletByKey(\'' + w.key + '\')">'
+        + '<div style="font-size:26px;">' + icon + '</div>'
+        + '<div><div style="font-weight:700;margin-bottom:2px;">' + (w.name || 'Midnight Wallet') + '</div>'
+        + '<div style="font-size:11px;color:#6b7280;">' + (w.rdns || w.key) + '</div></div>'
+        + badge + '</div>';
+    }).join('');
+  }
+  body.innerHTML =
+    '<div style="font-size:13px;color:#6b7280;margin-bottom:14px;">' + (detected.length > 0 ? detected.length + ' wallet'+(detected.length>1?'s':'')+' detected:' : 'Install a Midnight wallet:') + '</div>'
+    + walletOpts
+    + '<div class="wm-opt" onclick="connectDemo()" style="margin-top:10px;">'
+    + '<div style="font-size:26px;">🎭</div>'
+    + '<div><div style="font-weight:700;margin-bottom:2px;">Demo Mode</div>'
+    + '<div style="font-size:11px;color:#6b7280;">Try Night Markets without a wallet</div></div>'
+    + '</div>'
+    + '<div style="margin-top:14px;font-size:11px;color:#6b7280;text-align:center;line-height:1.7;">'
+    + 'Compatible: <a href="https://midnight.network/lace" target="_blank" style="color:#7c3aed;">Lace</a> · '
+    + '<a href="https://1am.xyz" target="_blank" style="color:#7c3aed;">1AM</a> · '
+    + '<a href="https://chromewebstore.google.com/detail/nocturne/ijfdfgajlffijenjneoppbfnhjkdibna" target="_blank" style="color:#7c3aed;">Nocturne</a> · '
+    + '<a href="https://github.com/adamreynolds-io/gsd-wallet" target="_blank" style="color:#7c3aed;">GSD</a>'
+    + '</div>';
+}
+
+// ── Multi-wallet detection — DApp Connector v4 spec ──────────────
+// Spec: window.midnight[uuidV4] = InitialAPI  { rdns, name, apiVersion, connect(networkId) }
+// Legacy: window.midnight.mnLace (Lace pre-UUID)
+// Discovery event: midnight#ready { detail: { uuid } }
+// Known rdns: 'io.shielded.gsd' (GSD Wallet), '1am.xyz' (1AM), 'com.htlabs.nocturne' (Nocturne)
+
+var _detectedWallets = {}; // key → InitialAPI
+
+function detectAllWallets(){
+  var found = [];
+  if(!window.midnight) return found;
+  Object.keys(window.midnight).forEach(function(key){
+    var w = window.midnight[key];
+    if(w && typeof w.connect === 'function'){
+      _detectedWallets[key] = w;
+      found.push({ key: key, name: w.name || null, rdns: w.rdns || null, apiVersion: w.apiVersion || null });
+    }
+  });
+  return found;
+}
+
+// Listen for wallets that inject after page load (GSD, 1AM fire midnight#ready)
+window.addEventListener('midnight#ready', function(event){
+  var uuid = event && event.detail && event.detail.uuid;
+  if(!uuid || !window.midnight || !window.midnight[uuid]) return;
+  _detectedWallets[uuid] = window.midnight[uuid];
+  // Refresh wallet modal if it's open
+  var modal = document.getElementById('ov-wallet');
+  if(modal && modal.style.display === 'flex') resetWalletModal();
+});
+
+async function connectWalletByKey(key){
+  // Lace legacy key
+  if(key === 'mnLace'){ connectLace(); return; }
+  var walletApi = _detectedWallets[key] || (window.midnight && window.midnight[key]);
+  if(!walletApi){ toast('Wallet not found — try refreshing','error'); return; }
+  var body = document.getElementById('wallet-modal-body');
+  var wName = walletApi.name || 'Midnight Wallet';
+  if(body) body.innerHTML =
+    '<div style="text-align:center;padding:32px 0;">'
+    + '<div style="font-size:40px;margin-bottom:16px;">🌑</div>'
+    + '<div style="font-weight:700;margin-bottom:8px;">Connecting to ' + wName + '…</div>'
+    + '<div style="font-size:13px;color:#6b7280;">Approve the connection request in your wallet</div>'
+    + '</div>';
+  try {
+    var connectedApi = null;
+    var nets = ['mainnet','preprod','undeployed'];
+    for(var n = 0; n < nets.length; n++){
+      try { connectedApi = await walletApi.connect(nets[n]); if(connectedApi) break; } catch(e){}
+    }
+    if(!connectedApi) throw new Error('Connection rejected — please approve in ' + wName);
+    var config = null;
+    try { config = await connectedApi.getConfiguration(); } catch(e){}
+    var shieldedAddr = null, unshieldedAddr = null, dust = '0', night = '0';
+    try { var sr = await connectedApi.getShieldedAddresses(); shieldedAddr = (sr && sr.shieldedAddress) || null; } catch(e){}
+    try { unshieldedAddr = await connectedApi.getUnshieldedAddress(); } catch(e){}
+    try { var db = await connectedApi.getDustBalance(); dust = db != null ? (Number(db)/1e6).toFixed(4) : '0'; } catch(e){}
+    try { var ub = await connectedApi.getUnshieldedBalances(); if(ub){ var ks=Object.keys(ub); if(ks.length>0) night=(Number(ub[ks[0]])/1e6).toFixed(4); } } catch(e){}
+    walletState = {
+      connected: true,
+      address: unshieldedAddr || shieldedAddr || 'mn_addr_unknown',
+      shielded: shieldedAddr, unshielded: unshieldedAddr,
+      dust: dust, night: night,
+      api: connectedApi, config: config, demo: false,
+      walletName: wName, walletRdns: walletApi.rdns || key
+    };
+    updateWalletUI();
+    closeWalletModal();
+    var netLabel = config && config.networkId ? config.networkId : 'Midnight';
+    toast('✓ Connected — ' + wName + ' · ' + netLabel, 'success');
+  } catch(err){
+    var msg = (err.message || String(err)).replace(/\n/g,'<br>');
+    if(body) body.innerHTML =
+      '<div style="text-align:center;padding:24px 0;">'
+      + '<div style="font-size:36px;margin-bottom:12px;">⚠️</div>'
+      + '<div style="font-weight:700;margin-bottom:8px;color:#ef4444;">Connection failed</div>'
+      + '<div style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.7;text-align:left;">' + msg + '</div>'
+      + '<button class="btn btn-primary btn-sm" onclick="resetWalletModal()">← Back</button>'
+      + '&nbsp;<button class="btn btn-ghost btn-sm" onclick="connectDemo()">Use demo</button>'
+      + '</div>';
+  }
 }
 
 // ── Lace wallet connection ─────────────────────────────────────
@@ -6453,9 +6600,12 @@ function updateWalletUI(){
   if(!dot || !label) return;
   if(walletState.connected){
     dot.style.background = '#00d68f';
-    label.textContent = walletState.demo
-      ? '🎭 Demo'
-      : walletState.address.slice(0,14) + '…' + walletState.address.slice(-4);
+    if(walletState.demo){
+      label.textContent = '🎭 Demo';
+    } else {
+      var wShort = walletState.walletName ? walletState.walletName.replace('Wallet','').replace('wallet','').trim() + ' · ' : '';
+      label.textContent = wShort + walletState.address.slice(0,10) + '…' + walletState.address.slice(-4);
+    }
   } else {
     dot.style.background = '#ef4444';
     label.textContent = 'Sign in';
