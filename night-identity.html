@@ -152,6 +152,19 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
 .info-title{font-size:13px;font-weight:700;margin-bottom:4px;}
 .info-body{font-size:11px;color:var(--muted);line-height:1.6;}
 
+/* Wallet connect button */
+.wallet-connect-row{display:flex;gap:10px;margin-bottom:16px;}
+.btn-wallet{flex:1;padding:13px 16px;border:1px solid rgba(124,58,237,.4);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(124,58,237,.08);color:var(--glow);}
+.btn-wallet:hover{border-color:var(--purple);background:rgba(124,58,237,.15);transform:translateY(-1px);}
+.btn-wallet:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-wallet.connected{border-color:var(--green);background:rgba(0,214,143,.08);color:var(--green);}
+.wallet-status{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:8px;min-height:16px;}
+.wallet-status.ok{color:var(--green);}
+.wallet-status.err{color:var(--red);}
+.or-divider{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.or-line{flex:1;height:1px;background:var(--rim2);}
+.or-text{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+
 /* Reset */
 .reset-btn{background:none;border:none;font-size:12px;font-family:var(--mono);color:var(--muted);cursor:pointer;text-decoration:underline;margin-top:12px;display:block;width:100%;text-align:center;}
 .reset-btn:hover{color:var(--text2);}
@@ -160,6 +173,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
   .cred-fields{grid-template-columns:1fr;}
   .info-grid{grid-template-columns:1fr;}
   .share-btns{flex-direction:column;}
+  .wallet-connect-row{flex-direction:column;}
 }
 </style>
 </head>
@@ -204,6 +218,18 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0
 
     <!-- Step 1 — input -->
     <div id="step1-content">
+
+      <!-- Wallet connect -->
+      <div class="input-label">Connect Wallet</div>
+      <div class="wallet-status" id="wallet-status">Lace wallet not detected — install from <a href="https://midnight.network/lace" target="_blank" style="color:var(--glow)">midnight.network/lace</a> or enter address manually</div>
+      <div class="wallet-connect-row">
+        <button class="btn-wallet" id="connect-btn" onclick="connectWallet()">
+          <span id="connect-btn-text">⊘ Connect Lace Wallet</span>
+        </button>
+      </div>
+
+      <div class="or-divider"><div class="or-line"></div><div class="or-text">or enter manually</div><div class="or-line"></div></div>
+
       <div class="input-label">Your Midnight Wallet Address</div>
       <div class="input-wrap">
         <input class="input-field" id="addr-input" type="text" placeholder="mn_addr_preprod1..." spellcheck="false" autocomplete="off"/>
@@ -626,11 +652,94 @@ function resetForm() {
   hideStatus();
 }
 
+// ─── Wallet Connect ────────────────────────────────────────────────────────────
+
+let connectedWalletApi = null;
+
+function detectWallet() {
+  // Check for any Midnight wallet injected into window.midnight
+  if (typeof window.midnight === 'undefined') return null;
+  // Prefer Lace, then any other injected wallet
+  const walletId = window.midnight.mnLace ? 'mnLace'
+    : Object.keys(window.midnight).find(k => window.midnight[k]?.connect);
+  return walletId ? window.midnight[walletId] : null;
+}
+
+function updateConnectBtn() {
+  const wallet = detectWallet();
+  const statusEl = document.getElementById('wallet-status');
+  const btn = document.getElementById('connect-btn');
+  if (wallet) {
+    const name = wallet.name || 'Lace';
+    statusEl.textContent = wallet.name + ' detected — click to connect';
+    statusEl.className = 'wallet-status ok';
+    btn.disabled = false;
+  } else {
+    statusEl.innerHTML = 'Lace wallet not detected — install from <a href="https://midnight.network/lace" target="_blank" style="color:var(--glow)">midnight.network/lace</a> or enter address manually';
+    statusEl.className = 'wallet-status';
+    btn.disabled = true;
+  }
+}
+
+async function connectWallet() {
+  const wallet = detectWallet();
+  if (!wallet) {
+    document.getElementById('wallet-status').textContent = 'No Midnight wallet found. Install Lace from midnight.network/lace';
+    document.getElementById('wallet-status').className = 'wallet-status err';
+    return;
+  }
+
+  const btn = document.getElementById('connect-btn');
+  btn.disabled = true;
+  document.getElementById('connect-btn-text').innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Connecting...';
+  document.getElementById('wallet-status').textContent = 'Waiting for wallet approval...';
+  document.getElementById('wallet-status').className = 'wallet-status';
+
+  try {
+    // Connect to preprod network
+    const api = await wallet.connect('preprod');
+    connectedWalletApi = api;
+
+    // Try to get the unshielded (Night) address
+    let address = null;
+    try {
+      address = await api.getUnshieldedAddress();
+    } catch(e) {
+      // Fallback — some wallet versions return shielded addresses
+      try {
+        const shielded = await api.getShieldedAddresses();
+        if (shielded && shielded.length > 0) address = shielded[0];
+      } catch(e2) { /* ignore */ }
+    }
+
+    if (address) {
+      document.getElementById('addr-input').value = address;
+      btn.className = 'btn-wallet connected';
+      document.getElementById('connect-btn-text').textContent = '✓ Wallet Connected';
+      document.getElementById('wallet-status').textContent = 'Connected — address auto-filled below';
+      document.getElementById('wallet-status').className = 'wallet-status ok';
+      btn.disabled = false;
+      // Auto-verify after connecting
+      setTimeout(() => verifyAddress(), 400);
+    } else {
+      throw new Error('Could not retrieve address from wallet');
+    }
+  } catch(err) {
+    document.getElementById('wallet-status').textContent = 'Connection failed: ' + (err.message || String(err));
+    document.getElementById('wallet-status').className = 'wallet-status err';
+    document.getElementById('connect-btn-text').textContent = '⊘ Connect Lace Wallet';
+    btn.disabled = false;
+  }
+}
+
 // Enter key support
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addr-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') verifyAddress();
   });
+  // Check for wallet on load and after a short delay (extension may inject after DOM ready)
+  updateConnectBtn();
+  setTimeout(updateConnectBtn, 1500);
 });
 </script>
 </body>
