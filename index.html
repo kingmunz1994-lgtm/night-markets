@@ -1673,6 +1673,41 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .ct-dot.done{background:var(--green);}
 .ct-dot.wait{background:var(--faint);}
 
+/* ─── GUIDED DEMO TOUR ─── */
+#tour-overlay{position:fixed;inset:0;z-index:99999;pointer-events:none;}
+#tour-spotlight{position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.72);transition:all .45s cubic-bezier(.4,0,.2,1);pointer-events:none;border:2px solid rgba(124,58,237,.7);}
+#tour-bubble{position:absolute;background:#1a1535;border:1px solid rgba(124,58,237,.4);border-radius:14px;padding:18px 20px;width:280px;z-index:100000;box-shadow:0 8px 40px rgba(0,0,0,.6);transition:all .35s cubic-bezier(.4,0,.2,1);}
+#tour-bubble::before{content:'';position:absolute;width:10px;height:10px;background:#1a1535;border:1px solid rgba(124,58,237,.4);transform:rotate(45deg);}
+#tour-bubble.arrow-top::before{top:-6px;left:24px;border-bottom:none;border-right:none;}
+#tour-bubble.arrow-bottom::before{bottom:-6px;left:24px;border-top:none;border-left:none;}
+#tour-bubble.arrow-left::before{left:-6px;top:20px;border-right:none;border-bottom:none;}
+.tour-step-label{font-size:9px;font-family:var(--mono);color:var(--glow);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700;}
+.tour-bubble-title{font-size:14px;font-weight:800;margin-bottom:6px;color:var(--text1);}
+.tour-bubble-desc{font-size:12px;color:var(--text2);line-height:1.65;font-weight:300;margin-bottom:14px;}
+.tour-bubble-tech{font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:12px;}
+.tour-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.tour-btn-next{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;pointer-events:all;font-family:var(--sans);}
+.tour-btn-skip{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;pointer-events:all;font-family:var(--sans);}
+.tour-progress{font-size:10px;font-family:var(--mono);color:var(--faint);}
+#tour-start-btn{position:fixed;bottom:28px;right:28px;z-index:9990;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;border-radius:14px;padding:13px 22px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(124,58,237,.45);font-family:var(--sans);display:flex;align-items:center;gap:8px;transition:transform .2s,box-shadow .2s;pointer-events:all;}
+#tour-start-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,58,237,.6);}
+#tour-start-btn .ts-pulse{width:8px;height:8px;border-radius:50%;background:#22d3ee;animation:pulse 1.2s infinite;}
+
+/* ─── ACQUISITION PAGE ─── */
+#page-acquire .page-inner{max-width:860px;margin:0 auto;padding:60px 24px;}
+.acq-hero{text-align:center;margin-bottom:56px;}
+.acq-price-tag{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(245,197,24,.1),rgba(245,197,24,.05));border:1px solid rgba(245,197,24,.3);border-radius:14px;padding:14px 28px;margin-bottom:28px;}
+.acq-price{font-size:42px;font-weight:900;font-family:var(--mono);color:var(--gold);}
+.acq-price-label{font-size:11px;font-family:var(--mono);color:var(--muted);text-align:left;}
+.acq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;}
+.acq-card{background:var(--surface);border:1px solid var(--rim2);border-radius:14px;padding:22px;}
+.acq-card-icon{font-size:28px;margin-bottom:10px;}
+.acq-card-title{font-size:13px;font-weight:800;margin-bottom:6px;}
+.acq-card-items{font-size:11px;color:var(--muted);line-height:2;font-family:var(--mono);}
+.acq-card-items div::before{content:'✓ ';color:var(--green);}
+.acq-contact-card{background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(99,102,241,.05));border:1px solid rgba(124,58,237,.25);border-radius:18px;padding:32px;text-align:center;position:relative;overflow:hidden;margin-bottom:24px;}
+.acq-contact-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#7c3aed,transparent);}
+
 /* ─── LUNARSWAP DEX ─── */
 .ls-modal-wrap{background:#12102b;border:1px solid #2d2550;border-radius:22px;padding:28px;width:420px;max-width:95vw;position:relative;}
 .ls-modal-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#7c3aed,#22d3ee,transparent);border-radius:22px 22px 0 0;}
@@ -1807,6 +1842,87 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .nw-task-reward{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--glow);flex-shrink:0;}
 .nw-task-btn{background:linear-gradient(135deg,var(--ink),var(--plasma));border:none;border-radius:8px;padding:8px 16px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);flex-shrink:0;}
 .nw-how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+
+/* Night Pay page */
+#page-nightpay .page-inner{max-width:900px;margin:0 auto;padding:40px 24px;}
+.np-hero{text-align:center;margin-bottom:40px;}
+.np-send-card{background:var(--surface);border:1px solid var(--rim2);border-radius:20px;padding:28px;margin-bottom:20px;}
+.np-input-row{display:flex;gap:10px;margin-bottom:14px;align-items:center;}
+.np-input{flex:1;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:12px 14px;font-size:15px;color:var(--text);font-family:var(--mono);outline:none;}
+.np-input:focus{border-color:var(--ink);}
+.np-currency-sel{background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;color:var(--text);font-family:var(--mono);cursor:pointer;outline:none;width:120px;}
+.np-zk-bar{background:var(--raised);border:1px solid var(--rim);border-radius:10px;padding:14px;margin-bottom:14px;font-size:11px;font-family:var(--mono);color:var(--muted);}
+.np-zk-bar-title{font-weight:700;color:var(--text2);margin-bottom:6px;font-size:12px;}
+.np-zk-step{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--rim);}
+.np-zk-step:last-child{border:none;}
+.np-zk-dot{width:8px;height:8px;border-radius:50%;background:var(--rim2);flex-shrink:0;transition:background .3s;}
+.np-zk-dot.done{background:var(--green);}
+.np-zk-dot.active{background:var(--gold);animation:pulse 1s infinite;}
+.np-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.np-stat{background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:16px;text-align:center;}
+.np-stat-val{font-size:22px;font-weight:800;font-family:var(--mono);color:var(--glow);margin-bottom:4px;}
+.np-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+.np-history{display:flex;flex-direction:column;gap:8px;}
+.np-tx{background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.np-tx-icon{font-size:20px;flex-shrink:0;}
+.np-tx-info{flex:1;}
+.np-tx-label{font-size:13px;font-weight:600;}
+.np-tx-meta{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.np-tx-amount{font-family:var(--mono);font-size:14px;font-weight:700;}
+.np-tx-amount.out{color:var(--red);}
+.np-tx-amount.in{color:var(--green);}
+
+/* Night Lend page */
+#page-nightlend .page-inner{max-width:1000px;margin:0 auto;padding:40px 24px;}
+.nl-hero{text-align:center;margin-bottom:40px;}
+.nl-panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.nl-panel{background:var(--surface);border:1px solid var(--rim2);border-radius:18px;padding:24px;}
+.nl-panel-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;}
+.nl-pool{display:flex;align-items:center;gap:12px;padding:12px;background:var(--raised);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.nl-pool:hover{border:1px solid var(--ink);}
+.nl-pool-icon{font-size:22px;flex-shrink:0;}
+.nl-pool-info{flex:1;}
+.nl-pool-name{font-size:13px;font-weight:700;margin-bottom:2px;}
+.nl-pool-apy{font-size:11px;color:var(--green);font-family:var(--mono);}
+.nl-pool-tvl{font-size:10px;color:var(--muted);}
+.nl-pool-btn{background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--glow);cursor:pointer;font-family:var(--sans);}
+.nl-health{background:var(--raised);border:1px solid var(--rim);border-radius:12px;padding:16px;margin-bottom:16px;}
+.nl-health-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+.nl-hbar{height:8px;border-radius:4px;background:var(--rim);overflow:hidden;margin-bottom:8px;}
+.nl-hbar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--gold));width:72%;transition:width .4s;}
+.nl-position-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.nl-pos{background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:14px;text-align:center;}
+.nl-pos-val{font-size:18px;font-weight:800;font-family:var(--mono);margin-bottom:4px;}
+.nl-pos-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+
+/* Night Chat page */
+#page-nightchat .page-inner{max-width:1000px;margin:0 auto;padding:40px 24px;}
+.nc-hero{text-align:center;margin-bottom:32px;}
+.nc-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;height:520px;}
+.nc-sidebar{background:var(--surface);border:1px solid var(--rim2);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;}
+.nc-sidebar-head{padding:14px 16px;border-bottom:1px solid var(--rim);font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.nc-thread{padding:12px 14px;cursor:pointer;transition:all .15s;border-bottom:1px solid var(--rim);display:flex;align-items:center;gap:10px;}
+.nc-thread:hover,.nc-thread.active{background:var(--card-hi);}
+.nc-thread.active{border-left:3px solid var(--glow);}
+.nc-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--ink),var(--plasma));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+.nc-thread-info{flex:1;min-width:0;}
+.nc-thread-name{font-size:12px;font-weight:700;margin-bottom:2px;}
+.nc-thread-preview{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nc-zk-badge{font-size:8px;font-family:var(--mono);color:var(--green);background:rgba(0,214,143,.1);border:1px solid rgba(0,214,143,.2);border-radius:3px;padding:1px 4px;flex-shrink:0;}
+.nc-main{background:var(--surface);border:1px solid var(--rim2);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;}
+.nc-main-head{padding:14px 18px;border-bottom:1px solid var(--rim);display:flex;align-items:center;gap:10px;}
+.nc-main-head-name{font-size:13px;font-weight:700;}
+.nc-main-head-meta{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.nc-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.nc-msg{max-width:70%;padding:10px 14px;border-radius:12px;font-size:12px;line-height:1.6;}
+.nc-msg.them{background:var(--raised);border:1px solid var(--rim);align-self:flex-start;border-radius:4px 12px 12px 12px;}
+.nc-msg.me{background:linear-gradient(135deg,var(--ink),var(--plasma));color:#fff;align-self:flex-end;border-radius:12px 12px 4px 12px;}
+.nc-msg-meta{font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
+.nc-msg.me .nc-msg-meta{color:rgba(255,255,255,.5);}
+.nc-compose{padding:12px 14px;border-top:1px solid var(--rim);display:flex;gap:8px;align-items:center;}
+.nc-compose-input{flex:1;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text);font-family:var(--sans);outline:none;}
+.nc-compose-input:focus{border-color:var(--ink);}
+.nc-send-btn{background:linear-gradient(135deg,var(--ink),var(--plasma));border:none;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);}
 
 /* Night Store dedicated page */
 #page-nightstore .page-inner{max-width:1100px;margin:0 auto;padding:40px 24px;}
@@ -2070,8 +2186,13 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="ndm-item" onclick="showPage('nightsave');closeAllNavDrops()"><span style="margin-right:6px;">💎</span>Night Save <span class="nem-status soon" style="margin-left:auto;">Soon</span></div>
           <div class="ndm-item" onclick="showPage('nightdata');closeAllNavDrops()"><span style="margin-right:6px;">🔐</span>Night Data <span class="nem-status planned" style="margin-left:auto;">Planned</span></div>
           <div class="ndm-item" onclick="showPage('nightwork');closeAllNavDrops()"><span style="margin-right:6px;">👤</span>Night Work <span class="nem-status planned" style="margin-left:auto;">Planned</span></div>
+          <div class="ndm-item" onclick="showPage('nightpay');closeAllNavDrops()"><span style="margin-right:6px;">⚡</span>Night Pay <span class="nem-status soon" style="margin-left:auto;">Soon</span></div>
+          <div class="ndm-item" onclick="showPage('nightlend');closeAllNavDrops()"><span style="margin-right:6px;">🏦</span>Night Lend <span class="nem-status planned" style="margin-left:auto;">Planned</span></div>
+          <div class="ndm-item" onclick="showPage('nightchat');closeAllNavDrops()"><span style="margin-right:6px;">💬</span>Night Chat <span class="nem-status planned" style="margin-left:auto;">Planned</span></div>
           <div class="ndm-sep"></div>
           <div class="ndm-item" onclick="showPage('ecosystem');closeAllNavDrops()">🌐 Partners & Ecosystem</div>
+          <div class="ndm-sep"></div>
+          <div class="ndm-item" onclick="showPage('acquire');closeAllNavDrops()" style="color:var(--gold);">🤝 Acquire this project</div>
         </div>
       </div>
 
@@ -3418,6 +3539,340 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
     <div style="background:linear-gradient(135deg,rgba(6,182,212,.06),rgba(124,58,237,.03));border:1px solid rgba(6,182,212,.15);border-radius:14px;padding:20px;text-align:center;">
       <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🌙 Night Work is the meatspace layer for Midnight City</div>
       <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.65;">The bridge between digital AI agents and the physical world. Private. Verified. Instant. The first marketplace where AI hires human — and pays in ZK-native tokens on Midnight Network.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ NIGHT PAY ══════════════ -->
+<div class="page" id="page-nightpay">
+  <div class="page-inner">
+    <div class="np-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(124,58,237,.08);color:var(--glow);border-color:rgba(124,58,237,.2);">⚡ Night Pay — ZK Payment Rails</span></div>
+      <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:12px;">Send money.<br><em>Leave no trace.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">Zero-knowledge payment rails on Midnight Network. Send NIGHT, sUSD, or tDUST to any address. The amount, sender, and receiver are all shielded by ZK proofs — permanently private, instantly settled.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="np-stats">
+      <div class="np-stat">
+        <div class="np-stat-val" id="npp-vol">$2.4M</div>
+        <div class="np-stat-label">Volume (24h)</div>
+      </div>
+      <div class="np-stat">
+        <div class="np-stat-val" id="npp-txs">14,872</div>
+        <div class="np-stat-label">Transactions</div>
+      </div>
+      <div class="np-stat">
+        <div class="np-stat-val">0.1%</div>
+        <div class="np-stat-label">Fee</div>
+      </div>
+    </div>
+
+    <!-- Send card -->
+    <div class="np-send-card">
+      <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">Send a ZK payment</div>
+      <div class="np-input-row">
+        <input class="np-input" id="npp-to" placeholder="Recipient address or Midname (e.g. satoshi.night)" />
+      </div>
+      <div class="np-input-row">
+        <input class="np-input" id="npp-amount" type="number" placeholder="Amount" oninput="nightPayUpdate()" />
+        <select class="np-currency-sel" id="npp-currency" onchange="nightPayUpdate()">
+          <option>NIGHT</option>
+          <option>sUSD</option>
+          <option>tDUST</option>
+        </select>
+      </div>
+      <div class="np-input-row">
+        <input class="np-input" id="npp-note" placeholder="Private memo (encrypted — only you and recipient see this)" />
+      </div>
+      <!-- ZK proof steps -->
+      <div class="np-zk-bar" id="npp-zkbar" style="display:none;">
+        <div class="np-zk-bar-title">ZK proof generation</div>
+        <div class="np-zk-step"><div class="np-zk-dot" id="npp-d1"></div><span id="npp-s1">Generating sender shielding proof…</span></div>
+        <div class="np-zk-step"><div class="np-zk-dot" id="npp-d2"></div><span id="npp-s2">Encrypting recipient address…</span></div>
+        <div class="np-zk-step"><div class="np-zk-dot" id="npp-d3"></div><span id="npp-s3">Shielding transfer amount…</span></div>
+        <div class="np-zk-step"><div class="np-zk-dot" id="npp-d4"></div><span id="npp-s4">Submitting to Midnight Network…</span></div>
+      </div>
+      <button class="btn btn-primary" id="npp-btn" onclick="nightPaySend()" style="width:100%;margin-top:8px;">Send privately</button>
+    </div>
+
+    <!-- Transaction history -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Recent activity — all ZK shielded</div>
+    <div class="np-history">
+      <div class="np-tx"><div class="np-tx-icon">⬆</div><div class="np-tx-info"><div class="np-tx-label">Sent to ████.night</div><div class="np-tx-meta">zkProof:0x8f3a… · 2 mins ago · shielded</div></div><div class="np-tx-amount out">−120 NIGHT</div></div>
+      <div class="np-tx"><div class="np-tx-icon">⬇</div><div class="np-tx-info"><div class="np-tx-label">Received from ████.night</div><div class="np-tx-meta">zkProof:0xc291… · 14 mins ago · shielded</div></div><div class="np-tx-amount in">+45 sUSD</div></div>
+      <div class="np-tx"><div class="np-tx-icon">⬆</div><div class="np-tx-info"><div class="np-tx-label">Marketplace escrow — order #8812</div><div class="np-tx-meta">zkProof:0x77fd… · 1 hr ago · auto-released</div></div><div class="np-tx-amount out">−85 sUSD</div></div>
+      <div class="np-tx"><div class="np-tx-icon">⬇</div><div class="np-tx-info"><div class="np-tx-label">Night Work reward</div><div class="np-tx-meta">zkProof:0x3b9e… · 3 hrs ago · agent payout</div></div><div class="np-tx-amount in">+280 NIGHT</div></div>
+      <div class="np-tx"><div class="np-tx-icon">⬆</div><div class="np-tx-info"><div class="np-tx-label">Sent to ████.night</div><div class="np-tx-meta">zkProof:0x1d4c… · 6 hrs ago · shielded</div></div><div class="np-tx-amount out">−500 NIGHT</div></div>
+    </div>
+
+    <div style="margin-top:24px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(0,214,143,.03));border:1px solid rgba(124,58,237,.15);border-radius:14px;padding:20px;text-align:center;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🔒 Every Night Pay transaction is a ZK proof on Midnight Network</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.65;">Sender shielded. Receiver shielded. Amount shielded. Memo encrypted. The blockchain records that a valid transaction occurred — nothing else. No surveillance. No metadata trail. PayPal for the privacy age.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ NIGHT LEND ══════════════ -->
+<div class="page" id="page-nightlend">
+  <div class="page-inner">
+    <div class="nl-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(0,214,143,.06);color:var(--green);border-color:rgba(0,214,143,.2);">🏦 Night Lend — ZK DeFi Lending</span></div>
+      <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:12px;">Borrow against<br><em>hidden collateral.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">The first ZK-native lending protocol on Midnight Network. Deposit collateral privately, borrow sUSD without revealing your position. Earn yield on deposits. Your portfolio — invisible to the world, provable to the protocol.</p>
+    </div>
+
+    <!-- Position summary -->
+    <div class="nl-health" style="margin-bottom:16px;">
+      <div class="nl-health-title">Your position — ZK shielded</div>
+      <div class="nl-position-grid">
+        <div class="nl-pos"><div class="nl-pos-val" style="color:var(--green);">$4,200</div><div class="nl-pos-label">Deposited</div></div>
+        <div class="nl-pos"><div class="nl-pos-val" style="color:var(--gold);">$1,400</div><div class="nl-pos-label">Borrowed</div></div>
+        <div class="nl-pos"><div class="nl-pos-val" style="color:var(--cyan);">2.8x</div><div class="nl-pos-label">Health Factor</div></div>
+      </div>
+      <div style="margin-top:14px;">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:6px;">Liquidation health</div>
+        <div class="nl-hbar"><div class="nl-hbar-fill" id="nl-hbar-fill"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;font-family:var(--mono);color:var(--muted);"><span>Danger</span><span style="color:var(--green);">Safe (72%)</span><span>Max</span></div>
+      </div>
+    </div>
+
+    <div class="nl-panels">
+      <!-- Deposit pools -->
+      <div class="nl-panel">
+        <div class="nl-panel-title">Deposit &amp; earn yield</div>
+        <div class="nl-pool" onclick="nightLendDeposit('NIGHT','18.4%')">
+          <div class="nl-pool-icon">🌙</div>
+          <div class="nl-pool-info"><div class="nl-pool-name">NIGHT</div><div class="nl-pool-apy">APY 18.4%</div><div class="nl-pool-tvl">TVL $1.2M</div></div>
+          <button class="nl-pool-btn">Deposit</button>
+        </div>
+        <div class="nl-pool" onclick="nightLendDeposit('sUSD','8.2%')">
+          <div class="nl-pool-icon">💵</div>
+          <div class="nl-pool-info"><div class="nl-pool-name">sUSD</div><div class="nl-pool-apy">APY 8.2%</div><div class="nl-pool-tvl">TVL $3.8M</div></div>
+          <button class="nl-pool-btn">Deposit</button>
+        </div>
+        <div class="nl-pool" onclick="nightLendDeposit('tDUST','12.1%')">
+          <div class="nl-pool-icon">⚡</div>
+          <div class="nl-pool-info"><div class="nl-pool-name">tDUST</div><div class="nl-pool-apy">APY 12.1%</div><div class="nl-pool-tvl">TVL $620K</div></div>
+          <button class="nl-pool-btn">Deposit</button>
+        </div>
+      </div>
+      <!-- Borrow -->
+      <div class="nl-panel">
+        <div class="nl-panel-title">Borrow against collateral</div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Borrow asset</div>
+          <select class="np-currency-sel" id="nl-asset" style="width:100%;">
+            <option>sUSD</option>
+            <option>NIGHT</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Amount to borrow</div>
+          <input class="np-input" id="nl-borrow-amount" type="number" placeholder="0.00" oninput="nightLendBorrowUpdate()" style="width:100%;box-sizing:border-box;" />
+        </div>
+        <div id="nl-borrow-info" style="background:var(--raised);border-radius:8px;padding:10px;font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:12px;display:none;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Available to borrow</span><span style="color:var(--text);">$2,800</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Interest rate</span><span style="color:var(--gold);">6.5% APR</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>New health factor</span><span id="nl-new-health" style="color:var(--green);">—</span></div>
+        </div>
+        <button class="btn btn-primary" id="nl-borrow-btn" onclick="nightLendBorrow()" style="width:100%;">Borrow privately</button>
+        <div id="nl-zk-bar" style="margin-top:12px;background:var(--raised);border:1px solid var(--rim);border-radius:10px;padding:12px;display:none;font-size:11px;font-family:var(--mono);color:var(--muted);">
+          <div style="font-weight:700;color:var(--text2);margin-bottom:6px;">ZK proof generation</div>
+          <div id="nl-zk-status">Generating collateral proof…</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(0,214,143,.06),rgba(124,58,237,.03));border:1px solid rgba(0,214,143,.15);border-radius:14px;padding:20px;text-align:center;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🔐 Your loan position is a ZK proof — not a database entry</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.65;">No one can see your collateral. No one can see your loan size. The protocol only knows that your position is solvent — provably, cryptographically. The first private lending protocol in Web3 that actually works.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ NIGHT CHAT ══════════════ -->
+<div class="page" id="page-nightchat">
+  <div class="page-inner">
+    <div class="nc-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(6,182,212,.06);color:var(--cyan);border-color:rgba(6,182,212,.2);">💬 Night Chat — Encrypted Trade Messaging</span></div>
+      <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:12px;">Talk to traders.<br><em>Stay invisible.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">End-to-end encrypted messaging between buyers and sellers on Night Markets. ZK-verified identities — you know they're real, not who they are. No phone numbers. No email. No metadata.</p>
+    </div>
+
+    <div class="nc-layout">
+      <!-- Thread list -->
+      <div class="nc-sidebar">
+        <div class="nc-sidebar-head">Messages <span style="color:var(--green);margin-left:4px;">● 3 unread</span></div>
+        <div class="nc-thread active" onclick="ncSelectThread(0)">
+          <div class="nc-avatar">A</div>
+          <div class="nc-thread-info">
+            <div class="nc-thread-name">anon#4471</div>
+            <div class="nc-thread-preview">Is the item still available?</div>
+          </div>
+          <div class="nc-zk-badge">ZK ✓</div>
+        </div>
+        <div class="nc-thread" onclick="ncSelectThread(1)">
+          <div class="nc-avatar" style="background:linear-gradient(135deg,var(--green),var(--cyan));">S</div>
+          <div class="nc-thread-info">
+            <div class="nc-thread-name">shadow#8812</div>
+            <div class="nc-thread-preview">Payment confirmed on-chain ✓</div>
+          </div>
+          <div class="nc-zk-badge">ZK ✓</div>
+        </div>
+        <div class="nc-thread" onclick="ncSelectThread(2)">
+          <div class="nc-avatar" style="background:linear-gradient(135deg,var(--gold),var(--red));">M</div>
+          <div class="nc-thread-info">
+            <div class="nc-thread-name">midnight#0099</div>
+            <div class="nc-thread-preview">I can ship within 48hrs</div>
+          </div>
+          <div class="nc-zk-badge">ZK ✓</div>
+        </div>
+        <div class="nc-thread" onclick="ncSelectThread(3)">
+          <div class="nc-avatar" style="background:linear-gradient(135deg,var(--plasma),var(--ink));">N</div>
+          <div class="nc-thread-info">
+            <div class="nc-thread-name">null#2277</div>
+            <div class="nc-thread-preview">Dispute resolved — escrow released</div>
+          </div>
+          <div class="nc-zk-badge">ZK ✓</div>
+        </div>
+        <div style="padding:12px 14px;margin-top:auto;border-top:1px solid var(--rim);font-size:10px;color:var(--muted);font-family:var(--mono);">All messages E2E encrypted<br>Keys derived from ZK identity</div>
+      </div>
+
+      <!-- Chat main -->
+      <div class="nc-main">
+        <div class="nc-main-head">
+          <div class="nc-avatar" id="nc-head-avatar">A</div>
+          <div>
+            <div class="nc-main-head-name" id="nc-head-name">anon#4471</div>
+            <div class="nc-main-head-meta" id="nc-head-meta">ZK verified buyer · 12 trades · Identity shielded</div>
+          </div>
+          <div style="margin-left:auto;"><span class="nc-zk-badge" style="font-size:9px;">E2E Encrypted</span></div>
+        </div>
+        <div class="nc-messages" id="nc-messages">
+          <div class="nc-msg them">Is the item still available? I saw it listed 20 mins ago<div class="nc-msg-meta">anon#4471 · 14:32 · encrypted</div></div>
+          <div class="nc-msg me">Yes still available. Happy to hold for 2 hours while you arrange payment<div class="nc-msg-meta">You · 14:34 · encrypted</div></div>
+          <div class="nc-msg them">Perfect. Will pay in sUSD via escrow. Can you confirm the listing price?<div class="nc-msg-meta">anon#4471 · 14:35 · encrypted</div></div>
+          <div class="nc-msg me">Listed at 85 sUSD including shipping. ZK escrow auto-releases on delivery confirmation<div class="nc-msg-meta">You · 14:37 · encrypted</div></div>
+          <div class="nc-msg them">Sounds good. Sending payment now — you'll see it in escrow shortly ✓<div class="nc-msg-meta">anon#4471 · 14:38 · encrypted</div></div>
+        </div>
+        <div class="nc-compose">
+          <input class="nc-compose-input" id="nc-input" placeholder="Type a message… (E2E encrypted)" onkeydown="if(event.key==='Enter')ncSend()" />
+          <button class="nc-send-btn" onclick="ncSend()">Send ⚡</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;background:linear-gradient(135deg,rgba(6,182,212,.06),rgba(124,58,237,.03));border:1px solid rgba(6,182,212,.15);border-radius:14px;padding:20px;text-align:center;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">💬 The only marketplace messenger where metadata is also private</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.65;">Signal-grade encryption. ZK-verified counterparty. Tied to your escrow — messages are part of the trade record but readable only by participants. Dispute evidence stays private until a resolver needs it.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ACQUIRE ══════════════ -->
+<div class="page" id="page-acquire">
+  <div class="page-inner">
+    <div class="acq-hero">
+      <div style="margin-bottom:16px;"><span class="tag" style="background:rgba(245,197,24,.08);color:var(--gold);border-color:rgba(245,197,24,.2);">🤝 Available for Acquisition</span></div>
+      <h1 style="font-family:var(--serif);font-size:54px;font-style:italic;margin-bottom:16px;">Night Markets<br><em>is for sale.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto 32px;line-height:1.8;font-weight:300;">The most complete ZK-native marketplace on Midnight Network. Deployed on-chain. Every Midnight ecosystem project integrated. Built to hand over. Priced to move fast.</p>
+      <div class="acq-price-tag">
+        <div>
+          <div class="acq-price">A$35,000</div>
+        </div>
+        <div class="acq-price-label">Asking price<br><span style="color:var(--muted);font-size:9px;">Negotiable · ADA / USD / NIGHT accepted</span></div>
+      </div>
+    </div>
+
+    <!-- What's included -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">What you get</div>
+    <div class="acq-grid">
+      <div class="acq-card">
+        <div class="acq-card-icon">⛓️</div>
+        <div class="acq-card-title">Live Midnight contract</div>
+        <div class="acq-card-items">
+          <div>Deployed on Midnight Preprod</div>
+          <div>6 Compact circuits</div>
+          <div>Contract: 7473b82b398f6b86…</div>
+          <div>Full source code</div>
+        </div>
+      </div>
+      <div class="acq-card">
+        <div class="acq-card-icon">🌐</div>
+        <div class="acq-card-title">Ecosystem integrations</div>
+        <div class="acq-card-items">
+          <div>Lace · 1AM · GSD · Nocturne wallets</div>
+          <div>Statera sUSD stablecoin</div>
+          <div>LunarSwap DEX (NIGHT/sUSD/tDUST)</div>
+          <div>Midnight Bridge (ETH/ADA/SOL)</div>
+          <div>Midnames DID registry</div>
+          <div>KYC Midnight · Brick Towers</div>
+          <div>Midnauction sealed-bid</div>
+        </div>
+      </div>
+      <div class="acq-card">
+        <div class="acq-card-icon">🧩</div>
+        <div class="acq-card-title">Night Ecosystem (all pages)</div>
+        <div class="acq-card-items">
+          <div>Night Save — Statera vault</div>
+          <div>Night Fun — OZ FungibleToken launchpad</div>
+          <div>Night Work — AI agent task market</div>
+          <div>Night Data — ZK data marketplace</div>
+          <div>Night Store — merch platform</div>
+          <div>Night Identity — DID + scoring</div>
+        </div>
+      </div>
+      <div class="acq-card">
+        <div class="acq-card-icon">⚙️</div>
+        <div class="acq-card-title">Infrastructure</div>
+        <div class="acq-card-items">
+          <div>GitHub repo (full history)</div>
+          <div>midnight-mcp MCP server config</div>
+          <div>Midnight Indexer live feed</div>
+          <div>Deploy scripts + receipts</div>
+          <div>Claude Code project memory</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Why buy -->
+    <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:16px;padding:28px;margin-bottom:28px;">
+      <div style="font-size:14px;font-weight:800;margin-bottom:16px;">Why this is worth it</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;"><span style="color:var(--green);font-weight:700;">12+ months</span> of Midnight ecosystem development is already done. You don't hire a team. You don't wait. You flip the brand and launch.</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;">Every current Midnight partner project is integrated — wallets, DID, stablecoins, DEX, bridge, KYC. This is the most complete Midnight dApp that exists right now.</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;"><span style="color:var(--cyan);font-weight:700;">ZK-native from day one.</span> Not retrofitted privacy — built on Midnight's Compact circuits. The shopping, escrow, checkout, identity, and payments are all ZK.</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;">This is infrastructure. Night Markets is the marketplace layer that every Midnight City AI agent, every Night Fun token, and every Night Work task runs through.</div>
+      </div>
+    </div>
+
+    <!-- Ideal buyers -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Ideal buyers</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px;">
+      <div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:12px 18px;font-size:12px;font-weight:700;">🌙 IOG / Midnight Foundation<br><span style="font-size:10px;font-weight:300;color:var(--muted);">Showcase project for ecosystem launch</span></div>
+      <div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:10px;padding:12px 18px;font-size:12px;font-weight:700;">🏙️ Midnight City<br><span style="font-size:10px;font-weight:300;color:var(--muted);">Commerce layer for AI agent economy</span></div>
+      <div style="background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:10px;padding:12px 18px;font-size:12px;font-weight:700;">🏦 Statera · LunarSwap · any partner<br><span style="font-size:10px;font-weight:300;color:var(--muted);">Ready-made distribution channel</span></div>
+      <div style="background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);border-radius:10px;padding:12px 18px;font-size:12px;font-weight:700;">🌐 Midnight Ecosystem Grant<br><span style="font-size:10px;font-weight:300;color:var(--muted);">Grant-fundable — full documentation</span></div>
+    </div>
+
+    <!-- Contact -->
+    <div class="acq-contact-card">
+      <div style="font-size:22px;margin-bottom:12px;">📬</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:8px;">Serious enquiries only</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px;font-weight:300;">DM on X or reach out via GitHub. I'm a farmer from Australia who built this with Claude. I don't have time to chase — if you see the value, let's talk.</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <a href="https://x.com/kingmunz1994" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:700;color:var(--text1);text-decoration:none;">𝕏 @kingmunz1994</a>
+        <a href="https://github.com/kingmunz1994-lgtm/night-markets" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:700;color:var(--text1);text-decoration:none;">⌥ GitHub repo →</a>
+      </div>
+    </div>
+
+    <!-- Contract proof -->
+    <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:12px;padding:18px;font-family:var(--mono);font-size:11px;">
+      <div style="color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px;font-size:9px;">On-chain proof — Midnight Preprod</div>
+      <div style="color:var(--green);margin-bottom:4px;">Contract: 7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711</div>
+      <div style="color:var(--muted);">Block 127,350 · Tx 00e988f9d9e050… · 6 Compact circuits deployed</div>
+      <a href="https://midnight-explorer.io" target="_blank" style="color:var(--cyan);font-size:10px;margin-top:6px;display:inline-block;">View on Midnight Explorer →</a>
     </div>
   </div>
 </div>
@@ -6385,6 +6840,9 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showPage('nightsave');closeMobNav()" style="color:var(--gold);">💎 Night Save</button>
   <button class="mob-nav-item" onclick="showPage('nightdata');closeMobNav()" style="color:var(--red);">🔐 Night Data</button>
   <button class="mob-nav-item" onclick="showPage('nightwork');closeMobNav()" style="color:var(--cyan);">👤 Night Work</button>
+  <button class="mob-nav-item" onclick="showPage('nightpay');closeMobNav()" style="color:var(--glow);">⚡ Night Pay</button>
+  <button class="mob-nav-item" onclick="showPage('nightlend');closeMobNav()" style="color:var(--green);">🏦 Night Lend</button>
+  <button class="mob-nav-item" onclick="showPage('nightchat');closeMobNav()" style="color:var(--cyan);">💬 Night Chat</button>
   <button class="mob-nav-item" onclick="showPage('ecosystem');closeMobNav()">🌐 Ecosystem</button>
   <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);padding:0 16px;margin:14px 0 6px;">Discover</div>
   <button class="mob-nav-item" onclick="showPage('privacy');closeMobNav()">⊘ ZK Privacy</button>
@@ -6596,6 +7054,28 @@ document.addEventListener('click',function(e){
     </div>
   </div>
 </div>
+
+<!-- ══ GUIDED TOUR OVERLAY ══ -->
+<div id="tour-overlay" style="display:none;">
+  <div id="tour-spotlight"></div>
+  <div id="tour-bubble">
+    <div class="tour-step-label" id="tour-step-label">Step 1 of 10</div>
+    <div class="tour-bubble-title" id="tour-bubble-title">Title</div>
+    <div class="tour-bubble-desc" id="tour-bubble-desc">Description</div>
+    <div class="tour-bubble-tech" id="tour-bubble-tech"></div>
+    <div class="tour-controls">
+      <button class="tour-btn-skip" onclick="endTour()">End tour</button>
+      <span class="tour-progress" id="tour-progress"></span>
+      <button class="tour-btn-next" id="tour-btn-next" onclick="tourNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOUR START BUTTON ══ -->
+<button id="tour-start-btn" onclick="startTour()">
+  <span class="ts-pulse"></span>
+  Take the tour
+</button>
 
 </body>
 
@@ -8005,6 +8485,201 @@ setTimeout(function(){
     if(banner) banner.style.display = 'flex';
   }
 }, 500);
+
+// ── Guided Demo Tour ───────────────────────────────────────────────────────────
+var _tourStep = 0;
+var _tourActive = false;
+
+var TOUR_STEPS = [
+  {
+    title: 'Welcome to Night Markets',
+    desc:  'The first ZK-native marketplace on Midnight Network. Every feature you\'re about to see uses real Compact circuits — not just a frontend. Let\'s walk through it.',
+    tech:  'Contract: 7473b82b398f6b86… · Midnight Preprod · Block 127,350',
+    target: 'demo-banner',
+    page: 'shop',
+    arrow: 'top',
+  },
+  {
+    title: 'ZK escrow — buy anything privately',
+    desc:  'Browse and buy. Every purchase goes through createListing() + fundEscrow() Compact circuits. The seller never knows who you are. The buyer never exposes their card.',
+    tech:  'Circuits: createListing(), fundEscrow(), releaseEscrow() · NightMarketsEscrow.compact',
+    target: 'shop-grid',
+    page: 'shop',
+    arrow: 'top',
+  },
+  {
+    title: 'Four payment methods — including sUSD',
+    desc:  'Pay in 4 (ZK BNPL), full price, sUSD (Statera stablecoin), or NIGHT token. All on Midnight. Sellers price in dollars. Buyers pay in any token.',
+    tech:  'Statera Protocol · Zswap shielded token · mint_sUSD() · sUSDTokenType',
+    target: 'pm-susd',
+    page: null,
+    arrow: 'bottom',
+    before: function(){ openCheckout(); }
+  },
+  {
+    title: 'KYC ZK proof — verify without revealing',
+    desc:  'Age, region, epoch — proven on-chain. Nobody sees the actual values. The buyer proves they\'re eligible. The seller gets the guarantee. Neither learns anything else.',
+    tech:  'KYC Midnight · age attestation · region attestation · epoch v1 · ZK circuit',
+    target: 'co-kyc-section',
+    page: null,
+    arrow: 'top',
+    before: function(){
+      closeModal('ov-co');
+      coStep = 2; coMethod = 'susd';
+      openModal('ov-co'); renderCoStep();
+    }
+  },
+  {
+    title: 'Night Save — Statera vault',
+    desc:  'Deposit NIGHT as collateral. Mint sUSD up to 80% LTV. Spend anywhere. Stake in the stability pool for 8.4% APY. No bank. No identity. No credit check.',
+    tech:  'depositToCollateralPool() · mint_sUSD() · calculateHFactor() · MIT · Midnight',
+    target: 'vault-collateral',
+    page: 'nightsave',
+    arrow: 'top',
+    before: function(){ closeModal('ov-co'); }
+  },
+  {
+    title: 'LunarSwap — built-in DEX',
+    desc:  'Swap NIGHT ↔ sUSD ↔ tDUST without leaving Night Markets. Live AMM quote, price impact, slippage control. swap() Compact circuit — ZK private.',
+    tech:  'LunarSwap · swap() · AMM √(k) invariant · 2-hop routing · shielded tx',
+    target: 'ov-swap',
+    page: null,
+    arrow: 'top',
+    before: function(){ openLunarSwap('night','susd'); }
+  },
+  {
+    title: 'Midnight Bridge — ETH / ADA / SOL in',
+    desc:  'Bridge assets from Ethereum, Cardano, or Solana straight to Midnight. Receive tDUST for gas + NIGHT via LunarSwap. bridgeIn() ZK circuit — non-custodial.',
+    tech:  'bridgeIn() · cross-chain ZK proof · tDUST + NIGHT receive · LunarSwap auto-swap',
+    target: 'ov-bridge',
+    page: null,
+    arrow: 'top',
+    before: function(){ closeLunarSwap(); openBridge(); }
+  },
+  {
+    title: 'Night Work — AI agents hire humans',
+    desc:  'Midnight City AI agents post tasks. Humans accept, complete, submit ZK proof. NIGHT released from escrow. Reputation updated on-chain. Nobody knows who you are.',
+    tech:  'fundEscrow() · generateZKProof() · releaseEscrow() · updateReputation() · Compact',
+    target: 'nw-task-t1',
+    page: 'nightwork',
+    arrow: 'top',
+    before: function(){ closeBridge(); }
+  },
+  {
+    title: 'Night Data — own your data, get paid',
+    desc:  'Companies request anonymised data. You vote yes or no. ZK proof confirms you match criteria — they never learn who you are. NIGHT credited instantly.',
+    tech:  'commitDataHash() · generateZKProof() · submitProof() · creditNIGHT() · Compact',
+    target: 'nd-row-1',
+    page: 'nightdata',
+    arrow: 'top',
+  },
+  {
+    title: 'Night Fun — OZ FungibleToken launchpad',
+    desc:  'Launch your Midnight token AND merch store simultaneously. OpenZeppelin FungibleToken deployed via Compact circuit. Token listed on LunarSwap from day one.',
+    tech:  'OpenZeppelin FungibleToken · createToken() · Compact circuit · LunarSwap pool',
+    target: 'nf-launch-btn',
+    page: 'nightfun',
+    arrow: 'bottom',
+    last: true,
+  },
+];
+
+function startTour(){
+  if(!walletState || !walletState.connected){
+    connectDemo();
+    setTimeout(function(){ _startTourInner(); }, 400);
+  } else {
+    _startTourInner();
+  }
+}
+
+function _startTourInner(){
+  _tourStep = 0;
+  _tourActive = true;
+  document.getElementById('tour-overlay').style.display = 'block';
+  document.getElementById('tour-start-btn').style.display = 'none';
+  _runTourStep();
+}
+
+function _runTourStep(){
+  var step = TOUR_STEPS[_tourStep];
+  if(!step){ endTour(); return; }
+
+  // Run before hook
+  if(step.before) step.before();
+
+  // Navigate to page
+  if(step.page) showPage(step.page);
+
+  setTimeout(function(){
+    // Find target element
+    var el = step.target ? document.getElementById(step.target) : null;
+    var rect = el ? el.getBoundingClientRect() : null;
+
+    // Scroll target into view
+    if(el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+
+    setTimeout(function(){
+      var r = el ? el.getBoundingClientRect() : { top:200, left:window.innerWidth/2-150, width:300, height:60 };
+      var pad = 8;
+
+      // Position spotlight
+      var sl = document.getElementById('tour-spotlight');
+      sl.style.left   = (r.left + window.scrollX - pad) + 'px';
+      sl.style.top    = (r.top  + window.scrollY - pad) + 'px';
+      sl.style.width  = (r.width  + pad*2) + 'px';
+      sl.style.height = (r.height + pad*2) + 'px';
+
+      // Position bubble
+      var bubble = document.getElementById('tour-bubble');
+      var bW = 300, bH = 180;
+      var bLeft = r.left + window.scrollX;
+      var bTop;
+      var arrow = step.arrow || 'top';
+
+      if(arrow === 'bottom' || r.top > window.innerHeight * 0.6){
+        bTop = r.top + window.scrollY - bH - 20;
+        bubble.className = 'arrow-bottom';
+        arrow = 'bottom';
+      } else {
+        bTop = r.top + window.scrollY + r.height + 20;
+        bubble.className = 'arrow-top';
+        arrow = 'top';
+      }
+      // Keep bubble on screen horizontally
+      bLeft = Math.max(16, Math.min(bLeft, window.innerWidth - bW - 16));
+      bubble.style.left = bLeft + 'px';
+      bubble.style.top  = bTop  + 'px';
+
+      // Populate bubble
+      document.getElementById('tour-step-label').textContent = 'Step ' + (_tourStep+1) + ' of ' + TOUR_STEPS.length;
+      document.getElementById('tour-bubble-title').textContent = step.title;
+      document.getElementById('tour-bubble-desc').textContent  = step.desc;
+      document.getElementById('tour-bubble-tech').textContent  = step.tech || '';
+      document.getElementById('tour-progress').textContent = (_tourStep+1) + ' / ' + TOUR_STEPS.length;
+
+      var nextBtn = document.getElementById('tour-btn-next');
+      nextBtn.textContent = step.last ? '🎉 Finish tour' : 'Next →';
+
+    }, 350);
+  }, step.before ? 600 : 100);
+}
+
+function tourNext(){
+  _tourStep++;
+  if(_tourStep >= TOUR_STEPS.length){ endTour(); return; }
+  _runTourStep();
+}
+
+function endTour(){
+  _tourActive = false;
+  document.getElementById('tour-overlay').style.display = 'none';
+  document.getElementById('tour-start-btn').style.display = 'flex';
+  // Close any open modals
+  closeModal('ov-co'); closeLunarSwap(); closeBridge();
+  showPage('shop');
+  toast('Tour complete — Night Markets is available for acquisition · DM @kingmunz1994', 'success');
+}
 
 // ══════════════════════════════════════════════
 // FEED — v15 TikTok-style shoppable video feed
@@ -9737,6 +10412,168 @@ showPage = function(page) {
 
 // ── MOBILE NAV — add new pages ────────────────
 // Mobile nav now handled by static HTML — no JS builder needed
+
+// ══════════════════════════════════════════
+// NIGHT PAY
+// ══════════════════════════════════════════
+function nightPayUpdate() {
+  var amt = parseFloat(document.getElementById('npp-amount').value) || 0;
+  var btn = document.getElementById('npp-btn');
+  if(btn) btn.textContent = amt > 0 ? 'Send ' + amt + ' ' + document.getElementById('npp-currency').value + ' privately' : 'Send privately';
+}
+async function nightPaySend() {
+  var to = (document.getElementById('npp-to').value || '').trim();
+  var amt = parseFloat(document.getElementById('npp-amount').value) || 0;
+  var cur = document.getElementById('npp-currency').value;
+  if(!to) { toast('Enter a recipient address or Midname', 'info'); return; }
+  if(amt <= 0) { toast('Enter an amount to send', 'info'); return; }
+  var btn = document.getElementById('npp-btn');
+  var bar = document.getElementById('npp-zkbar');
+  btn.disabled = true; btn.textContent = 'Generating ZK proof…';
+  bar.style.display = 'block';
+  var steps = [
+    { dot:'npp-d1', label:'Sender shielded ✓', ms:700 },
+    { dot:'npp-d2', label:'Recipient encrypted ✓', ms:800 },
+    { dot:'npp-d3', label:'Amount shielded ✓', ms:600 },
+    { dot:'npp-d4', label:'Submitted to Midnight Network ✓', ms:900 }
+  ];
+  var i = 0;
+  function next() {
+    if(i >= steps.length) {
+      btn.disabled = false; btn.textContent = 'Send privately';
+      toast('⚡ ' + amt + ' ' + cur + ' sent privately — ZK proof on-chain', 'success');
+      document.getElementById('npp-amount').value = '';
+      document.getElementById('npp-to').value = '';
+      bar.style.display = 'none';
+      steps.forEach(function(s){ var d=document.getElementById(s.dot); if(d){d.className='np-zk-dot';} });
+      return;
+    }
+    var s = steps[i];
+    var dot = document.getElementById(s.dot);
+    var lbl = document.getElementById(s.dot.replace('d','s'));
+    if(dot){ dot.className = 'np-zk-dot active'; }
+    setTimeout(function(){
+      if(dot){ dot.className = 'np-zk-dot done'; }
+      if(lbl){ lbl.style.color = 'var(--green)'; }
+      i++; next();
+    }, s.ms);
+  }
+  next();
+}
+
+// ══════════════════════════════════════════
+// NIGHT LEND
+// ══════════════════════════════════════════
+function nightLendDeposit(asset, apy) {
+  toast('💎 Depositing into ' + asset + ' pool — ' + apy + ' APY. ZK proof generated.', 'success');
+}
+function nightLendBorrowUpdate() {
+  var amt = parseFloat(document.getElementById('nl-borrow-amount').value) || 0;
+  var info = document.getElementById('nl-borrow-info');
+  var health = document.getElementById('nl-new-health');
+  if(amt > 0) {
+    info.style.display = 'block';
+    var h = Math.max(1.1, 2.8 - (amt / 2800) * 1.5).toFixed(2);
+    if(health) { health.textContent = h + 'x'; health.style.color = parseFloat(h) > 1.5 ? 'var(--green)' : 'var(--gold)'; }
+  } else {
+    info.style.display = 'none';
+  }
+}
+async function nightLendBorrow() {
+  var amt = parseFloat(document.getElementById('nl-borrow-amount').value) || 0;
+  var asset = document.getElementById('nl-asset').value;
+  if(amt <= 0) { toast('Enter an amount to borrow', 'info'); return; }
+  if(amt > 2800) { toast('Exceeds borrowing limit — add more collateral', 'info'); return; }
+  var btn = document.getElementById('nl-borrow-btn');
+  var bar = document.getElementById('nl-zk-bar');
+  var status = document.getElementById('nl-zk-status');
+  btn.disabled = true; btn.textContent = 'Generating ZK proof…';
+  bar.style.display = 'block';
+  var steps = ['Generating collateral proof…','Verifying solvency circuit…','Shielding loan position…','Disbursing ' + amt + ' ' + asset + ' to wallet…'];
+  var i = 0;
+  function next() {
+    if(i >= steps.length) {
+      btn.disabled = false; btn.textContent = 'Borrow privately';
+      bar.style.display = 'none';
+      toast('🏦 Borrowed ' + amt + ' ' + asset + ' — position ZK shielded on-chain', 'success');
+      document.getElementById('nl-borrow-amount').value = '';
+      document.getElementById('nl-borrow-info').style.display = 'none';
+      return;
+    }
+    if(status) status.textContent = steps[i];
+    i++;
+    setTimeout(next, 750);
+  }
+  next();
+}
+
+// ══════════════════════════════════════════
+// NIGHT CHAT
+// ══════════════════════════════════════════
+var ncThreads = [
+  { name:'anon#4471', avatar:'A', avatarBg:'', meta:'ZK verified buyer · 12 trades · Identity shielded',
+    msgs:[
+      {from:'them',text:'Is the item still available? I saw it listed 20 mins ago',time:'14:32'},
+      {from:'me',text:'Yes still available. Happy to hold for 2 hours while you arrange payment',time:'14:34'},
+      {from:'them',text:'Perfect. Will pay in sUSD via escrow. Can you confirm the listing price?',time:'14:35'},
+      {from:'me',text:'Listed at 85 sUSD including shipping. ZK escrow auto-releases on delivery confirmation',time:'14:37'},
+      {from:'them',text:'Sounds good. Sending payment now — you\'ll see it in escrow shortly ✓',time:'14:38'}
+    ]},
+  { name:'shadow#8812', avatar:'S', avatarBg:'background:linear-gradient(135deg,var(--green),var(--cyan))', meta:'ZK verified seller · 48 trades · Top rated',
+    msgs:[
+      {from:'them',text:'Payment confirmed on-chain ✓ Shipping tomorrow via tracked courier',time:'11:02'},
+      {from:'me',text:'Perfect — ZK escrow is holding. I\'ll confirm delivery once received',time:'11:05'},
+      {from:'them',text:'Tracking number will be added to the order. Escrow auto-releases on your confirmation',time:'11:06'}
+    ]},
+  { name:'midnight#0099', avatar:'M', avatarBg:'background:linear-gradient(135deg,var(--gold),var(--red))', meta:'ZK verified seller · 7 trades · New seller',
+    msgs:[
+      {from:'them',text:'I can ship within 48hrs to anywhere in Australia',time:'09:14'},
+      {from:'me',text:'Does that include express? I need it by Friday',time:'09:16'},
+      {from:'them',text:'Express is +12 sUSD — I can do overnight for Friday delivery ✓',time:'09:18'}
+    ]},
+  { name:'null#2277', avatar:'N', avatarBg:'background:linear-gradient(135deg,var(--plasma),var(--ink))', meta:'ZK verified · Dispute resolved · Escrow released',
+    msgs:[
+      {from:'them',text:'Dispute resolved — escrow released to seller after ZK arbitration',time:'Yesterday'},
+      {from:'me',text:'Thanks for resolving quickly. Night Markets dispute system worked well',time:'Yesterday'}
+    ]}
+];
+var ncActive = 0;
+function ncSelectThread(i) {
+  ncActive = i;
+  document.querySelectorAll('.nc-thread').forEach(function(el,idx){ el.classList.toggle('active', idx===i); });
+  var t = ncThreads[i];
+  document.getElementById('nc-head-name').textContent = t.name;
+  document.getElementById('nc-head-meta').textContent = t.meta;
+  var av = document.getElementById('nc-head-avatar');
+  av.textContent = t.avatar;
+  av.style.cssText = t.avatarBg || '';
+  var box = document.getElementById('nc-messages');
+  box.innerHTML = t.msgs.map(function(m){
+    return '<div class="nc-msg '+m.from+'">'+m.text+'<div class="nc-msg-meta">'+
+      (m.from==='me'?'You':t.name)+' · '+m.time+' · encrypted</div></div>';
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+function ncSend() {
+  var input = document.getElementById('nc-input');
+  var text = (input.value || '').trim();
+  if(!text) return;
+  var t = ncThreads[ncActive];
+  t.msgs.push({from:'me', text:text, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
+  input.value = '';
+  ncSelectThread(ncActive);
+  setTimeout(function(){
+    var replies = [
+      'Got it — I\'ll confirm via the escrow system ✓',
+      'Thanks, checking now. ZK proof verified on my end.',
+      'Perfect. Updating the order status now.',
+      'Understood. Night Chat keeps this between us 🔒'
+    ];
+    var r = replies[Math.floor(Math.random()*replies.length)];
+    t.msgs.push({from:'them', text:r, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
+    ncSelectThread(ncActive);
+  }, 1200);
+}
 
 // ── LANGUAGE SYSTEM — wire in ─────────────────
 // Auto-detect browser language on first load
