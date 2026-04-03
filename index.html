@@ -1673,6 +1673,44 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .ct-dot.done{background:var(--green);}
 .ct-dot.wait{background:var(--faint);}
 
+/* ─── LUNARSWAP DEX ─── */
+.ls-modal-wrap{background:#12102b;border:1px solid #2d2550;border-radius:22px;padding:28px;width:420px;max-width:95vw;position:relative;}
+.ls-modal-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#7c3aed,#22d3ee,transparent);border-radius:22px 22px 0 0;}
+.ls-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.ls-title{font-size:17px;font-weight:800;}
+.ls-badge{font-size:9px;font-family:var(--mono);background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.25);border-radius:5px;padding:2px 7px;font-weight:700;}
+.ls-token-box{background:rgba(255,255,255,.04);border:1px solid var(--rim2);border-radius:14px;padding:16px;margin-bottom:6px;cursor:pointer;transition:border-color .2s;}
+.ls-token-box:hover{border-color:rgba(124,58,237,.4);}
+.ls-token-box:focus-within{border-color:rgba(124,58,237,.6);}
+.ls-tb-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.ls-tb-label{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+.ls-tb-bal{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.ls-tb-bal span{color:var(--text1);font-weight:700;cursor:pointer;}
+.ls-tb-main{display:flex;align-items:center;gap:10px;}
+.ls-token-sel{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.25);border:1px solid var(--rim);border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.ls-token-sel:hover{background:rgba(124,58,237,.15);}
+.ls-token-icon{font-size:20px;line-height:1;}
+.ls-token-name{font-size:13px;font-weight:800;}
+.ls-token-ticker{font-size:9px;font-family:var(--mono);color:var(--muted);}
+.ls-chevron{font-size:9px;color:var(--muted);margin-left:3px;}
+.ls-amount-input{flex:1;background:none;border:none;outline:none;font-size:24px;font-weight:800;font-family:var(--mono);color:var(--text1);text-align:right;min-width:0;}
+.ls-amount-input::placeholder{color:var(--faint);}
+.ls-usd-equiv{font-size:11px;font-family:var(--mono);color:var(--muted);text-align:right;margin-top:4px;}
+.ls-flip-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);border-radius:10px;cursor:pointer;margin:0 auto;transition:background .2s,transform .2s;font-size:16px;user-select:none;}
+.ls-flip-btn:hover{background:rgba(124,58,237,.22);transform:rotate(180deg);}
+.ls-route-row{display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);color:var(--muted);margin:10px 0 4px;flex-wrap:wrap;}
+.ls-route-hop{background:rgba(255,255,255,.05);border:1px solid var(--rim);border-radius:5px;padding:2px 7px;}
+.ls-route-arrow{color:var(--faint);}
+.ls-info-row{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;}
+.ls-info-row span:last-child{color:var(--text2);}
+.ls-slippage-row{display:flex;align-items:center;gap:6px;margin:10px 0;}
+.ls-slip-btn{font-size:9px;font-family:var(--mono);padding:3px 8px;background:rgba(255,255,255,.04);border:1px solid var(--rim);border-radius:5px;cursor:pointer;color:var(--muted);transition:all .15s;}
+.ls-slip-btn.active,.ls-slip-btn:hover{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.4);color:#a78bfa;}
+.ls-swap-btn{width:100%;padding:15px;margin-top:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .2s;font-family:var(--mono);}
+.ls-swap-btn:hover{opacity:.88;}
+.ls-swap-btn:disabled{opacity:.4;cursor:not-allowed;}
+.ls-circuit{background:var(--depth);border:1px solid var(--rim);border-radius:10px;padding:12px;font-family:var(--mono);font-size:10px;line-height:1.9;color:var(--muted);margin-top:12px;display:none;}
+
 /* Night Save page */
 #page-nightsave .page-inner{max-width:900px;margin:0 auto;padding:40px 24px;}
 .ns-banks-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--rim);border-radius:16px;overflow:hidden;margin-bottom:32px;}
@@ -2027,6 +2065,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div class="cart-count" id="cart-badge">0</div>
       </div>
       <button class="btn btn-primary btn-sm" onclick="showPage('shop')">Shop now</button>
+      <button class="btn btn-ghost btn-sm" onclick="openLunarSwap('night','susd')" style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(91,33,182,.1));border-color:rgba(124,58,237,.3);color:#a78bfa;font-family:var(--mono);font-size:11px;" title="LunarSwap DEX">🌙 Swap</button>
       <button class="btn btn-ghost btn-sm" id="wallet-btn" onclick="handleWalletClick()" style="position:relative;">
         <span id="wallet-dot" style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:6px;"></span>
         <span id="wallet-label">Sign in</span>
@@ -4963,9 +5002,16 @@ function renderCoStep(){
         + '</div>'
         + (walletState && walletState.connected
           ? (hasEnough
-            ? '<div style="text-align:center;padding:10px;background:rgba(0,214,143,.08);border-radius:8px;color:var(--green);font-weight:700;font-size:13px;">✓ Ready — $' + coTotal.toLocaleString() + ' sUSD'
-            : '<div style="text-align:center;padding:10px;background:rgba(245,197,24,.06);border-radius:8px;color:var(--gold);font-size:12px;font-family:var(--mono);">⚠ Insufficient sUSD — <span style="cursor:pointer;text-decoration:underline;" onclick="closeModal(\'ov-co\');showPage(\'nightsave\')">mint more in Night Save →</span>'
-            ) + '</div>'
+            ? '<div style="text-align:center;padding:10px;background:rgba(0,214,143,.08);border-radius:8px;color:var(--green);font-weight:700;font-size:13px;">✓ Ready — $' + coTotal.toLocaleString() + ' sUSD</div>'
+            : '<div style="background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);border-radius:10px;padding:12px;">'
+              + '<div style="color:var(--gold);font-size:12px;font-family:var(--mono);margin-bottom:10px;text-align:center;">⚠ Insufficient sUSD · need $' + coTotal.toLocaleString() + ' · have $' + parseFloat(susdBal).toFixed(2) + '</div>'
+              + '<div style="display:flex;gap:8px;">'
+              + '<button class="btn btn-primary btn-sm" style="flex:1;background:linear-gradient(135deg,#7c3aed,#5b21b6);font-size:11px;" onclick="lsOpenForCheckout(' + coTotal + ')">🌙 Swap via LunarSwap</button>'
+              + '<button class="btn btn-ghost btn-sm" style="flex:1;font-size:11px;" onclick="closeModal(\'ov-co\');showPage(\'nightsave\')">Mint in Night Save →</button>'
+              + '</div>'
+              + '<div style="font-size:9px;font-family:var(--mono);color:var(--faint);text-align:center;margin-top:7px;">swap() · Compact circuit · AMM DEX · Midnight Network</div>'
+              + '</div>'
+          )
           : '<div style="text-align:center;"><button class="btn btn-primary btn-sm" onclick="openWalletModal()">Connect wallet to use sUSD</button></div>'
         );
 
@@ -6284,6 +6330,102 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showZKOnboard();closeMobNav()">⊘ How it works</button>
 </div>
 
+
+<!-- ══ LUNARSWAP MODAL ══ -->
+<div id="ov-swap" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.82);align-items:center;justify-content:center;" onclick="if(event.target===this)closeLunarSwap()">
+  <div class="ls-modal-wrap">
+    <div class="ls-hdr">
+      <div>
+        <div class="ls-title">🌙 LunarSwap</div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">AMM DEX · Midnight Network · ZK private</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="ls-badge">⊘ Shielded</div>
+        <button onclick="closeLunarSwap()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);">✕</button>
+      </div>
+    </div>
+
+    <!-- From token -->
+    <div class="ls-token-box" id="ls-from-box">
+      <div class="ls-tb-top">
+        <div class="ls-tb-label">You pay</div>
+        <div class="ls-tb-bal">Balance: <span id="ls-from-bal" onclick="lsMaxFrom()">—</span></div>
+      </div>
+      <div class="ls-tb-main">
+        <div class="ls-token-sel" onclick="lsOpenTokenPicker('from')">
+          <div class="ls-token-icon" id="ls-from-icon">🌑</div>
+          <div>
+            <div class="ls-token-name" id="ls-from-name">NIGHT</div>
+            <div class="ls-token-ticker" id="ls-from-ticker">Midnight · shielded</div>
+          </div>
+          <div class="ls-chevron">▾</div>
+        </div>
+        <input class="ls-amount-input" id="ls-from-amt" type="number" placeholder="0" oninput="lsUpdateQuote()"/>
+      </div>
+      <div class="ls-usd-equiv" id="ls-from-usd">≈ $0.00</div>
+    </div>
+
+    <!-- Flip button -->
+    <div class="ls-flip-btn" onclick="lsFlipTokens()" title="Flip">⇅</div>
+
+    <!-- To token -->
+    <div class="ls-token-box" id="ls-to-box" style="margin-top:6px;">
+      <div class="ls-tb-top">
+        <div class="ls-tb-label">You receive</div>
+        <div class="ls-tb-bal">Balance: <span id="ls-to-bal">—</span></div>
+      </div>
+      <div class="ls-tb-main">
+        <div class="ls-token-sel" onclick="lsOpenTokenPicker('to')">
+          <div class="ls-token-icon" id="ls-to-icon">🟢</div>
+          <div>
+            <div class="ls-token-name" id="ls-to-name">sUSD</div>
+            <div class="ls-token-ticker" id="ls-to-ticker">Statera · Zswap</div>
+          </div>
+          <div class="ls-chevron">▾</div>
+        </div>
+        <div class="ls-amount-input" id="ls-to-amt" style="font-size:24px;font-weight:800;font-family:var(--mono);text-align:right;color:var(--green);">0.00</div>
+      </div>
+      <div class="ls-usd-equiv" id="ls-to-usd">≈ $0.00</div>
+    </div>
+
+    <!-- Route -->
+    <div class="ls-route-row" id="ls-route-row">
+      <span style="color:var(--faint);">Route:</span>
+      <span class="ls-route-hop" id="ls-route-a">NIGHT</span>
+      <span class="ls-route-arrow">→</span>
+      <span class="ls-route-hop" id="ls-route-b">sUSD</span>
+      <span style="color:var(--faint);margin-left:auto;">LunarSwap · best path</span>
+    </div>
+
+    <!-- Info rows -->
+    <div class="ls-info-row"><span>Rate</span><span id="ls-rate">—</span></div>
+    <div class="ls-info-row"><span>Price impact</span><span id="ls-impact" style="color:var(--green);">—</span></div>
+    <div class="ls-info-row"><span>Min received</span><span id="ls-min-recv">—</span></div>
+    <div class="ls-info-row"><span>ZK proof</span><span style="color:var(--cyan);">swap() · Compact circuit</span></div>
+
+    <!-- Slippage -->
+    <div class="ls-slippage-row">
+      <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-right:4px;">Slippage:</div>
+      <div class="ls-slip-btn active" onclick="lsSetSlippage(0.1,this)">0.1%</div>
+      <div class="ls-slip-btn" onclick="lsSetSlippage(0.5,this)">0.5%</div>
+      <div class="ls-slip-btn" onclick="lsSetSlippage(1,this)">1%</div>
+      <div class="ls-slip-btn" onclick="lsSetSlippage(3,this)">3%</div>
+    </div>
+
+    <button class="ls-swap-btn" id="ls-swap-btn" onclick="lsExecuteSwap()">Enter an amount</button>
+
+    <!-- Circuit execution trace -->
+    <div class="ls-circuit" id="ls-circuit"></div>
+  </div>
+</div>
+
+<!-- Token picker sub-modal -->
+<div id="ov-token-picker" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);align-items:center;justify-content:center;" onclick="if(event.target===this)document.getElementById('ov-token-picker').style.display='none'">
+  <div style="background:#1a1535;border:1px solid #2d2550;border-radius:18px;padding:24px;width:340px;max-width:95vw;">
+    <div style="font-size:14px;font-weight:800;margin-bottom:16px;">Select token</div>
+    <div id="ls-token-list"></div>
+  </div>
+</div>
 
 <!-- ══ WALLET MODAL ══ -->
 <div id="ov-wallet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);align-items:center;justify-content:center;" onclick="if(event.target===this)closeWalletModal()">
@@ -8706,6 +8848,332 @@ function vaultClaimReward(){
 function openNightSave() {
   if(!walletState || !walletState.connected) { openWalletModal(); return; }
   toast('💎 Night Save account opening — deploying on Midnight mainnet', 'success');
+}
+
+// ── LunarSwap DEX ─────────────────────────────────────────────────────────────
+
+var LS_TOKENS = [
+  { id:'night', icon:'🌑', name:'NIGHT',  ticker:'Midnight · shielded',  usd:0.04,   balKey:'night'    },
+  { id:'susd',  icon:'🟢', name:'sUSD',   ticker:'Statera · Zswap',      usd:1.00,   balKey:'susd'     },
+  { id:'dust',  icon:'💧', name:'tDUST',  ticker:'Midnight gas token',   usd:0.12,   balKey:'dust'     },
+];
+
+var _ls = {
+  from: 'night',
+  to:   'susd',
+  slippage: 0.1,
+  _checkoutTarget: null,  // set when opened from checkout
+};
+
+// Pool liquidity depth for price-impact calc (demo)
+var LS_POOLS = {
+  'night-susd': { depth: 2400000, fee: 0.003 },
+  'susd-night': { depth: 2400000, fee: 0.003 },
+  'night-dust':  { depth: 850000,  fee: 0.003 },
+  'dust-night':  { depth: 850000,  fee: 0.003 },
+  'susd-dust':   { depth: 1100000, fee: 0.002 },
+  'dust-susd':   { depth: 1100000, fee: 0.002 },
+};
+
+function lsToken(id){ return LS_TOKENS.find(function(t){ return t.id === id; }); }
+
+function lsGetBal(id){
+  var t = lsToken(id);
+  if(!walletState || !walletState.connected || !t) return null;
+  var v = walletState[t.balKey];
+  if(v === null || v === undefined) return null;
+  return parseFloat(v) || 0;
+}
+
+function lsFormatBal(id){
+  var b = lsGetBal(id);
+  if(b === null) return '—';
+  var t = lsToken(id);
+  return t.id === 'susd' ? '$'+b.toFixed(2) : b.toLocaleString();
+}
+
+function lsQuote(fromId, toId, amount){
+  if(!amount || amount <= 0) return { out:0, rate:0, impact:0, route:[], hops:1 };
+  var fT = lsToken(fromId), tT = lsToken(toId);
+  var poolKey = fromId + '-' + toId;
+  var pool = LS_POOLS[poolKey];
+
+  // Check for direct pool; if not, route via sUSD
+  var route, out, fee, impact;
+  if(pool){
+    fee = pool.fee;
+    var usdIn = amount * fT.usd;
+    out = (usdIn / tT.usd) * (1 - fee);
+    impact = Math.min((usdIn / pool.depth) * 100, 99);
+    route = [fromId, toId];
+  } else {
+    // 2-hop via sUSD
+    var p1 = LS_POOLS[fromId + '-susd'] || LS_POOLS[fromId + '-dust'];
+    var midId = LS_POOLS[fromId + '-susd'] ? 'susd' : 'dust';
+    var p2 = LS_POOLS[midId + '-' + toId];
+    if(!p1 || !p2){ return { out:0, rate:0, impact:0, route:[fromId,'?',toId], hops:2 }; }
+    fee = 1 - (1-p1.fee)*(1-p2.fee);
+    var usdIn2 = amount * fT.usd;
+    out = (usdIn2 / tT.usd) * (1 - fee);
+    impact = Math.min(((usdIn2 / p1.depth) + (usdIn2 / p2.depth)) * 50, 99);
+    route = [fromId, midId, toId];
+  }
+  var rate = out / amount;
+  return { out: Math.max(0, out), rate, impact, route, hops: route.length - 1 };
+}
+
+function lsUpdateQuote(){
+  var fromAmt = parseFloat(document.getElementById('ls-from-amt').value) || 0;
+  var q = lsQuote(_ls.from, _ls.to, fromAmt);
+  var fT = lsToken(_ls.from), tT = lsToken(_ls.to);
+
+  // To amount
+  document.getElementById('ls-to-amt').textContent = tT.id === 'susd' ? '$' + q.out.toFixed(2) : q.out.toLocaleString(undefined, {maximumFractionDigits:4});
+
+  // USD equivs
+  document.getElementById('ls-from-usd').textContent = fromAmt ? '≈ $' + (fromAmt * fT.usd).toFixed(2) : '≈ $0.00';
+  document.getElementById('ls-to-usd').textContent   = q.out  ? '≈ $' + (q.out * tT.usd).toFixed(2)   : '≈ $0.00';
+
+  // Rate
+  document.getElementById('ls-rate').textContent = fromAmt && q.rate
+    ? '1 ' + fT.name + ' = ' + (tT.id==='susd' ? '$' : '') + q.rate.toFixed(4) + ' ' + tT.name
+    : '—';
+
+  // Impact
+  var impEl = document.getElementById('ls-impact');
+  if(fromAmt && q.impact > 0){
+    impEl.textContent = q.impact.toFixed(3) + '%';
+    impEl.style.color = q.impact > 5 ? 'var(--red)' : q.impact > 1 ? 'var(--gold)' : 'var(--green)';
+  } else {
+    impEl.textContent = '—'; impEl.style.color = 'var(--green)';
+  }
+
+  // Min received
+  var minRecv = q.out * (1 - _ls.slippage / 100);
+  document.getElementById('ls-min-recv').textContent = fromAmt && q.out
+    ? (tT.id==='susd' ? '$' : '') + minRecv.toFixed(4) + ' ' + tT.name
+    : '—';
+
+  // Route
+  var rEl = document.getElementById('ls-route-row');
+  rEl.innerHTML = '<span style="color:var(--faint)">Route:</span>'
+    + q.route.map(function(id){ return '<span class="ls-route-hop">'+lsToken(id).name+'</span>'; }).join('<span class="ls-route-arrow">→</span>')
+    + '<span style="color:var(--faint);margin-left:auto;">LunarSwap · '+(q.hops===1?'direct':'2-hop')+'</span>';
+
+  // Swap button state
+  var btn = document.getElementById('ls-swap-btn');
+  if(!walletState || !walletState.connected){
+    btn.textContent = 'Connect wallet'; btn.disabled = false;
+  } else if(!fromAmt || fromAmt <= 0){
+    btn.textContent = 'Enter an amount'; btn.disabled = true;
+  } else {
+    var bal = lsGetBal(_ls.from);
+    if(bal !== null && fromAmt > bal){
+      btn.textContent = 'Insufficient ' + fT.name + ' balance'; btn.disabled = true;
+    } else {
+      btn.textContent = 'Swap ' + fT.name + ' → ' + tT.name; btn.disabled = false;
+    }
+  }
+}
+
+function lsSetSlippage(pct, el){
+  _ls.slippage = pct;
+  document.querySelectorAll('.ls-slip-btn').forEach(function(b){ b.classList.remove('active'); });
+  if(el) el.classList.add('active');
+  lsUpdateQuote();
+}
+
+function lsMaxFrom(){
+  var bal = lsGetBal(_ls.from);
+  if(bal === null) return;
+  document.getElementById('ls-from-amt').value = bal;
+  lsUpdateQuote();
+}
+
+function lsFlipTokens(){
+  var tmp = _ls.from; _ls.from = _ls.to; _ls.to = tmp;
+  lsRefreshTokenUI();
+  var fromAmt = document.getElementById('ls-from-amt').value;
+  document.getElementById('ls-from-amt').value = '';
+  lsUpdateQuote();
+}
+
+function lsRefreshTokenUI(){
+  var fT = lsToken(_ls.from), tT = lsToken(_ls.to);
+  document.getElementById('ls-from-icon').textContent   = fT.icon;
+  document.getElementById('ls-from-name').textContent   = fT.name;
+  document.getElementById('ls-from-ticker').textContent = fT.ticker;
+  document.getElementById('ls-to-icon').textContent     = tT.icon;
+  document.getElementById('ls-to-name').textContent     = tT.name;
+  document.getElementById('ls-to-ticker').textContent   = tT.ticker;
+  document.getElementById('ls-from-bal').textContent    = lsFormatBal(_ls.from);
+  document.getElementById('ls-to-bal').textContent      = lsFormatBal(_ls.to);
+  // Reset route
+  document.getElementById('ls-route-row').innerHTML =
+    '<span style="color:var(--faint)">Route:</span>'
+    + '<span class="ls-route-hop">'+fT.name+'</span><span class="ls-route-arrow">→</span><span class="ls-route-hop">'+tT.name+'</span>'
+    + '<span style="color:var(--faint);margin-left:auto;">LunarSwap · best path</span>';
+  // Reset display
+  document.getElementById('ls-to-amt').textContent = '0.00';
+  document.getElementById('ls-from-usd').textContent = '≈ $0.00';
+  document.getElementById('ls-to-usd').textContent   = '≈ $0.00';
+  document.getElementById('ls-rate').textContent      = '—';
+  document.getElementById('ls-impact').textContent    = '—';
+  document.getElementById('ls-min-recv').textContent  = '—';
+}
+
+function lsOpenTokenPicker(side){
+  var picker = document.getElementById('ov-token-picker');
+  var list = document.getElementById('ls-token-list');
+  var current = side === 'from' ? _ls.from : _ls.to;
+  list.innerHTML = LS_TOKENS.map(function(t){
+    var bal = lsFormatBal(t.id);
+    var isCurrent = t.id === current;
+    return '<div onclick="lsSelectToken(\''+side+'\',\''+t.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;cursor:pointer;'
+      + (isCurrent ? 'background:rgba(124,58,237,.15);' : 'background:rgba(255,255,255,.02);')
+      + 'margin-bottom:6px;border:1px solid '+(isCurrent?'rgba(124,58,237,.4)':'var(--rim)')+';transition:background .15s;">'
+      + '<div style="font-size:26px;">'+t.icon+'</div>'
+      + '<div style="flex:1;"><div style="font-weight:800;">'+t.name+'</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);">'+t.ticker+'</div></div>'
+      + '<div style="text-align:right;font-family:var(--mono);font-size:12px;color:var(--text2);">'+bal+'</div>'
+      + '</div>';
+  }).join('');
+  picker.style.display = 'flex';
+}
+
+function lsSelectToken(side, id){
+  // Don't allow same token on both sides — swap if collision
+  if(side === 'from'){
+    if(id === _ls.to){ _ls.to = _ls.from; }
+    _ls.from = id;
+  } else {
+    if(id === _ls.from){ _ls.from = _ls.to; }
+    _ls.to = id;
+  }
+  document.getElementById('ov-token-picker').style.display = 'none';
+  lsRefreshTokenUI();
+  document.getElementById('ls-from-amt').value = '';
+  lsUpdateQuote();
+}
+
+async function lsExecuteSwap(){
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  var fromAmt = parseFloat(document.getElementById('ls-from-amt').value) || 0;
+  if(fromAmt <= 0){ toast('Enter an amount to swap', 'info'); return; }
+  var bal = lsGetBal(_ls.from);
+  if(bal !== null && fromAmt > bal){ toast('Insufficient balance', 'error'); return; }
+
+  var fT = lsToken(_ls.from), tT = lsToken(_ls.to);
+  var q = lsQuote(_ls.from, _ls.to, fromAmt);
+  var outAmt = q.out;
+  var btn = document.getElementById('ls-swap-btn');
+  btn.disabled = true;
+
+  // Determine circuit steps based on route hops
+  var circuitEl = document.getElementById('ls-circuit');
+  circuitEl.style.display = 'block';
+  var steps = [];
+  if(q.hops === 1){
+    steps = [
+      { label:'swap('+fT.name+' → '+tT.name+')', ms:850 },
+      { label:'Generating ZK proof…', ms:1100 },
+      { label:'Computing AMM output via √(k) invariant…', ms:700 },
+      { label:'Verifying slippage tolerance ('+_ls.slippage+'%)…', ms:500 },
+      { label:'Submitting shielded transaction…', ms:950 },
+      { label:'Balances updated · '+(tT.id==='susd'?'$':'')+outAmt.toFixed(4)+' '+tT.name+' received', ms:400 },
+    ];
+  } else {
+    var midId = q.route[1];
+    var midT = lsToken(midId);
+    var mid = lsQuote(_ls.from, midId, fromAmt);
+    steps = [
+      { label:'swap() — hop 1: '+fT.name+' → '+midT.name, ms:800 },
+      { label:'ZK proof: pool_1 · '+fT.name+'-'+midT.name, ms:950 },
+      { label:'swap() — hop 2: '+midT.name+' → '+tT.name, ms:800 },
+      { label:'ZK proof: pool_2 · '+midT.name+'-'+tT.name, ms:950 },
+      { label:'Aggregating 2-hop route proof…', ms:700 },
+      { label:'Shielded tx submitted · '+outAmt.toFixed(4)+' '+tT.name+' received', ms:400 },
+    ];
+  }
+
+  circuitEl.innerHTML = steps.map(function(s,i){
+    return '<div id="ls-cs-'+i+'" style="display:flex;align-items:center;gap:7px;"><span class="ct-dot wait" id="ls-cd-'+i+'"></span><span style="color:var(--muted);">'+s.label+'</span></div>';
+  }).join('');
+
+  var i = 0;
+  function nextStep(){
+    if(i > 0){
+      var pd = document.getElementById('ls-cd-'+(i-1));
+      var pr = document.getElementById('ls-cs-'+(i-1));
+      if(pd){ pd.className = 'ct-dot done'; }
+      if(pr){ pr.querySelector('span:last-child').style.color = 'var(--green)'; }
+    }
+    if(i >= steps.length){
+      // Swap complete — update balances
+      if(walletState[fT.balKey] !== null && walletState[fT.balKey] !== undefined){
+        var newFrom = Math.max(0, parseFloat(walletState[fT.balKey]||0) - fromAmt);
+        walletState[fT.balKey] = fT.id === 'susd' ? newFrom.toFixed(2) : String(Math.floor(newFrom));
+      }
+      if(walletState[tT.balKey] !== null && walletState[tT.balKey] !== undefined){
+        var newTo = parseFloat(walletState[tT.balKey]||0) + outAmt;
+        walletState[tT.balKey] = tT.id === 'susd' ? newTo.toFixed(2) : String(Math.floor(newTo));
+      }
+      lsRefreshTokenUI();
+      document.getElementById('ls-from-amt').value = '';
+      lsUpdateQuote();
+      btn.disabled = false;
+      toast('✓ Swapped '+fromAmt.toLocaleString()+' '+fT.name+' → '+(tT.id==='susd'?'$':'')+outAmt.toFixed(2)+' '+tT.name+' · LunarSwap confirmed', 'success');
+      // If opened from checkout for a specific target amount, close swap + reopen checkout
+      if(_ls._checkoutTarget && tT.id === 'susd'){
+        setTimeout(function(){
+          closeLunarSwap();
+          toast('✓ sUSD ready — return to checkout to complete your order', 'success');
+        }, 1500);
+        _ls._checkoutTarget = null;
+      }
+      return;
+    }
+    var dot = document.getElementById('ls-cd-'+i);
+    var row = document.getElementById('ls-cs-'+i);
+    if(dot){ dot.className = 'ct-dot active'; }
+    if(row){ row.querySelector('span:last-child').style.color = 'var(--cyan)'; }
+    i++;
+    setTimeout(nextStep, steps[i-1].ms);
+  }
+  nextStep();
+}
+
+function openLunarSwap(fromId, toId){
+  _ls.from = fromId || 'night';
+  _ls.to   = toId   || 'susd';
+  _ls._checkoutTarget = null;
+  document.getElementById('ls-from-amt').value = '';
+  document.getElementById('ls-circuit').style.display = 'none';
+  document.getElementById('ls-circuit').innerHTML = '';
+  lsRefreshTokenUI();
+  lsUpdateQuote();
+  document.getElementById('ov-swap').style.display = 'flex';
+}
+
+// Called from checkout when sUSD balance is insufficient
+function lsOpenForCheckout(targetAmt){
+  _ls._checkoutTarget = targetAmt || null;
+  _ls.from = 'night';
+  _ls.to   = 'susd';
+  // Pre-fill the amount needed
+  if(targetAmt){
+    var needed = targetAmt - parseFloat((walletState && walletState.susd) || 0);
+    var nightNeeded = Math.ceil(needed / 0.04 * 1.05); // 5% buffer for slippage
+    document.getElementById('ls-from-amt').value = nightNeeded > 0 ? nightNeeded : '';
+  }
+  document.getElementById('ls-circuit').style.display = 'none';
+  document.getElementById('ls-circuit').innerHTML = '';
+  lsRefreshTokenUI();
+  lsUpdateQuote();
+  document.getElementById('ov-swap').style.display = 'flex';
+}
+
+function closeLunarSwap(){
+  document.getElementById('ov-swap').style.display = 'none';
 }
 
 // Night Data
