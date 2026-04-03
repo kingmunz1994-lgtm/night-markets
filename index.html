@@ -1711,6 +1711,43 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .ls-swap-btn:disabled{opacity:.4;cursor:not-allowed;}
 .ls-circuit{background:var(--depth);border:1px solid var(--rim);border-radius:10px;padding:12px;font-family:var(--mono);font-size:10px;line-height:1.9;color:var(--muted);margin-top:12px;display:none;}
 
+/* ─── NIGHT FUN deploy result ─── */
+#nf-launch-result{display:none;background:linear-gradient(135deg,rgba(6,182,212,.07),rgba(124,58,237,.05));border:1px solid rgba(6,182,212,.25);border-radius:18px;padding:26px;margin-top:20px;position:relative;overflow:hidden;}
+#nf-launch-result::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.nf-result-addr{font-size:11px;font-family:var(--mono);color:var(--cyan);word-break:break-all;background:rgba(0,0,0,.25);border:1px solid var(--rim);border-radius:8px;padding:8px 12px;margin:8px 0;}
+.nf-result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0;}
+.nf-result-stat{background:rgba(0,0,0,.2);border:1px solid var(--rim);border-radius:8px;padding:10px;text-align:center;}
+.nf-rs-label{font-size:8px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.nf-rs-val{font-size:15px;font-weight:800;font-family:var(--mono);}
+.nf-circuit{background:var(--depth);border:1px solid var(--rim);border-radius:10px;padding:12px;font-family:var(--mono);font-size:10px;line-height:1.9;color:var(--muted);margin-bottom:12px;}
+
+/* ─── NIGHT DATA ZK proof inline ─── */
+.nd-proof-panel{display:none;background:var(--depth);border:1px solid rgba(0,214,143,.15);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:10px;line-height:1.85;color:var(--muted);margin-top:8px;}
+.nd-credited{display:inline-flex;align-items:center;gap:6px;background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--green);margin-top:8px;}
+
+/* ─── NIGHT WORK task expansion ─── */
+.nw-task-proof{display:none;border-top:1px solid var(--rim);margin-top:12px;padding-top:12px;}
+.nw-task-proof-circuit{background:var(--depth);border:1px solid var(--rim);border-radius:8px;padding:10px;font-family:var(--mono);font-size:10px;line-height:1.85;color:var(--muted);margin-bottom:10px;}
+.nw-task.accepted{border-color:rgba(0,214,143,.3);background:rgba(0,214,143,.03);}
+.nw-task.completed{border-color:rgba(245,197,24,.3);background:rgba(245,197,24,.02);}
+
+/* ─── MIDNIGHT BRIDGE modal ─── */
+.br-modal-wrap{background:#0f0d24;border:1px solid #2a1f5c;border-radius:22px;padding:28px;width:430px;max-width:95vw;position:relative;}
+.br-modal-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#06b6d4,#7c3aed,transparent);border-radius:22px 22px 0 0;}
+.br-chain-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.br-chain-box{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--rim2);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .2s;}
+.br-chain-box.selected{border-color:rgba(6,182,212,.5);background:rgba(6,182,212,.05);}
+.br-chain-icon{font-size:28px;text-align:center;margin-bottom:5px;}
+.br-chain-name{font-size:12px;font-weight:800;text-align:center;}
+.br-chain-sub{font-size:9px;font-family:var(--mono);color:var(--muted);text-align:center;}
+.br-arrow{font-size:22px;color:var(--cyan);flex-shrink:0;}
+.br-asset-grid{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.br-asset{padding:7px 13px;background:rgba(255,255,255,.04);border:1px solid var(--rim);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--mono);transition:all .15s;}
+.br-asset.active{background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.4);color:var(--cyan);}
+.br-info-row{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;}
+.br-info-row span:last-child{color:var(--text2);}
+.br-circuit{background:var(--depth);border:1px solid var(--rim);border-radius:10px;padding:12px;font-family:var(--mono);font-size:10px;line-height:1.9;color:var(--muted);margin-top:12px;display:none;}
+
 /* Night Save page */
 #page-nightsave .page-inner{max-width:900px;margin:0 auto;padding:40px 24px;}
 .ns-banks-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--rim);border-radius:16px;overflow:hidden;margin-bottom:32px;}
@@ -2066,6 +2103,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
       </div>
       <button class="btn btn-primary btn-sm" onclick="showPage('shop')">Shop now</button>
       <button class="btn btn-ghost btn-sm" onclick="openLunarSwap('night','susd')" style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(91,33,182,.1));border-color:rgba(124,58,237,.3);color:#a78bfa;font-family:var(--mono);font-size:11px;" title="LunarSwap DEX">🌙 Swap</button>
+      <button class="btn btn-ghost btn-sm" onclick="openBridge()" style="background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(6,182,212,.06));border-color:rgba(6,182,212,.3);color:var(--cyan);font-family:var(--mono);font-size:11px;" title="Midnight Bridge">🌉 Bridge</button>
       <button class="btn btn-ghost btn-sm" id="wallet-btn" onclick="handleWalletClick()" style="position:relative;">
         <span id="wallet-dot" style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:6px;"></span>
         <span id="wallet-label">Sign in</span>
@@ -2943,8 +2981,26 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div class="field"><label class="label">Your NIGHT wallet</label><input class="input" id="nf-wallet" placeholder="mn_addr_..." type="text"/></div>
       </div>
       <div class="field" style="margin-bottom:16px;"><label class="label">Project description</label><textarea class="input" id="nf-desc" placeholder="Tell the community what you're building..." style="min-height:80px;resize:vertical;"></textarea></div>
-      <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="launchNightFun()">🌙 Launch token + merch store →</button>
-      <div style="font-size:10px;color:var(--faint);font-family:var(--mono);text-align:center;margin-top:8px;">⊘ ZK private · Midnight mainnet · Holders earn from day one</div>
+      <button class="btn btn-primary" style="width:100%;padding:14px;" id="nf-launch-btn" onclick="launchNightFun()">🌙 Launch token + merch store →</button>
+      <div style="font-size:10px;color:var(--faint);font-family:var(--mono);text-align:center;margin-top:8px;">⊘ ZK private · Midnight mainnet · OpenZeppelin FungibleToken · Holders earn from day one</div>
+      <!-- Deploy circuit + result -->
+      <div class="nf-circuit" id="nf-deploy-circuit" style="display:none;margin-top:16px;"></div>
+      <div id="nf-launch-result">
+        <div style="font-size:14px;font-weight:800;margin-bottom:4px;" id="nf-result-title">🎉 Token deployed!</div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;" id="nf-result-sub">OpenZeppelin FungibleToken · Midnight Mainnet · MIT License</div>
+        <div style="font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.8px;">Contract address</div>
+        <div class="nf-result-addr" id="nf-result-addr">mn_contract_preprod1...</div>
+        <div class="nf-result-grid">
+          <div class="nf-result-stat"><div class="nf-rs-label">Total supply</div><div class="nf-rs-val" id="nf-rs-supply">—</div></div>
+          <div class="nf-result-stat"><div class="nf-rs-label">Token symbol</div><div class="nf-rs-val" style="color:var(--cyan);" id="nf-rs-symbol">—</div></div>
+          <div class="nf-result-stat"><div class="nf-rs-label">Merch store</div><div class="nf-rs-val" style="color:var(--green);">✓ Live</div></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <div style="font-size:9px;font-family:var(--mono);background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:5px;padding:3px 8px;color:var(--cyan);">⊘ OpenZeppelin FungibleToken</div>
+          <div style="font-size:9px;font-family:var(--mono);background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:5px;padding:3px 8px;color:var(--green);">✓ Holders earn from sales</div>
+          <div style="font-size:9px;font-family:var(--mono);background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:5px;padding:3px 8px;color:#a78bfa;">🌙 LunarSwap listed</div>
+        </div>
+      </div>
     </div>
 
     <!-- How it works -->
@@ -3237,25 +3293,29 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
       <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Live data requests</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:16px;font-weight:300;">Tick yes to share — NIGHT paid instantly to your Night Save account</div>
       <div id="nd-requests-list">
-        <div class="nd-request-row">
+        <div class="nd-request-row" id="nd-row-1">
           <div class="nd-req-info"><div class="nd-req-title">Cardiology research cohort — ages 40-60</div><div class="nd-req-meta">Pharma Research Institute · 10,000 participants needed · ZK anonymous</div></div>
           <div class="nd-req-reward">50 NIGHT</div>
           <div class="nd-req-toggle"><button class="nd-yes" onclick="ndVote(this,'yes')">✓ Yes</button><button class="nd-no" onclick="ndVote(this,'no')">✗ No</button></div>
+          <div class="nd-proof-panel" id="nd-proof-1"></div>
         </div>
-        <div class="nd-request-row">
+        <div class="nd-request-row" id="nd-row-2">
           <div class="nd-req-info"><div class="nd-req-title">E-commerce purchase patterns — electronics category</div><div class="nd-req-meta">Market Research Co. · 50,000 participants · 30-day window</div></div>
           <div class="nd-req-reward">12 NIGHT</div>
           <div class="nd-req-toggle"><button class="nd-yes" onclick="ndVote(this,'yes')">✓ Yes</button><button class="nd-no" onclick="ndVote(this,'no')">✗ No</button></div>
+          <div class="nd-proof-panel" id="nd-proof-2"></div>
         </div>
-        <div class="nd-request-row">
+        <div class="nd-request-row" id="nd-row-3">
           <div class="nd-req-info"><div class="nd-req-title">Urban mobility patterns — city centre commuters</div><div class="nd-req-meta">City Planning Authority · 5,000 participants · 90-day window</div></div>
           <div class="nd-req-reward">28 NIGHT</div>
           <div class="nd-req-toggle"><button class="nd-yes" onclick="ndVote(this,'yes')">✓ Yes</button><button class="nd-no" onclick="ndVote(this,'no')">✗ No</button></div>
+          <div class="nd-proof-panel" id="nd-proof-3"></div>
         </div>
-        <div class="nd-request-row">
+        <div class="nd-request-row" id="nd-row-4">
           <div class="nd-req-info"><div class="nd-req-title">Midnight City agent interaction study</div><div class="nd-req-meta">Midnight City AI Agents · Unlimited participants · Ongoing</div></div>
           <div class="nd-req-reward">8 NIGHT</div>
           <div class="nd-req-toggle"><button class="nd-yes" onclick="ndVote(this,'yes')">✓ Yes</button><button class="nd-no" onclick="ndVote(this,'no')">✗ No</button></div>
+          <div class="nd-proof-panel" id="nd-proof-4"></div>
         </div>
       </div>
     </div>
@@ -3279,7 +3339,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
     <!-- Live tasks -->
     <div style="margin-bottom:16px;"><div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Available tasks — posted by Midnight City agents</div></div>
     <div class="nw-tasks">
-      <div class="nw-task" onclick="acceptTask('t1')">
+      <div class="nw-task" id="nw-task-t1">
         <div class="nw-task-icon">📸</div>
         <div class="nw-task-info">
           <div class="nw-task-title">Photograph Sydney CBD — 10 specific locations</div>
@@ -3287,9 +3347,10 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="nw-task-agent">Posted by: Midnight City Agent #4471 — Urban Mapper faction</div>
         </div>
         <div class="nw-task-reward">120 NIGHT</div>
-        <button class="nw-task-btn">Accept</button>
+        <button class="nw-task-btn" id="nw-btn-t1" onclick="acceptTask('t1')">Accept</button>
+        <div class="nw-task-proof" id="nw-proof-t1"></div>
       </div>
-      <div class="nw-task" onclick="acceptTask('t2')">
+      <div class="nw-task" id="nw-task-t2">
         <div class="nw-task-icon">📦</div>
         <div class="nw-task-info">
           <div class="nw-task-title">Purchase and ship a physical item to Melbourne</div>
@@ -3297,9 +3358,10 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="nw-task-agent">Posted by: Midnight City Agent #1829 — Commerce faction</div>
         </div>
         <div class="nw-task-reward">85 NIGHT</div>
-        <button class="nw-task-btn">Accept</button>
+        <button class="nw-task-btn" id="nw-btn-t2" onclick="acceptTask('t2')">Accept</button>
+        <div class="nw-task-proof" id="nw-proof-t2"></div>
       </div>
-      <div class="nw-task" onclick="acceptTask('t3')">
+      <div class="nw-task" id="nw-task-t3">
         <div class="nw-task-icon">✅</div>
         <div class="nw-task-info">
           <div class="nw-task-title">Verify this business is still operating — Brisbane</div>
@@ -3307,9 +3369,10 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="nw-task-agent">Posted by: Midnight City Agent #7703 — Intelligence faction</div>
         </div>
         <div class="nw-task-reward">40 NIGHT</div>
-        <button class="nw-task-btn">Accept</button>
+        <button class="nw-task-btn" id="nw-btn-t3" onclick="acceptTask('t3')">Accept</button>
+        <div class="nw-task-proof" id="nw-proof-t3"></div>
       </div>
-      <div class="nw-task" onclick="acceptTask('t4')">
+      <div class="nw-task" id="nw-task-t4">
         <div class="nw-task-icon">🗣️</div>
         <div class="nw-task-info">
           <div class="nw-task-title">Translate conversation — Japanese to English · In person</div>
@@ -3317,9 +3380,10 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="nw-task-agent">Posted by: Midnight City Agent #2244 — Diplomat faction</div>
         </div>
         <div class="nw-task-reward">340 NIGHT</div>
-        <button class="nw-task-btn">Accept</button>
+        <button class="nw-task-btn" id="nw-btn-t4" onclick="acceptTask('t4')">Accept</button>
+        <div class="nw-task-proof" id="nw-proof-t4"></div>
       </div>
-      <div class="nw-task" onclick="acceptTask('t5')">
+      <div class="nw-task" id="nw-task-t5">
         <div class="nw-task-icon">🌾</div>
         <div class="nw-task-info">
           <div class="nw-task-title">Verify crop yield data — farm visit required · Regional NSW</div>
@@ -3327,7 +3391,8 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="nw-task-agent">Posted by: Midnight City Agent #9901 — Agriculture faction</div>
         </div>
         <div class="nw-task-reward">280 NIGHT</div>
-        <button class="nw-task-btn">Accept</button>
+        <button class="nw-task-btn" id="nw-btn-t5" onclick="acceptTask('t5')">Accept</button>
+        <div class="nw-task-proof" id="nw-proof-t5"></div>
       </div>
     </div>
 
@@ -6331,6 +6396,95 @@ document.addEventListener('click',function(e){
 </div>
 
 
+<!-- ══ MIDNIGHT BRIDGE MODAL ══ -->
+<div id="ov-bridge" style="display:none;position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,.82);align-items:center;justify-content:center;" onclick="if(event.target===this)closeBridge()">
+  <div class="br-modal-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-size:17px;font-weight:800;">🌉 Midnight Bridge</div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Bridge assets to Midnight Network · get NIGHT & tDUST</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="font-size:9px;font-family:var(--mono);background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.2);border-radius:5px;padding:2px 7px;font-weight:700;">⊘ Non-custodial</div>
+        <button onclick="closeBridge()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);">✕</button>
+      </div>
+    </div>
+
+    <!-- Chain selector -->
+    <div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">From chain</div>
+    <div class="br-chain-row">
+      <div class="br-chain-box selected" id="br-chain-eth" onclick="brSelectChain('eth')">
+        <div class="br-chain-icon">⟠</div>
+        <div class="br-chain-name">Ethereum</div>
+        <div class="br-chain-sub">ERC-20</div>
+      </div>
+      <div class="br-chain-box" id="br-chain-ada" onclick="brSelectChain('ada')">
+        <div class="br-chain-icon">₳</div>
+        <div class="br-chain-name">Cardano</div>
+        <div class="br-chain-sub">Native token</div>
+      </div>
+      <div class="br-chain-box" id="br-chain-sol" onclick="brSelectChain('sol')">
+        <div class="br-chain-icon">◎</div>
+        <div class="br-chain-name">Solana</div>
+        <div class="br-chain-sub">SPL token</div>
+      </div>
+      <div class="br-arrow">→</div>
+      <div class="br-chain-box selected" style="cursor:default;">
+        <div class="br-chain-icon">🌑</div>
+        <div class="br-chain-name">Midnight</div>
+        <div class="br-chain-sub">ZK shielded</div>
+      </div>
+    </div>
+
+    <!-- Asset picker -->
+    <div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Asset to bridge</div>
+    <div class="br-asset-grid" id="br-asset-grid">
+      <div class="br-asset active" onclick="brSelectAsset(this,'eth')">ETH</div>
+      <div class="br-asset" onclick="brSelectAsset(this,'usdc')">USDC</div>
+      <div class="br-asset" onclick="brSelectAsset(this,'usdt')">USDT</div>
+      <div class="br-asset" onclick="brSelectAsset(this,'dai')">DAI</div>
+    </div>
+
+    <!-- Amount + receive -->
+    <div style="background:rgba(255,255,255,.03);border:1px solid var(--rim2);border-radius:12px;padding:14px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);">Send</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);">Balance: <span id="br-from-bal" style="color:var(--text2);">—</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input id="br-amount" type="number" placeholder="0.00" oninput="brUpdateEstimate()" style="flex:1;background:none;border:none;outline:none;font-size:22px;font-weight:800;font-family:var(--mono);color:var(--text1);min-width:0;"/>
+        <div style="font-size:14px;font-weight:800;font-family:var(--mono);color:var(--cyan);" id="br-from-asset">ETH</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;font-size:18px;color:var(--muted);margin-bottom:10px;">↓</div>
+
+    <div style="background:rgba(0,214,143,.04);border:1px solid rgba(0,214,143,.15);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:6px;">You receive on Midnight</div>
+      <div style="display:flex;gap:16px;align-items:center;">
+        <div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--muted);">tDUST (gas)</div>
+          <div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--cyan);" id="br-recv-dust">0</div>
+        </div>
+        <div style="color:var(--faint);">+</div>
+        <div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--muted);">NIGHT (via LunarSwap)</div>
+          <div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--text1);" id="br-recv-night">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info rows -->
+    <div class="br-info-row"><span>Bridge fee</span><span>0.1%</span></div>
+    <div class="br-info-row"><span>Estimated time</span><span id="br-time">~12 minutes</span></div>
+    <div class="br-info-row"><span>Route</span><span id="br-route" style="color:var(--cyan);">ETH → tDUST → NIGHT</span></div>
+    <div class="br-info-row"><span>ZK proof</span><span style="color:var(--green);">bridgeIn() · Compact circuit</span></div>
+
+    <button class="ls-swap-btn" id="br-btn" onclick="executeBridge()" style="margin-top:14px;">Enter amount to bridge</button>
+    <div class="br-circuit" id="br-circuit"></div>
+  </div>
+</div>
+
 <!-- ══ LUNARSWAP MODAL ══ -->
 <div id="ov-swap" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.82);align-items:center;justify-content:center;" onclick="if(event.target===this)closeLunarSwap()">
   <div class="ls-modal-wrap">
@@ -8637,7 +8791,7 @@ function closeFeatMenu(){ closeAllNavDrops(); }
 
 
 
-// Night Fun
+// ── Night Fun ─────────────────────────────────────────────────────────────────
 var nfSides = JSON.parse(localStorage.getItem('nf_sides') || '{"peace":0,"war":0}');
 function joinNFSide(side) {
   nfSides[side]++;
@@ -8645,14 +8799,73 @@ function joinNFSide(side) {
   if(side === 'peace') toast('☮️ Peace side locked in — see you at Night Fun launch', 'success');
   else toast('⚔️ War side locked in — see you at Night Fun launch', 'success');
 }
+
 function launchNightFun() {
-  var name = document.getElementById('nf-name');
-  var symbol = document.getElementById('nf-symbol');
-  if(!name || !name.value.trim() || !symbol || !symbol.value.trim()) {
+  var nameEl   = document.getElementById('nf-name');
+  var symbolEl = document.getElementById('nf-symbol');
+  var supplyEl = document.getElementById('nf-supply');
+  if(!nameEl || !nameEl.value.trim() || !symbolEl || !symbolEl.value.trim()) {
     toast('Please enter your project name and token symbol', 'error'); return;
   }
   if(!walletState || !walletState.connected) { openWalletModal(); return; }
-  toast('🌙 Night Fun launching '+name.value+' ('+symbol.value+') — deploying Midnight contract + merch store...', 'success');
+
+  var name   = nameEl.value.trim();
+  var symbol = symbolEl.value.trim().toUpperCase();
+  var supply = supplyEl && supplyEl.value.trim() ? supplyEl.value.trim() : '1,000,000,000';
+
+  var btn = document.getElementById('nf-launch-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Deploying…'; }
+
+  // OpenZeppelin FungibleToken deploy circuit
+  var circuitEl = document.getElementById('nf-deploy-circuit');
+  circuitEl.style.display = 'block';
+  document.getElementById('nf-launch-result').style.display = 'none';
+
+  var steps = [
+    { label:'Compiling OpenZeppelin FungibleToken circuit…',   sub:'Compact → WASM · MIT License', ms:900 },
+    { label:'Generating deploy ZK proof…',                     sub:'zkConfig · Midnight Preprod', ms:1100 },
+    { label:'Deploying FungibleToken contract…',               sub:'createToken(name="'+name+'", symbol="'+symbol+'", supply='+supply+')', ms:1000 },
+    { label:'Minting initial supply to deployer…',             sub:'transfer() · shielded UTXO · Zswap', ms:800 },
+    { label:'Registering on LunarSwap liquidity pool…',        sub:'addLiquidity() · '+symbol+'/NIGHT pool', ms:850 },
+    { label:'Deploying Night Store merch contract…',           sub:'Night Store · Printful integration · revenue → holders', ms:750 },
+    { label:'Token live · merch store live',                   sub:'Night Fun · OpenZeppelin FungibleToken · Midnight mainnet', ms:0 },
+  ];
+
+  circuitEl.innerHTML = steps.map(function(s,i){
+    return '<div id="nfc-'+i+'" style="display:flex;align-items:center;gap:7px;"><span class="ct-dot wait" id="nfd-'+i+'"></span><span>'+s.label+'</span></div>';
+  }).join('');
+
+  var i = 0;
+  function next(){
+    if(i > 0){
+      var pd = document.getElementById('nfd-'+(i-1));
+      var pr = document.getElementById('nfc-'+(i-1));
+      if(pd){ pd.className = 'ct-dot done'; }
+      if(pr){ pr.style.color = 'var(--green)'; }
+    }
+    if(i >= steps.length){
+      // Show result panel
+      var addr = 'mn_contract_preprod1' + symbol.toLowerCase() + Math.random().toString(36).slice(2,10);
+      document.getElementById('nf-result-title').textContent = '🎉 '+name+' ('+symbol+') deployed!';
+      document.getElementById('nf-result-sub').textContent = 'OpenZeppelin FungibleToken · Midnight Mainnet · MIT License';
+      document.getElementById('nf-result-addr').textContent = addr;
+      document.getElementById('nf-rs-supply').textContent = supply;
+      document.getElementById('nf-rs-symbol').textContent = symbol;
+      document.getElementById('nf-launch-result').style.display = 'block';
+      if(btn){ btn.disabled = false; btn.textContent = '🌙 Launch another token →'; }
+      toast('✓ '+symbol+' deployed · LunarSwap pool created · merch store live', 'success');
+      return;
+    }
+    var dot = document.getElementById('nfd-'+i);
+    var row = document.getElementById('nfc-'+i);
+    if(dot){ dot.className = 'ct-dot active'; }
+    if(row){ row.style.color = 'var(--cyan)'; }
+    var delay = steps[i].ms;
+    i++;
+    if(delay > 0) setTimeout(next, delay);
+    else next();
+  }
+  next();
 }
 
 // ── Night Save — Statera vault functions ──────────────────────────────────────
@@ -9176,25 +9389,332 @@ function closeLunarSwap(){
   document.getElementById('ov-swap').style.display = 'none';
 }
 
-// Night Data
-function ndVote(btn, choice) {
-  var row = btn.closest('.nd-request-row');
-  var reward = row.querySelector('.nd-req-reward').textContent;
-  var title = row.querySelector('.nd-req-title').textContent;
-  row.querySelectorAll('.nd-yes,.nd-no').forEach(function(b){ b.disabled = true; b.style.opacity = '.5'; });
-  if(choice === 'yes') {
-    btn.style.background = 'rgba(0,214,143,.2)';
-    btn.style.opacity = '1';
-    toast('⊘ ZK proof generated — '+reward+' credited to Night Save', 'success');
+// ── Midnight Bridge ───────────────────────────────────────────────────────────
+var _br = {
+  chain:   'eth',
+  asset:   'eth',
+  assetPrice: { eth:2480, usdc:1, usdt:1, dai:1, ada:0.42 },
+  chainAssets: {
+    eth: ['eth','usdc','usdt','dai'],
+    ada: ['ada','usdc'],
+    sol: ['usdc','usdt'],
+  },
+  dustPerUSD:  8.33,   // 1 USD → 8.33 tDUST (demo rate)
+  nightPerUSD: 25,     // 1 USD → 25 NIGHT (demo rate)
+};
+
+function openBridge(){
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  document.getElementById('br-amount').value = '';
+  document.getElementById('br-circuit').style.display = 'none';
+  document.getElementById('br-circuit').innerHTML = '';
+  brSelectChain('eth');
+  brUpdateEstimate();
+  document.getElementById('ov-bridge').style.display = 'flex';
+}
+function closeBridge(){ document.getElementById('ov-bridge').style.display = 'none'; }
+
+function brSelectChain(chain){
+  _br.chain = chain;
+  ['eth','ada','sol'].forEach(function(c){
+    var el = document.getElementById('br-chain-'+c);
+    if(el){ el.classList.toggle('selected', c === chain); }
+  });
+  // Update asset grid
+  var assets = _br.chainAssets[chain] || ['usdc'];
+  _br.asset = assets[0];
+  var grid = document.getElementById('br-asset-grid');
+  grid.innerHTML = assets.map(function(a){
+    return '<div class="br-asset'+(a===_br.asset?' active':'')+'" onclick="brSelectAsset(this,\''+a+'\')">'+a.toUpperCase()+'</div>';
+  }).join('');
+  // Update time
+  var times = { eth:'~12 minutes', ada:'~5 minutes', sol:'~2 minutes' };
+  document.getElementById('br-time').textContent = times[chain] || '~10 minutes';
+  // Update route
+  var routes = { eth:'ETH asset → tDUST → NIGHT', ada:'ADA → tDUST → NIGHT', sol:'SOL asset → tDUST → NIGHT' };
+  document.getElementById('br-route').textContent = routes[chain] || 'Asset → tDUST → NIGHT';
+  document.getElementById('br-from-asset').textContent = _br.asset.toUpperCase();
+  brUpdateEstimate();
+}
+
+function brSelectAsset(el, asset){
+  _br.asset = asset;
+  document.querySelectorAll('.br-asset').forEach(function(a){ a.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('br-from-asset').textContent = asset.toUpperCase();
+  brUpdateEstimate();
+}
+
+function brUpdateEstimate(){
+  var amount = parseFloat(document.getElementById('br-amount').value) || 0;
+  var usd    = amount * (_br.assetPrice[_br.asset] || 1);
+  var dust   = Math.floor(usd * _br.dustPerUSD * 0.999); // 0.1% fee
+  var night  = Math.floor(usd * _br.nightPerUSD * 0.999);
+  document.getElementById('br-recv-dust').textContent  = dust  ? dust.toLocaleString()  : '0';
+  document.getElementById('br-recv-night').textContent = night ? night.toLocaleString() : '0';
+  var btn = document.getElementById('br-btn');
+  if(amount > 0){
+    btn.textContent = 'Bridge '+amount+' '+_br.asset.toUpperCase()+' → Midnight';
+    btn.disabled = false;
   } else {
-    toast('✓ Declined — your data stays private', 'info');
+    btn.textContent = 'Enter amount to bridge';
+    btn.disabled = true;
   }
 }
 
-// Night Work
+async function executeBridge(){
+  var amount = parseFloat(document.getElementById('br-amount').value) || 0;
+  if(amount <= 0){ toast('Enter an amount to bridge', 'info'); return; }
+  var usd   = amount * (_br.assetPrice[_br.asset] || 1);
+  var dust  = Math.floor(usd * _br.dustPerUSD  * 0.999);
+  var night = Math.floor(usd * _br.nightPerUSD * 0.999);
+  var btn   = document.getElementById('br-btn');
+  btn.disabled = true;
+
+  var chainNames = { eth:'Ethereum', ada:'Cardano', sol:'Solana' };
+  var fromChain  = chainNames[_br.chain] || 'Source chain';
+
+  var circuitEl = document.getElementById('br-circuit');
+  circuitEl.style.display = 'block';
+
+  var steps = [
+    { label:'Locking '+amount+' '+_br.asset.toUpperCase()+' on '+fromChain+'…',   ms:1000 },
+    { label:'Generating cross-chain ZK proof…',                                     ms:1200 },
+    { label:'bridgeIn() — relaying to Midnight Network…',                           ms:900  },
+    { label:'Minting '+dust.toLocaleString()+' tDUST…',                            ms:750  },
+    { label:'LunarSwap: '+dust.toLocaleString()+' tDUST → '+night.toLocaleString()+' NIGHT…', ms:950 },
+    { label:'Balance update · Midnight shielded wallet…',                           ms:500  },
+  ];
+
+  circuitEl.innerHTML = steps.map(function(s,i){
+    return '<div id="brc-'+i+'" style="display:flex;align-items:center;gap:7px;">'
+      + '<span class="ct-dot wait" id="brd-'+i+'"></span><span>'+s.label+'</span></div>';
+  }).join('');
+
+  var i = 0;
+  function next(){
+    if(i > 0){
+      var pd = document.getElementById('brd-'+(i-1));
+      var pr = document.getElementById('brc-'+(i-1));
+      if(pd){ pd.className = 'ct-dot done'; }
+      if(pr){ pr.style.color = 'var(--green)'; }
+    }
+    if(i >= steps.length){
+      // Update wallet
+      if(walletState){
+        walletState.dust  = String((parseInt(walletState.dust||'0',10)  + dust));
+        walletState.night = String((parseInt(walletState.night||'0',10) + night));
+      }
+      btn.disabled = false;
+      btn.textContent = '✓ Bridge another';
+      document.getElementById('br-amount').value = '';
+      brUpdateEstimate();
+      toast('✓ '+dust.toLocaleString()+' tDUST + '+night.toLocaleString()+' NIGHT received · bridgeIn() confirmed', 'success');
+      return;
+    }
+    var dot = document.getElementById('brd-'+i);
+    var row = document.getElementById('brc-'+i);
+    if(dot){ dot.className = 'ct-dot active'; }
+    if(row){ row.style.color = 'var(--cyan)'; }
+    i++;
+    setTimeout(next, steps[i-1].ms);
+  }
+  next();
+}
+
+// ── Night Data ────────────────────────────────────────────────────────────────
+var _ndRowIndex = 0; // track which row for proof panel id
+
+function ndVote(btn, choice) {
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  var row     = btn.closest('.nd-request-row');
+  var reward  = row.querySelector('.nd-req-reward').textContent.trim();
+  var title   = row.querySelector('.nd-req-title').textContent.trim();
+  var night   = parseInt(reward.replace(/[^0-9]/g,''), 10) || 0;
+
+  // Disable buttons
+  row.querySelectorAll('.nd-yes,.nd-no').forEach(function(b){ b.disabled = true; b.style.opacity = '.5'; });
+
+  if(choice !== 'yes'){
+    toast('✓ Declined — your data stays private', 'info');
+    return;
+  }
+
+  // Find the proof panel in this row
+  var proofPanel = row.querySelector('.nd-proof-panel');
+  if(!proofPanel) return;
+  proofPanel.style.display = 'block';
+
+  var steps = [
+    { label:'commitDataHash() — hashing your data locally…',  col:'var(--muted)',  ms:700 },
+    { label:'generateZKProof() — proving eligibility…',       col:'var(--cyan)',   ms:1050 },
+    { label:'submitProof() — sending to Midnight Network…',   col:'var(--muted)',  ms:850 },
+    { label:'creditNIGHT() — '+night+' NIGHT → Night Save',   col:'var(--green)',  ms:500 },
+  ];
+
+  proofPanel.innerHTML = steps.map(function(s,i){
+    return '<div id="ndp-step-'+row.id+'-'+i+'" style="display:flex;align-items:center;gap:6px;">'
+      + '<span class="ct-dot wait" id="ndp-dot-'+row.id+'-'+i+'"></span>'
+      + '<span>'+s.label+'</span></div>';
+  }).join('');
+
+  var i = 0;
+  function next(){
+    if(i > 0){
+      var pd = document.getElementById('ndp-dot-'+row.id+'-'+(i-1));
+      var pr = document.getElementById('ndp-step-'+row.id+'-'+(i-1));
+      if(pd){ pd.className = 'ct-dot done'; }
+      if(pr){ pr.style.color = 'var(--green)'; }
+    }
+    if(i >= steps.length){
+      // Credit NIGHT
+      if(walletState){ walletState.night = String((parseInt(walletState.night||'0',10) + night)); }
+      // Mark row green
+      row.style.borderLeftColor = 'rgba(0,214,143,.4)';
+      // Add credited badge
+      var badge = document.createElement('div');
+      badge.className = 'nd-credited';
+      badge.textContent = '✓ +'+night+' NIGHT credited';
+      proofPanel.appendChild(badge);
+      toast('⊘ ZK proof verified — +'+night+' NIGHT credited to Night Save', 'success');
+      return;
+    }
+    var dot = document.getElementById('ndp-dot-'+row.id+'-'+i);
+    var row2 = document.getElementById('ndp-step-'+row.id+'-'+i);
+    if(dot){ dot.className = 'ct-dot active'; }
+    if(row2){ row2.style.color = steps[i].col; }
+    i++;
+    setTimeout(next, steps[i-1].ms);
+  }
+  next();
+}
+
+// ── Night Work ────────────────────────────────────────────────────────────────
+var _nwTaskState = {}; // id → 'accepting'|'accepted'|'proving'|'complete'
+
+var NW_TASKS = {
+  t1:{ reward:120, title:'Photograph Sydney CBD' },
+  t2:{ reward:85,  title:'Purchase and ship item' },
+  t3:{ reward:40,  title:'Verify business operating' },
+  t4:{ reward:340, title:'Translate conversation' },
+  t5:{ reward:280, title:'Verify crop yield data' },
+};
+
 function acceptTask(id) {
-  if(!walletState || !walletState.connected) { openWalletModal(); return; }
-  toast('✓ Task accepted — NIGHT locked in escrow. Complete the task and submit ZK proof.', 'success');
+  if(!walletState || !walletState.connected){ openWalletModal(); return; }
+  var state = _nwTaskState[id];
+  var task  = NW_TASKS[id];
+  if(!task) return;
+
+  if(state === 'accepted'){
+    // Second click — submit ZK proof
+    nwSubmitProof(id);
+    return;
+  }
+  if(state === 'proving' || state === 'complete') return;
+
+  _nwTaskState[id] = 'accepting';
+  var taskEl  = document.getElementById('nw-task-'+id);
+  var proofEl = document.getElementById('nw-proof-'+id);
+  var btn     = document.getElementById('nw-btn-'+id);
+
+  if(taskEl){ taskEl.classList.add('accepted'); }
+  if(btn){ btn.disabled = true; btn.textContent = 'Locking…'; }
+  proofEl.style.display = 'block';
+
+  // Escrow lock circuit
+  var steps = [
+    { label:'fundEscrow() — '+task.reward+' NIGHT locked on-chain…', ms:800 },
+    { label:'ZK proof: task commitment hash generated…',              ms:950 },
+    { label:'Escrow confirmed · task assigned to your wallet…',       ms:600 },
+  ];
+
+  proofEl.innerHTML = '<div class="nw-task-proof-circuit" id="nwc-'+id+'">'
+    + steps.map(function(s,i){
+        return '<div id="nws-'+id+'-'+i+'" style="display:flex;align-items:center;gap:6px;">'
+          + '<span class="ct-dot wait" id="nwd-'+id+'-'+i+'"></span><span>'+s.label+'</span></div>';
+      }).join('')
+    + '</div>';
+
+  var i = 0;
+  function next(){
+    if(i > 0){
+      var pd = document.getElementById('nwd-'+id+'-'+(i-1));
+      var pr = document.getElementById('nws-'+id+'-'+(i-1));
+      if(pd){ pd.className = 'ct-dot done'; }
+      if(pr){ pr.style.color = 'var(--green)'; }
+    }
+    if(i >= steps.length){
+      _nwTaskState[id] = 'accepted';
+      if(btn){ btn.disabled = false; btn.textContent = 'Submit ZK Proof ✓'; btn.style.background='rgba(0,214,143,.15)'; btn.style.borderColor='rgba(0,214,143,.3)'; btn.style.color='var(--green)'; }
+      // Add instructions
+      var instrEl = document.createElement('div');
+      instrEl.style.cssText = 'font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:8px;padding:8px;background:rgba(0,0,0,.15);border-radius:6px;';
+      instrEl.textContent = '✓ Escrow locked · Complete the task · Click "Submit ZK Proof" when done';
+      proofEl.appendChild(instrEl);
+      toast('✓ '+task.reward+' NIGHT locked in escrow · Task assigned · Complete and submit proof', 'success');
+      return;
+    }
+    var dot = document.getElementById('nwd-'+id+'-'+i);
+    var row = document.getElementById('nws-'+id+'-'+i);
+    if(dot){ dot.className = 'ct-dot active'; }
+    if(row){ row.style.color = 'var(--cyan)'; }
+    i++;
+    setTimeout(next, steps[i-1].ms);
+  }
+  next();
+}
+
+function nwSubmitProof(id){
+  var task   = NW_TASKS[id];
+  var taskEl = document.getElementById('nw-task-'+id);
+  var proofEl= document.getElementById('nw-proof-'+id);
+  var btn    = document.getElementById('nw-btn-'+id);
+  _nwTaskState[id] = 'proving';
+  if(btn){ btn.disabled = true; btn.textContent = 'Generating proof…'; }
+
+  // ZK proof submission circuit
+  var steps = [
+    { label:'buildProof() — compiling completion evidence…',         ms:900 },
+    { label:'generateZKProof() — proving task done without identity…', ms:1100 },
+    { label:'submitProof() — Midnight Network verification…',         ms:850 },
+    { label:'releaseEscrow() — '+task.reward+' NIGHT released…',     ms:600 },
+    { label:'updateReputation() — on-chain score +1 · anonymous…',   ms:500 },
+  ];
+
+  var circDiv = document.createElement('div');
+  circDiv.className = 'nw-task-proof-circuit';
+  circDiv.id = 'nwpc-'+id;
+  circDiv.innerHTML = steps.map(function(s,i){
+    return '<div id="nwps-'+id+'-'+i+'" style="display:flex;align-items:center;gap:6px;">'
+      + '<span class="ct-dot wait" id="nwpd-'+id+'-'+i+'"></span><span>'+s.label+'</span></div>';
+  }).join('');
+  proofEl.appendChild(circDiv);
+
+  var i = 0;
+  function next(){
+    if(i > 0){
+      var pd = document.getElementById('nwpd-'+id+'-'+(i-1));
+      var pr = document.getElementById('nwps-'+id+'-'+(i-1));
+      if(pd){ pd.className = 'ct-dot done'; }
+      if(pr){ pr.style.color = 'var(--green)'; }
+    }
+    if(i >= steps.length){
+      _nwTaskState[id] = 'complete';
+      if(walletState){ walletState.night = String((parseInt(walletState.night||'0',10) + task.reward)); }
+      if(taskEl){ taskEl.classList.remove('accepted'); taskEl.classList.add('completed'); }
+      if(btn){ btn.disabled = true; btn.textContent = '✓ Complete'; btn.style.background='rgba(245,197,24,.1)'; btn.style.borderColor='rgba(245,197,24,.3)'; btn.style.color='var(--gold)'; }
+      toast('✓ ZK proof verified · '+task.reward+' NIGHT released to wallet · Reputation updated', 'success');
+      return;
+    }
+    var dot = document.getElementById('nwpd-'+id+'-'+i);
+    var row = document.getElementById('nwps-'+id+'-'+i);
+    if(dot){ dot.className = 'ct-dot active'; }
+    if(row){ row.style.color = 'var(--cyan)'; }
+    i++;
+    setTimeout(next, steps[i-1].ms);
+  }
+  next();
 }
 
 // Night Store
