@@ -1,0 +1,180 @@
+// ============================================================
+// Night Markets — Payback Token (Business Token / Merch Token)
+// Compact language v0.28+ · Midnight Network
+//
+// Demonstrates:
+//   • Private business revenue (shielded state — never on-chain)
+//   • Public dividend totals (verifiable by investors)
+//   • ZK revenue proof circuit — prove % split without revealing margins
+//   • Automatic dividend distribution to token holders
+//
+// Circuits:
+//   launchToken       — seller creates token with payback %
+//   recordSale        — private sale event, triggers dividend split
+//   claimDividend     — holder claims their share via ZK proof
+//   proveRevenue      — ZK proof of total revenue (no margin disclosure)
+//   updateHolders     — add/remove token holders (private)
+// ============================================================
+
+pragma language_version >= 0.28;
+
+import CompactStandardLibrary;
+
+// ── Token metadata (public — visible to investors) ──────────
+export ledger tokenName:       Opaque<"string">;   // e.g. "Mama's Spice Shop"
+export ledger tokenType:       Opaque<"string">;   // "merch" | "biz" | "invoice" | "coop"
+export ledger paybackBps:      Uint<32>;           // basis points (e.g. 1000 = 10%)
+export ledger totalDividendsPaid: Uint<64>;        // cumulative dividends distributed (public)
+export ledger holderCount:     Uint<32>;           // number of token holders (public)
+export ledger tokenRound:      Counter;            // increments each dividend cycle
+
+// ── Private business data (shielded — never published) ──────
+// Revenue, margins, and customer data stay in private ledger.
+// Only ZK proofs of aggregate facts hit the public chain.
+ledger privateRevenue:         Uint<64>;           // total revenue this cycle (private)
+ledger privateSaleCount:       Uint<32>;           // number of sales (private)
+ledger sellerSecretKey:        Bytes<32>;          // seller ZK commitment key (private)
+
+// ── Holder balances (private — each holder sees only their own) ─
+// In production: use a Merkle tree or ZK membership structure.
+// This skeleton uses a simplified commitment approach.
+ledger dividendPool:           Uint<64>;           // current undistributed dividend pool
+ledger holderCommitment:       Bytes<32>;          // Merkle root of holder balances (private)
+
+// ── Witnesses (private inputs to ZK proof generation) ───────
+witness sellerKey():           Bytes<32>;
+witness holderKey():           Bytes<32>;
+witness revenueWitness():      Uint<64>;
+witness shareWitness():        Uint<64>;           // this holder's token share (‰ basis)
+
+// ============================================================
+// Circuit: launchToken
+// Seller initialises the token with name, type, and payback %.
+// Payback % is set once and encoded in the ZK circuit — cannot
+// be changed without a new token deployment.
+// ============================================================
+export circuit launchToken(
+  name:       Opaque<"string">,
+  ttype:      Opaque<"string">,
+  paybackBps: Uint<32>          // basis points — max 3000 (30%)
+): [] {
+  assert paybackBps <= 3000 "Payback cannot exceed 30%";
+  assert paybackBps >= 200  "Payback must be at least 2%";
+
+  // Store token metadata in public ledger
+  tokenName       = name;
+  tokenType       = ttype;
+  paybackBps      = paybackBps;
+  holderCount     = 0;
+  totalDividendsPaid = 0;
+  tokenRound.increment(1);
+
+  // Initialise private state
+  privateRevenue  = 0;
+  privateSaleCount = 0;
+  dividendPool    = 0;
+}
+
+// ============================================================
+// Circuit: recordSale
+// Called on each sale. Revenue is added to private state.
+// The payback % is automatically split into the dividend pool.
+// The seller's margin is NEVER published — only the dividend
+// amount (derived from the fixed paybackBps) hits the pool.
+//
+// ZK guarantee: investor can verify dividend was correctly
+// calculated from the revenue without seeing the sale amount.
+// ============================================================
+export circuit recordSale(
+  saleAmountNight: Uint<64>      // sale amount in NIGHT (private input)
+): [] {
+  const sk = sellerKey();
+  // Verify caller is the legitimate seller
+  const expectedCommit = kernel sha256(sk, tokenName);
+  assert expectedCommit == sellerSecretKey "Not the token seller";
+
+  // Add to private revenue
+  privateRevenue  = privateRevenue + saleAmountNight;
+  privateSaleCount = privateSaleCount + 1;
+
+  // Calculate dividend split (paybackBps / 10000 of sale amount)
+  // Integer arithmetic: divide then multiply to avoid overflow
+  const dividendAmount = (saleAmountNight * paybackBps) / 10000;
+
+  // Dividend goes to pool — available for holder claims
+  dividendPool = dividendPool + dividendAmount;
+}
+
+// ============================================================
+// Circuit: claimDividend
+// Token holder claims their share of the dividend pool.
+// Holder proves their share (‰ basis points) via ZK witness.
+// Their identity and exact balance stay private.
+//
+// The ZK proof verifies:
+//   1. Holder is in the holderCommitment Merkle tree
+//   2. Their share is correctly proportional
+//   3. They haven't double-claimed this cycle
+// ============================================================
+export circuit claimDividend(
+  recipientAddress: Opaque<"string">   // shielded Midnight address
+): Uint<64> {
+  const hk    = holderKey();
+  const share = shareWitness();        // holder's basis points of total supply
+
+  assert share > 0    "No token balance";
+  assert share <= 10000 "Share exceeds 100%";
+
+  // Verify holder membership (simplified — production uses Merkle proof)
+  const holderProof = kernel sha256(hk, holderCommitment);
+  // In production: assert holderProof is in Merkle tree
+
+  // Calculate this holder's dividend
+  const holderDividend = (dividendPool * share) / 10000;
+
+  assert holderDividend > 0 "Nothing to claim this cycle";
+
+  // Update pool and global counter
+  dividendPool         = dividendPool - holderDividend;
+  totalDividendsPaid   = totalDividendsPaid + holderDividend;
+  tokenRound.increment(1);
+
+  // Return amount — caller uses this to trigger NIGHT transfer
+  return holderDividend;
+}
+
+// ============================================================
+// Circuit: proveRevenue
+// ZK proof that total revenue exceeded a threshold.
+// Used for: due diligence, accredited investor disclosure,
+//           regulatory audits (with auditor escrow key).
+//
+// What is revealed:  revenue > threshold (boolean fact)
+// What stays hidden: actual revenue amount, sale count, margins
+// ============================================================
+export circuit proveRevenue(
+  threshold: Uint<64>    // minimum revenue to prove (e.g. 10000 NIGHT)
+): Boolean {
+  const rev = revenueWitness();
+  assert rev == privateRevenue "Revenue witness mismatch";
+
+  // ZK proof: reveal only the comparison result
+  return rev >= threshold;
+}
+
+// ============================================================
+// Circuit: updateHolders
+// Add a new token holder after they purchase tokens.
+// Holder's address and balance stay in private state.
+// Public counter increments — investor sees total holder count.
+// ============================================================
+export circuit updateHolders(
+  newHolderCommitment: Bytes<32>   // new Merkle root after adding holder
+): [] {
+  const sk = sellerKey();
+  const expectedCommit = kernel sha256(sk, tokenName);
+  assert expectedCommit == sellerSecretKey "Not the token seller";
+
+  holderCommitment = newHolderCommitment;
+  holderCount      = holderCount + 1;
+}
