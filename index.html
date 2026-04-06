@@ -1943,6 +1943,79 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .nc-compose-input:focus{border-color:var(--ink);}
 .nc-send-btn{background:linear-gradient(135deg,var(--ink),var(--plasma));border:none;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);}
 
+/* Midnight Vision / Use Cases page */
+#page-ecosystem-vision .page-inner{max-width:1100px;margin:0 auto;padding:60px 24px;}
+.ev-hero{text-align:center;margin-bottom:56px;}
+.ev-tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:40px;}
+.ev-tab{background:var(--surface);border:1px solid var(--rim2);border-radius:10px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:var(--sans);}
+.ev-tab.active,.ev-tab:hover{background:linear-gradient(135deg,var(--ink),var(--plasma));color:#fff;border-color:transparent;}
+.ev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:32px;}
+.ev-card{background:var(--surface);border:1px solid var(--rim);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.ev-card:hover{border-color:var(--rim2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.ev-card-icon{font-size:28px;margin-bottom:10px;}
+.ev-card-title{font-size:13px;font-weight:800;margin-bottom:4px;}
+.ev-card-desc{font-size:11px;color:var(--muted);line-height:1.6;font-weight:300;}
+.ev-card-cat{position:absolute;top:12px;right:12px;font-size:8px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.8px;border-radius:3px;padding:2px 6px;}
+.ev-card-cat.health{background:rgba(0,214,143,.1);color:var(--green);}
+.ev-card-cat.finance{background:rgba(124,58,237,.1);color:var(--glow);}
+.ev-card-cat.gov{background:rgba(245,197,24,.08);color:var(--gold);}
+.ev-card-cat.ai{background:rgba(6,182,212,.08);color:var(--cyan);}
+.ev-card-cat.commerce{background:rgba(248,113,113,.08);color:var(--red);}
+.ev-count{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:32px;}
+.ev-count-item{background:var(--surface);border:1px solid var(--rim2);border-radius:10px;padding:12px 20px;text-align:center;}
+.ev-count-val{font-size:24px;font-weight:900;font-family:var(--mono);color:var(--glow);}
+.ev-count-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;}
+
+/* Business Token / RWA page */
+#page-biztoken .page-inner{max-width:1000px;margin:0 auto;padding:60px 24px;}
+.bt-hero{text-align:center;margin-bottom:48px;}
+.bt-launch-card{background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(99,102,241,.04));border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:32px;margin-bottom:24px;}
+.bt-launch-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;}
+.bt-token-types{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;}
+.bt-type{background:var(--surface);border:1px solid var(--rim2);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;}
+.bt-type:hover,.bt-type.selected{border-color:var(--ink);background:rgba(124,58,237,.06);}
+.bt-type-icon{font-size:24px;margin-bottom:8px;}
+.bt-type-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.bt-type-desc{font-size:11px;color:var(--muted);line-height:1.5;font-weight:300;}
+.bt-slider-wrap{margin-bottom:18px;}
+.bt-slider-label{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);margin-bottom:8px;}
+.bt-slider{width:100%;accent-color:var(--glow);}
+.bt-preview{background:var(--raised);border:1px solid var(--rim);border-radius:12px;padding:16px;margin-bottom:18px;}
+.bt-preview-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--rim);}
+.bt-preview-row:last-child{border:none;}
+.bt-preview-key{color:var(--muted);}
+.bt-preview-val{font-family:var(--mono);font-weight:700;}
+.bt-tokens-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.bt-token{background:var(--surface);border:1px solid var(--rim2);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;}
+.bt-token:hover{border-color:var(--ink);transform:translateY(-2px);}
+.bt-token-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bt-token-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.bt-token-name{font-size:13px;font-weight:800;}
+.bt-token-type{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.bt-token-apy{font-size:16px;font-weight:900;font-family:var(--mono);color:var(--green);margin-bottom:4px;}
+.bt-token-apy-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;}
+.bt-token-bar{height:4px;background:var(--rim);border-radius:2px;overflow:hidden;margin-top:8px;}
+.bt-token-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--glow),var(--cyan));}
+
+/* BTC on-ramp modal */
+.btc-modal-inner{background:var(--card);border:1px solid var(--rim2);border-radius:20px;padding:28px;max-width:420px;width:100%;position:relative;}
+.btc-step{flex:1;text-align:center;font-size:10px;font-family:var(--mono);padding:5px 4px;border-radius:6px;border:1px solid var(--rim2);color:var(--muted);transition:all .3s;}
+.btc-step.active{background:rgba(0,214,143,.1);border-color:var(--green);color:var(--green);font-weight:700;}
+.btc-dot{width:10px;height:10px;border-radius:50%;background:var(--rim2);flex-shrink:0;transition:background .4s;}
+.btc-dot.lit{background:var(--gold);}
+.btc-proof-step{font-size:11px;font-family:var(--mono);color:var(--muted);padding:5px 0;transition:color .3s;}
+.btc-proof-step.done{color:var(--green);}
+.btc-proof-step.done::first-letter{content:'✓';}
+.btc-input{width:100%;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:13px 14px;font-size:16px;color:var(--text);font-family:var(--mono);outline:none;box-sizing:border-box;text-align:center;font-weight:700;}
+.btc-input:focus{border-color:var(--gold);}
+.btc-rate-row{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);padding:6px 0;border-bottom:1px solid var(--rim);}
+.btc-rate-row:last-child{border:none;}
+.btc-progress{display:flex;flex-direction:column;gap:10px;margin:16px 0;}
+.btc-prog-step{display:flex;align-items:center;gap:10px;font-size:12px;}
+.btc-prog-dot{width:10px;height:10px;border-radius:50%;background:var(--rim2);flex-shrink:0;transition:background .3s;}
+.btc-prog-dot.done{background:var(--green);}
+.btc-prog-dot.active{background:var(--gold);animation:pulse 1s infinite;}
+
 /* Tokenomics page */
 #page-tokenomics .page-inner{max-width:1000px;margin:0 auto;padding:60px 24px;}
 .tk-hero{text-align:center;margin-bottom:56px;}
@@ -2295,6 +2368,8 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="ndm-item" onclick="showPage('litepaper');closeAllNavDrops()">📄 Litepaper</div>
           <div class="ndm-item" onclick="showPage('tokenomics');closeAllNavDrops()">🌙 Tokenomics</div>
           <div class="ndm-item" onclick="showPage('press');closeAllNavDrops()">📰 Press Kit</div>
+          <div class="ndm-item" onclick="showPage('ecosystem-vision');closeAllNavDrops()">🌐 Ecosystem Vision</div>
+          <div class="ndm-item" onclick="showPage('biztoken');closeAllNavDrops()">🏢 Business Tokens</div>
           <div class="ndm-sep"></div>
           <div class="ndm-item" onclick="showPage('privacy');closeAllNavDrops()">⊘ ZK Privacy</div>
           <div class="ndm-item" onclick="showPage('midnight');closeAllNavDrops()">🌑 About Midnight</div>
@@ -7108,6 +7183,132 @@ document.addEventListener('click',function(e){
   </div>
 </div>
 
+<!-- ══════════════ MIDNIGHT ECOSYSTEM VISION ══════════════ -->
+<div class="page" id="page-ecosystem-vision">
+  <div class="page-inner">
+    <div class="ev-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(124,58,237,.08);color:var(--glow);border-color:rgba(124,58,237,.2);">🌑 The Midnight Ecosystem — What ZK Unlocks</span></div>
+      <h1 style="font-family:var(--serif);font-size:54px;font-style:italic;margin-bottom:14px;">Prove anything.<br><em>Reveal nothing.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:600px;margin:0 auto;line-height:1.8;font-weight:300;">Night Markets is the flagship consumer application. But Midnight Network's ZK primitive unlocks an entire universe of applications across healthcare, finance, governance, AI, and beyond. Every one of these is buildable on the same infrastructure Night Markets is built on.</p>
+    </div>
+
+    <div class="ev-count">
+      <div class="ev-count-item"><div class="ev-count-val">100+</div><div class="ev-count-label">Use Cases</div></div>
+      <div class="ev-count-item"><div class="ev-count-val">$6.3T</div><div class="ev-count-label">E-commerce TAM</div></div>
+      <div class="ev-count-item"><div class="ev-count-val">1.4B</div><div class="ev-count-label">Unbanked People</div></div>
+      <div class="ev-count-item"><div class="ev-count-val">$0</div><div class="ev-count-label">Privacy-native commerce today</div></div>
+    </div>
+
+    <div class="ev-tabs">
+      <div class="ev-tab active" onclick="evFilter('all',this)">All</div>
+      <div class="ev-tab" onclick="evFilter('health',this)">🏥 Healthcare</div>
+      <div class="ev-tab" onclick="evFilter('finance',this)">💰 Finance</div>
+      <div class="ev-tab" onclick="evFilter('gov',this)">🏛️ Governance</div>
+      <div class="ev-tab" onclick="evFilter('ai',this)">🤖 AI</div>
+      <div class="ev-tab" onclick="evFilter('commerce',this)">🛒 Commerce</div>
+    </div>
+
+    <div class="ev-grid" id="ev-grid">
+      <!-- Populated by JS -->
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(6,182,212,.04));border:1px solid rgba(124,58,237,.2);border-radius:18px;padding:32px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:14px;">🌑</div>
+      <div style="font-size:18px;font-weight:800;font-family:var(--serif);font-style:italic;margin-bottom:10px;">Night Markets is the on-ramp.</div>
+      <div style="font-size:13px;color:var(--text2);max-width:600px;margin:0 auto;line-height:1.8;font-weight:300;">Every use case above is powered by the same ZK infrastructure Night Markets is already built on. We are not building a single app — we are building the commerce and identity layer that makes Midnight's vision real for everyday people. The marketplace is the beginning.</div>
+      <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="showPage('litepaper')">Read the litepaper →</button>
+        <button class="btn btn-outline-ink" onclick="showPage('acquire')">Acquire this project</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ BUSINESS TOKEN / RWA ══════════════ -->
+<div class="page" id="page-biztoken">
+  <div class="page-inner">
+    <div class="bt-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(0,214,143,.06);color:var(--green);border-color:rgba(0,214,143,.2);">🏢 Business Tokens — ZK Profit Sharing</span></div>
+      <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:14px;">Tokenize your business.<br><em>Share the upside.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">Any seller on Night Markets can turn their business into an investable token. Buyers become co-owners and get paid automatically every time you make a sale — via ZK-verified profit proof. No banks. No lawyers. No paperwork.</p>
+    </div>
+
+    <!-- Launch card -->
+    <div class="bt-launch-card">
+      <div class="bt-launch-title">Launch your business token</div>
+      <div class="bt-token-types">
+        <div class="bt-type selected" id="bt-merch" onclick="btSelectType('merch')">
+          <div class="bt-type-icon">🛍️</div>
+          <div class="bt-type-title">Merch Token</div>
+          <div class="bt-type-desc">Tied to a specific product line. Buyers invest in your best products and earn dividends from those sales.</div>
+        </div>
+        <div class="bt-type" id="bt-biz" onclick="btSelectType('biz')">
+          <div class="bt-type-icon">🏢</div>
+          <div class="bt-type-title">Business Token</div>
+          <div class="bt-type-desc">Represents your whole business. Investors get a % of all future profits — like micro-equity without the lawyers.</div>
+        </div>
+        <div class="bt-type" id="bt-invoice" onclick="btSelectType('invoice')">
+          <div class="bt-type-icon">📄</div>
+          <div class="bt-type-title">Invoice Token</div>
+          <div class="bt-type-desc">Tokenize unpaid invoices. Get cash now. When the invoice is paid, holders receive principal + yield automatically.</div>
+        </div>
+        <div class="bt-type" id="bt-coop" onclick="btSelectType('coop')">
+          <div class="bt-type-icon">🤝</div>
+          <div class="bt-type-title">Co-op Token</div>
+          <div class="bt-type-desc">Group of sellers pool together. One token covers the whole collective. Community investors share group profits.</div>
+        </div>
+      </div>
+
+      <div class="bt-slider-wrap">
+        <div class="bt-slider-label">
+          <span>Payback % to token holders</span>
+          <span id="bt-slider-val" style="color:var(--glow);font-weight:800;">10%</span>
+        </div>
+        <input type="range" class="bt-slider" id="bt-slider" min="2" max="30" value="10" oninput="btUpdateSlider()">
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:4px;"><span>2% min</span><span>30% max</span></div>
+      </div>
+
+      <div class="bt-preview" id="bt-preview">
+        <div class="bt-preview-row"><div class="bt-preview-key">Token type</div><div class="bt-preview-val" id="bt-prev-type">Merch Token</div></div>
+        <div class="bt-preview-row"><div class="bt-preview-key">Payback %</div><div class="bt-preview-val" id="bt-prev-pct" style="color:var(--glow);">10% of sales</div></div>
+        <div class="bt-preview-row"><div class="bt-preview-key">Distribution</div><div class="bt-preview-val">Auto · ZK proof · instant</div></div>
+        <div class="bt-preview-row"><div class="bt-preview-key">Revenue visibility</div><div class="bt-preview-val" style="color:var(--green);">Private — ZK verified</div></div>
+        <div class="bt-preview-row"><div class="bt-preview-key">Smart contract</div><div class="bt-preview-val" style="color:var(--cyan);">Compact · Midnight Preprod</div></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="btLaunch()" style="width:100%;padding:14px;font-size:14px;">Launch token — deploy to Midnight</button>
+    </div>
+
+    <!-- Live business tokens -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">Live on Night Markets — invest in real businesses</div>
+    <div class="bt-tokens-grid">
+      <div class="bt-token" onclick="btInvest('Mama\'s Spice Shop','8.4%')">
+        <div class="bt-token-header"><div class="bt-token-avatar" style="background:linear-gradient(135deg,#f5c518,#f97316);">🌶️</div><div><div class="bt-token-name">Mama's Spice Shop</div><div class="bt-token-type">Business Token · Lagos, NG</div></div></div>
+        <div class="bt-token-apy">8.4%</div><div class="bt-token-apy-label">Current yield</div>
+        <div class="bt-token-bar"><div class="bt-token-fill" style="width:68%;"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:var(--mono);">68% funded · 142 investors</div>
+      </div>
+      <div class="bt-token" onclick="btInvest('Nairobi Textile Co.','12.1%')">
+        <div class="bt-token-header"><div class="bt-token-avatar" style="background:linear-gradient(135deg,var(--ink),var(--plasma));">🧵</div><div><div class="bt-token-name">Nairobi Textile Co.</div><div class="bt-token-type">Co-op Token · Nairobi, KE</div></div></div>
+        <div class="bt-token-apy">12.1%</div><div class="bt-token-apy-label">Current yield</div>
+        <div class="bt-token-bar"><div class="bt-token-fill" style="width:45%;"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:var(--mono);">45% funded · 89 investors</div>
+      </div>
+      <div class="bt-token" onclick="btInvest('Street Food Manila','15.8%')">
+        <div class="bt-token-header"><div class="bt-token-avatar" style="background:linear-gradient(135deg,var(--red),#f97316);">🍜</div><div><div class="bt-token-name">Street Food Manila</div><div class="bt-token-type">Merch Token · Manila, PH</div></div></div>
+        <div class="bt-token-apy">15.8%</div><div class="bt-token-apy-label">Current yield</div>
+        <div class="bt-token-bar"><div class="bt-token-fill" style="width:91%;"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:var(--mono);">91% funded · 203 investors</div>
+      </div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(0,214,143,.06),rgba(124,58,237,.03));border:1px solid rgba(0,214,143,.15);border-radius:14px;padding:22px;text-align:center;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🏢 The first micro-VC platform for the global south — powered by Midnight ZK</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.7;">Sellers get instant capital without banks or lawyers. Investors get real yield from real businesses they can see and trust. Every dividend is a ZK proof on Midnight — the revenue is verified, the business identity is private. Shark Tank for the unbanked.</div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════ VISION ══════════════ -->
 <div class="page" id="page-vision">
   <div class="page-inner" style="padding-top:0;max-width:100%;padding-left:0;padding-right:0;">
@@ -7504,6 +7705,8 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showPage('litepaper');closeMobNav()" style="color:var(--cyan);">📄 Litepaper</button>
   <button class="mob-nav-item" onclick="showPage('tokenomics');closeMobNav()" style="color:var(--glow);">🌙 Tokenomics</button>
   <button class="mob-nav-item" onclick="showPage('press');closeMobNav()" style="color:var(--green);">📰 Press Kit</button>
+  <button class="mob-nav-item" onclick="showPage('ecosystem-vision');closeMobNav()" style="color:var(--cyan);">🌐 Ecosystem Vision</button>
+  <button class="mob-nav-item" onclick="showPage('biztoken');closeMobNav()" style="color:var(--gold);">🏢 Business Tokens</button>
   <button class="mob-nav-item" onclick="showPage('privacy');closeMobNav()">⊘ ZK Privacy</button>
   <button class="mob-nav-item" onclick="showPage('midnight');closeMobNav()">🌑 Midnight</button>
   <button class="mob-nav-item" onclick="showPage('vision');closeMobNav()">🌍 Vision</button>
@@ -7512,6 +7715,106 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showZKOnboard();closeMobNav()">⊘ How it works</button>
 </div>
 
+
+<!-- ══ BTC ON-RAMP MODAL ══ -->
+<div id="ov-btc-onramp" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closeBtcOnramp()">
+  <div class="btc-modal-inner" style="position:relative;">
+    <button onclick="closeBtcOnramp()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+      <div style="width:42px;height:42px;background:linear-gradient(135deg,#f7931a,#ff6b00);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">₿</div>
+      <div>
+        <div style="font-size:17px;font-weight:800;">Bitcoin On-Ramp</div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--mono);">BTC → shielded NIGHT vault · ZK private</div>
+      </div>
+    </div>
+    <!-- Step indicators -->
+    <div style="display:flex;gap:6px;margin-bottom:20px;" id="btc-steps">
+      <div class="btc-step active" id="btcs-1">1 · Amount</div>
+      <div class="btc-step" id="btcs-2">2 · Deposit</div>
+      <div class="btc-step" id="btcs-3">3 · Shield</div>
+      <div class="btc-step" id="btcs-4">✓ Done</div>
+    </div>
+    <!-- Step 1: Amount -->
+    <div id="btc-panel-1">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;color:var(--muted);font-family:var(--mono);display:block;margin-bottom:6px;">BTC AMOUNT</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input id="btc-amount-input" type="number" min="0.0001" step="0.0001" value="0.01" style="flex:1;background:var(--card2);border:1px solid var(--rim2);border-radius:10px;padding:10px 14px;color:var(--txt);font-size:15px;font-weight:700;font-family:var(--mono);" oninput="btcUpdateCalc()"/>
+          <div style="background:rgba(247,147,26,.1);border:1px solid rgba(247,147,26,.3);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;color:#f7931a;">BTC</div>
+        </div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--rim2);border-radius:12px;padding:14px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;">
+          <span style="color:var(--muted);">You send</span>
+          <span id="btc-send-display" style="font-weight:700;font-family:var(--mono);">0.0100 BTC</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;">
+          <span style="color:var(--muted);">BTC price</span>
+          <span id="btc-price-display" style="font-family:var(--mono);">$95,200</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;">
+          <span style="color:var(--muted);">Bridge fee (0.3%)</span>
+          <span id="btc-fee-display" style="font-family:var(--mono);color:var(--muted);">−$2.86</span>
+        </div>
+        <div style="height:1px;background:var(--rim2);margin:8px 0;"></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:800;">
+          <span style="color:var(--green);">You receive (shielded)</span>
+          <span id="btc-receive-display" style="font-family:var(--mono);color:var(--green);">~945 NIGHT</span>
+        </div>
+      </div>
+      <div style="background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--muted);margin-bottom:16px;">
+        ⊘ Your BTC identity is shielded via ZK proof. No on-chain link between your Bitcoin address and Midnight wallet.
+      </div>
+      <button class="btn btn-primary" onclick="btcStep(2)" style="width:100%;padding:13px;">Continue →</button>
+    </div>
+    <!-- Step 2: Deposit address -->
+    <div id="btc-panel-2" style="display:none;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Send exactly <span id="btc-exact-amount" style="color:var(--txt);font-weight:700;font-family:var(--mono);">0.0100 BTC</span> to:</div>
+        <div style="background:var(--card2);border:1px solid var(--rim2);border-radius:12px;padding:14px;font-family:var(--mono);font-size:11px;word-break:break-all;color:var(--cyan);letter-spacing:0.5px;" id="btc-deposit-addr">bc1qnight...markets7zkpriv</div>
+        <button onclick="btcCopyAddr()" style="margin-top:8px;background:none;border:1px solid var(--rim2);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:11px;cursor:pointer;">📋 Copy address</button>
+      </div>
+      <div style="background:var(--card2);border-radius:10px;padding:12px;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Network confirmations</div>
+        <div style="display:flex;gap:6px;" id="btc-confirm-dots">
+          <div class="btc-dot" id="btcd-1"></div>
+          <div class="btc-dot" id="btcd-2"></div>
+          <div class="btc-dot" id="btcd-3"></div>
+          <div style="font-size:11px;color:var(--muted);margin-left:4px;" id="btc-confirm-text">Waiting for deposit…</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="btcSimulateConfirm()" style="width:100%;padding:13px;">Simulate deposit (demo)</button>
+    </div>
+    <!-- Step 3: Shielding -->
+    <div id="btc-panel-3" style="display:none;">
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:36px;margin-bottom:12px;">⊘</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Generating ZK Shield Proof</div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:18px;">Your BTC is being converted and shielded on Midnight Network</div>
+        <div id="btc-proof-steps" style="text-align:left;background:var(--card2);border-radius:10px;padding:14px;">
+          <div class="btc-proof-step" id="btcps-1">○ Verifying Bitcoin finality…</div>
+          <div class="btc-proof-step" id="btcps-2">○ Generating nullifier secret…</div>
+          <div class="btc-proof-step" id="btcps-3">○ Building Compact witness…</div>
+          <div class="btc-proof-step" id="btcps-4">○ Submitting to Midnight…</div>
+        </div>
+      </div>
+    </div>
+    <!-- Step 4: Done -->
+    <div id="btc-panel-4" style="display:none;">
+      <div style="text-align:center;padding:16px 0 8px;">
+        <div style="font-size:48px;margin-bottom:12px;">✅</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:6px;">Shielded!</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Your NIGHT tokens are now in your ZK-shielded vault. No one can see your balance or transaction history.</div>
+        <div style="background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.25);border-radius:12px;padding:14px;margin-bottom:16px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Shielded balance received</div>
+          <div id="btc-final-amount" style="font-size:22px;font-weight:900;font-family:var(--mono);color:var(--green);">~945 NIGHT</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px;" id="btc-final-txid">tx: NM_SHIELD_…</div>
+        </div>
+        <button class="btn btn-primary" onclick="closeBtcOnramp()" style="width:100%;padding:13px;">Start shopping →</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ MIDNIGHT BRIDGE MODAL ══ -->
 <div id="ov-bridge" style="display:none;position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,.82);align-items:center;justify-content:center;" onclick="if(event.target===this)closeBridge()">
@@ -9170,81 +9473,6 @@ async function simulateCompactReleaseEscrow(orderId){
   // Mirrors Compact: round.increment(1) — Counter type uses .increment(), not += 
   entry.round = (entry.round + 1) & 0xFFFFFFFF;
   console.log('[NM Escrow] releaseEscrow', orderId, { newRound: entry.round });
-  return true;
-}
-
-// ══════════════════════════════════════════════════════════════
-// NIGHT TOKEN TRANSFER — midnight-js 3.0.0
-// Breaking changes vs 2.x:
-//   • submitTx → submitTransaction (returns Promise<TransactionId>)
-//   • contract imports use .js not .cjs
-//   • makeTransfer field: tokenType (not type), recipient (not receiverAddress)
-// ══════════════════════════════════════════════════════════════
-async function makeNightTransfer(recipientAddress, amountNight){
-  if(!walletState.connected || !walletState.api || walletState.demo) return null;
-  try {
-    var amountRaw = BigInt(Math.round(amountNight * 1_000_000)); // 6 decimals → bigint
-
-    // makeTransfer([{kind, tokenType, value, recipient}])
-    // tokenType: 'night' = nativeToken().raw (hex) from @midnight-ntwrk/ledger-v7
-    var tx = await walletState.api.makeTransfer([{
-      kind:      'unshielded',
-      tokenType: 'night',          // nativeToken().raw equivalent
-      value:     amountRaw,
-      recipient: recipientAddress
-    }]);
-
-    // midnight-js 3.0.0: submitTransaction() returns Promise<TransactionId>
-    var txId = await walletState.api.submitTransaction(tx);
-    console.log('[NM] Transfer submitted. TransactionId:', txId);
-    return txId;
-
-  } catch(err){
-    toast('Transaction failed: ' + (err.message || String(err)), 'error');
-    return null;
-  }
-}
-
-// ── NIGHT checkout with ZK escrow flow ────────────────────────
-// Replaces the bare transfer in coConfirmNight with a full escrow cycle:
-//   1. Generate IPFS CID for listing metadata (simulated)
-//   2. simulateCompactCreateListing → seller commitment
-//   3. simulateCompactFundEscrow    → buyer commitment + NIGHT transfer
-//   4. simulateCompactReleaseEscrow → escrow released, round rotated
-async function coConfirmNightWithEscrow(orderId, amountNight){
-  // Step 1 — private listing metadata ref (Opaque<"string"> in Compact)
-  // In production: encrypt listing details, pin to IPFS, store CID on-chain
-  var listingCid = 'ipfs://QmSimulated_' + orderId.replace('NM-','') + '_' + Date.now().toString(36);
-
-  // Step 2 — createListing (seller side; in prod this happens at listing time)
-  await simulateCompactCreateListing(orderId, listingCid, amountNight);
-
-  // Step 3 — fundEscrow (buyer side) + actual NIGHT transfer
-  var buyerCommit = await simulateCompactFundEscrow(orderId, amountNight);
-
-  var txId = null;
-  if(!walletState.demo && walletState.api){
-    // Real transfer — midnight-js 3.0.0 async submitTransaction
-    txId = await makeNightTransfer(walletState.unshielded, amountNight);
-    if(!txId) throw new Error('NIGHT transfer failed — see console');
-  } else {
-    // Demo simulation
-    await new Promise(function(r){ setTimeout(r, 1800); });
-    txId = 'DEMO_TX_' + Math.random().toString(36).slice(2,12).toUpperCase();
-  }
-
-  // Step 4 — releaseEscrow (buyer confirms receipt)
-  await simulateCompactReleaseEscrow(orderId);
-
-  return { txId, listingCid, buyerCommit };
-}
-
-// ── Wallet check before checkout ───────────────────────────────
-function walletCheckBeforeConfirm(){
-  if(!walletState || !walletState.connected){
-    openWalletModal();
-    return false;
-  }
   return true;
 }
 
@@ -11382,6 +11610,304 @@ function ncSend() {
     if(supported.indexOf(lang) !== -1) localStorage.setItem('nm_lang', lang);
   }
 })();
+
+// ══════════════════════════════════════════════════════════════
+// ECOSYSTEM VISION PAGE — evFilter + ev-grid population
+// ══════════════════════════════════════════════════════════════
+var EV_CASES = [
+  // Healthcare
+  {cat:'health', icon:'🏥', title:'Private Medical Records', desc:'ZK-verified health data shared only with consenting parties. No hospital data breaches.'},
+  {cat:'health', icon:'💊', title:'Prescription Traceability', desc:'Track medication from manufacturer to patient without exposing personal health info.'},
+  {cat:'health', icon:'🧬', title:'Genomic Data Marketplace', desc:'Sell your DNA insights to researchers while keeping identity completely shielded.'},
+  {cat:'health', icon:'🩺', title:'Telemedicine ZK Identity', desc:'Verify doctor credentials and patient identity without exposing full records.'},
+  {cat:'health', icon:'🏋️', title:'Private Wellness Rewards', desc:'Earn NIGHT tokens for hitting health goals. Insurer sees proof, not your data.'},
+  {cat:'health', icon:'🧪', title:'Clinical Trial Privacy', desc:'Participants proven eligible via ZK. No name, DOB, or address exposed to sponsors.'},
+  {cat:'health', icon:'👁️', title:'Ophthalmology Records', desc:'Eye prescription data shielded — share with new optometrist via single-use ZK proof.'},
+  {cat:'health', icon:'🦷', title:'Dental Insurance Claims', desc:'ZK-proven treatment without exposing full dental history to third-party processors.'},
+  // Finance
+  {cat:'finance', icon:'🏦', title:'ZK Credit Scoring', desc:'Prove creditworthiness above threshold without revealing income, debts, or bank history.'},
+  {cat:'finance', icon:'💸', title:'Private Payroll', desc:'Employer proves staff are paid above minimum wage to regulators. Staff balances private.'},
+  {cat:'finance', icon:'📊', title:'Dark Pool Trading', desc:'Institutional trades executed with ZK proofs. Volume hidden until settlement.'},
+  {cat:'finance', icon:'🏠', title:'Mortgage Privacy', desc:'Prove income sufficiency to lenders without exposing full salary or spending patterns.'},
+  {cat:'finance', icon:'💳', title:'ZK KYC Once', desc:'Complete KYC once, reuse ZK attestation across all Midnight DApps. No re-uploading passports.'},
+  {cat:'finance', icon:'🌍', title:'Cross-border Remittance', desc:'Send money home without surveillance. Recipient proves receipt via ZK. No intermediaries.'},
+  {cat:'finance', icon:'📈', title:'Private VC Investing', desc:'Prove accredited investor status without disclosing net worth to every startup.'},
+  {cat:'finance', icon:'🏛️', title:'Tax Compliance Proof', desc:'Prove taxes are paid to authorities without exposing full financial profile to third parties.'},
+  {cat:'finance', icon:'🔒', title:'Shielded Stablecoin', desc:'Transact in sUSD with Midnight ZK privacy. Counterparty sees proof of funds, not balance.'},
+  {cat:'finance', icon:'🎯', title:'Night Markets Escrow', desc:'Buy and sell goods with ZK escrow. Dispute resolution on-chain. Identity private.'},
+  // Governance
+  {cat:'gov', icon:'🗳️', title:'Private Voting', desc:'Prove you are a registered citizen and cast your vote. Neither government nor hackers see your choice.'},
+  {cat:'gov', icon:'📜', title:'Anonymous Whistleblowing', desc:'Submit evidence to regulators with ZK proof of authenticity. Source identity never exposed.'},
+  {cat:'gov', icon:'🏛️', title:'DAO Governance', desc:'Vote on protocol changes with quadratic voting. Wallet balance stays private.'},
+  {cat:'gov', icon:'🌐', title:'Digital Identity', desc:'National ID on Midnight. Prove age, citizenship, residency — one ZK proof, infinite uses.'},
+  {cat:'gov', icon:'📋', title:'Procurement Transparency', desc:'Government contracts proven fair without exposing sensitive supplier pricing.'},
+  {cat:'gov', icon:'🛡️', title:'Sanctions Compliance', desc:'Prove counterparty is not sanctioned without revealing who they are to other parties.'},
+  {cat:'gov', icon:'🏢', title:'Corporate Registry', desc:'Verify company registration and directors via ZK. Due diligence without data leaks.'},
+  {cat:'gov', icon:'⚖️', title:'Legal Evidence Chain', desc:'ZK-timestamped evidence. Prove document existed before event without exposing contents.'},
+  // AI
+  {cat:'ai', icon:'🤖', title:'Private AI Training', desc:'Contribute your data to AI model training. Proof of contribution without exposing raw data.'},
+  {cat:'ai', icon:'🧠', title:'ZK Model Verification', desc:'Prove AI model was trained ethically and on consented data without revealing training set.'},
+  {cat:'ai', icon:'🔍', title:'Private Search', desc:'Search across shielded Night Markets inventory. Seller sees query result, not your intent.'},
+  {cat:'ai', icon:'📸', title:'Deepfake Provenance', desc:'ZK-signed media. Prove content is authentic and unaltered. Combat misinformation at root.'},
+  {cat:'ai', icon:'🎙️', title:'Voice Identity Shield', desc:'Authenticate with voice biometric via ZK. Voice print never stored on server.'},
+  {cat:'ai', icon:'💬', title:'Night Chat AI Assist', desc:'AI suggestions inside encrypted Night Chat. Messages never leave your device unshielded.'},
+  {cat:'ai', icon:'📡', title:'Private IoT Data', desc:'IoT devices prove sensor readings are within spec without leaking raw telemetry.'},
+  {cat:'ai', icon:'🌱', title:'Carbon Credit Verification', desc:'AI-verified carbon offsets proven real via ZK satellite data. No greenwashing.'},
+  // Commerce
+  {cat:'commerce', icon:'🛒', title:'Night Markets', desc:'The OG. ZK escrow marketplace. Buy anything, sell anything. Identity private, dispute fair.'},
+  {cat:'commerce', icon:'🏢', title:'Business Tokens (RWA)', desc:'Tokenize your small business revenue. Investors get ZK-verified payback dividends.'},
+  {cat:'commerce', icon:'💰', title:'Night Pay', desc:'Pay anyone with ZK-shielded NIGHT. No payment history visible to merchants or banks.'},
+  {cat:'commerce', icon:'🏦', title:'Night Lend', desc:'ZK-private DeFi lending. Prove collateral without revealing full portfolio.'},
+  {cat:'commerce', icon:'🎮', title:'Private Gaming Assets', desc:'Buy, sell, trade in-game items with ZK proof of ownership. No wallet doxxing.'},
+  {cat:'commerce', icon:'🎨', title:'Private NFT Drops', desc:'Mint and sell NFTs with shielded provenance. Creator identity optional.'},
+  {cat:'commerce', icon:'🌶️', title:'Street Market Payments', desc:'Lagos market vendor accepts NIGHT. Buyer pays with ZK proof. No bank account needed.'},
+  {cat:'commerce', icon:'🚗', title:'Private Auto Finance', desc:'Prove income for car loan without exposing full financial history to dealership.'},
+  {cat:'commerce', icon:'✈️', title:'Travel Without Surveillance', desc:'Book flights and hotels with NIGHT. Loyalty points earned without building ad profiles.'},
+  {cat:'commerce', icon:'🏡', title:'Property Purchase', desc:'ZK proof of funds for property. Seller verifies buyer can pay without seeing source.'},
+  {cat:'commerce', icon:'👗', title:'Fashion Resale', desc:'Authenticate luxury goods with ZK provenance. Buyer knows it\'s real. Seller stays private.'},
+  {cat:'commerce', icon:'📦', title:'Supply Chain Visibility', desc:'Track goods from factory to shelf with ZK proofs at each step. No competitive data leakage.'},
+];
+
+function evFilter(cat, el) {
+  // Update tabs
+  document.querySelectorAll('.ev-tab').forEach(function(t){ t.classList.remove('active'); });
+  if(el) el.classList.add('active');
+
+  // Filter and render
+  var filtered = cat === 'all' ? EV_CASES : EV_CASES.filter(function(c){ return c.cat === cat; });
+  var grid = document.getElementById('ev-grid');
+  if(!grid) return;
+
+  grid.innerHTML = filtered.map(function(c){
+    return '<div class="ev-card"><div class="ev-card-icon">' + c.icon + '</div><div class="ev-card-title">' + c.title + '</div><div class="ev-card-desc">' + c.desc + '</div></div>';
+  }).join('');
+
+  // Update count display
+  var countEl = document.getElementById('ev-count');
+  if(countEl) countEl.textContent = filtered.length + ' use cases';
+}
+
+// Populate on page show — hook into showPage
+var _origShowPage = typeof showPage === 'function' ? showPage : null;
+(function(){
+  var _sp = window.showPage;
+  window.showPage = function(id){
+    if(_sp) _sp(id);
+    if(id === 'ecosystem-vision'){
+      setTimeout(function(){ evFilter('all', document.querySelector('.ev-tab')); }, 50);
+    }
+    if(id === 'biztoken'){
+      setTimeout(function(){ btUpdatePreview(); }, 50);
+    }
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════
+// BUSINESS TOKEN PAGE — btSelectType, btUpdateSlider, btLaunch, btInvest
+// ══════════════════════════════════════════════════════════════
+var btState = {
+  type: 'merch',
+  name: '',
+  revenue: 10000,
+  payback: 12,
+  raise: 5000
+};
+
+var BT_TYPES = {
+  merch:   { label: 'Merch Token',     desc: 'Tokenize product revenue. Holders earn % of each sale.',      color: '#a855f7' },
+  biz:     { label: 'Business Token',  desc: 'Full revenue share. Investors back your whole operation.',     color: '#00d68f' },
+  invoice: { label: 'Invoice Token',   desc: 'Unlock unpaid invoices as liquidity. Pay back when settled.',  color: '#f59e0b' },
+  coop:    { label: 'Co-op Token',     desc: 'Community-owned business. Token = governance + profit share.', color: '#06b6d4' }
+};
+
+function btSelectType(type) {
+  btState.type = type;
+  ['merch','biz','invoice','coop'].forEach(function(t){
+    var el = document.getElementById('bt-' + t);
+    if(el) el.classList.toggle('selected', t === type);
+  });
+  btUpdatePreview();
+}
+
+function btUpdateSlider() {
+  var slider = document.getElementById('bt-slider');
+  if(slider) {
+    btState.payback = parseInt(slider.value);
+    var display = document.getElementById('bt-slider-val');
+    if(display) display.textContent = btState.payback + '%';
+    btUpdatePreview();
+  }
+}
+
+function btUpdatePreview() {
+  var typeInfo = BT_TYPES[btState.type] || BT_TYPES.biz;
+  var prevType = document.getElementById('bt-prev-type');
+  var prevPay  = document.getElementById('bt-prev-pct');
+  if(prevType) prevType.textContent = typeInfo.label;
+  if(prevPay)  prevPay.textContent  = btState.payback + '% of sales';
+}
+
+function btLaunch() {
+  if(!walletState || !walletState.connected) {
+    openWalletModal();
+    toast('Connect your Lace wallet to deploy', 'warn');
+    return;
+  }
+  var typeInfo = BT_TYPES[btState.type] || BT_TYPES.biz;
+  var name = typeInfo.label + ' #' + Math.floor(Math.random()*9000+1000);
+  toast('Deploying ' + typeInfo.label + ' to Midnight…', 'info');
+
+  // Simulate ZK deployment
+  setTimeout(function(){
+    toast(name + ' deployed! Contract live on Midnight ✓', 'success');
+    // Add to live tokens list
+    var liveList = document.querySelector('.bt-tokens-grid');
+    if(liveList) {
+      var colors = ['#f7931a','#a855f7','#00d68f','#06b6d4'];
+      var color = colors[Math.floor(Math.random()*colors.length)];
+      var emoji = ['🌶️','🧵','🍜','☕','🎨','🛠️'][Math.floor(Math.random()*6)];
+      var newToken = document.createElement('div');
+      newToken.className = 'bt-token';
+      newToken.innerHTML = '<div class="bt-token-header"><div class="bt-token-avatar" style="background:linear-gradient(135deg,' + color + ',#1a1a2e);">' + emoji + '</div><div><div class="bt-token-name">' + name + '</div><div class="bt-token-type">' + typeInfo.label + ' · Just deployed</div></div></div><div class="bt-token-stats"><div class="bt-stat"><div class="bt-stat-val">' + btState.payback + '%</div><div class="bt-stat-label">payback</div></div><div class="bt-stat"><div class="bt-stat-val">0</div><div class="bt-stat-label">holders</div></div><div class="bt-stat"><div class="bt-stat-val">0 NIGHT</div><div class="bt-stat-label">raised</div></div></div>';
+      newToken.onclick = function(){ btInvest(name, btState.payback + '%'); };
+      liveList.prepend(newToken);
+    }
+  }, 2200);
+}
+
+function btInvest(tokenName, payback) {
+  toast('Investing in ' + tokenName + ' (' + payback + ' payback) — connect wallet to proceed', 'info');
+  if(!walletState || !walletState.connected) {
+    openWalletModal();
+  }
+}
+
+function formatNight(n) {
+  if(n >= 1000) return (n/1000).toFixed(1) + 'k';
+  return String(n);
+}
+
+// Wire up slider on bt page
+document.addEventListener('DOMContentLoaded', function(){
+  var sl = document.getElementById('bt-slider');
+  if(sl) sl.addEventListener('input', btUpdateSlider);
+  btUpdatePreview();
+});
+
+// ══════════════════════════════════════════════════════════════
+// BTC ON-RAMP MODAL — open, close, step navigation, simulate
+// ══════════════════════════════════════════════════════════════
+var BTC_PRICE = 95200;
+
+function openBtcOnramp() {
+  var el = document.getElementById('ov-btc-onramp');
+  if(el){ el.style.display = 'flex'; }
+  btcUpdateCalc();
+  btcGoPanel(1);
+}
+
+function closeBtcOnramp() {
+  var el = document.getElementById('ov-btc-onramp');
+  if(el){ el.style.display = 'none'; }
+}
+
+function btcUpdateCalc() {
+  var inp = document.getElementById('btc-amount-input');
+  var btc = inp ? parseFloat(inp.value) || 0.01 : 0.01;
+  var usd = btc * BTC_PRICE;
+  var fee = usd * 0.003;
+  var netUsd = usd - fee;
+  var night = Math.round(netUsd / 0.10); // 1 NIGHT = $0.10
+
+  var sd = document.getElementById('btc-send-display');
+  var pd = document.getElementById('btc-price-display');
+  var fd = document.getElementById('btc-fee-display');
+  var rd = document.getElementById('btc-receive-display');
+
+  if(sd) sd.textContent = btc.toFixed(4) + ' BTC';
+  if(pd) pd.textContent = '$' + BTC_PRICE.toLocaleString();
+  if(fd) fd.textContent = '−$' + fee.toFixed(2);
+  if(rd) rd.textContent = '~' + night.toLocaleString() + ' NIGHT';
+}
+
+function btcStep(n) {
+  var inp = document.getElementById('btc-amount-input');
+  var btc = inp ? parseFloat(inp.value) || 0.01 : 0.01;
+  var exactEl = document.getElementById('btc-exact-amount');
+  if(exactEl) exactEl.textContent = btc.toFixed(4) + ' BTC';
+  // Generate a demo deposit address
+  var addrEl = document.getElementById('btc-deposit-addr');
+  if(addrEl && n === 2) {
+    addrEl.textContent = 'bc1qnm' + Math.random().toString(36).slice(2,10) + 'zk' + Math.random().toString(36).slice(2,10) + 'night';
+  }
+  btcGoPanel(n);
+}
+
+function btcGoPanel(n) {
+  [1,2,3,4].forEach(function(i){
+    var p = document.getElementById('btc-panel-' + i);
+    var s = document.getElementById('btcs-' + i);
+    if(p) p.style.display = i === n ? 'block' : 'none';
+    if(s) s.classList.toggle('active', i === n);
+  });
+}
+
+function btcCopyAddr() {
+  var addrEl = document.getElementById('btc-deposit-addr');
+  if(addrEl && navigator.clipboard) {
+    navigator.clipboard.writeText(addrEl.textContent).then(function(){
+      toast('Address copied ✓', 'success');
+    });
+  }
+}
+
+function btcSimulateConfirm() {
+  // Animate confirmation dots
+  var dots = ['btcd-1','btcd-2','btcd-3'];
+  var textEl = document.getElementById('btc-confirm-text');
+  var i = 0;
+  var interval = setInterval(function(){
+    if(i < dots.length) {
+      var d = document.getElementById(dots[i]);
+      if(d) d.classList.add('lit');
+      if(textEl) textEl.textContent = (i+1) + '/3 confirmations…';
+      i++;
+    } else {
+      clearInterval(interval);
+      if(textEl) textEl.textContent = 'Confirmed ✓';
+      setTimeout(function(){ btcStep(3); btcRunShieldProof(); }, 600);
+    }
+  }, 700);
+}
+
+function btcRunShieldProof() {
+  var steps = ['btcps-1','btcps-2','btcps-3','btcps-4'];
+  var labels = [
+    '✓ Bitcoin finality verified',
+    '✓ Nullifier secret generated',
+    '✓ Compact witness built',
+    '✓ Submitted to Midnight'
+  ];
+  var i = 0;
+  var interval = setInterval(function(){
+    if(i < steps.length) {
+      var el = document.getElementById(steps[i]);
+      if(el){ el.textContent = labels[i]; el.classList.add('done'); }
+      i++;
+    } else {
+      clearInterval(interval);
+      // Calc final amount
+      var inp = document.getElementById('btc-amount-input');
+      var btc = inp ? parseFloat(inp.value) || 0.01 : 0.01;
+      var night = Math.round((btc * BTC_PRICE * 0.997) / 0.10);
+      var fa = document.getElementById('btc-final-amount');
+      var fi = document.getElementById('btc-final-txid');
+      if(fa) fa.textContent = '~' + night.toLocaleString() + ' NIGHT';
+      if(fi) fi.textContent = 'tx: NM_SHIELD_' + Math.random().toString(36).slice(2,14).toUpperCase();
+      setTimeout(function(){ btcGoPanel(4); }, 400);
+    }
+  }, 900);
+}
 
 
 
