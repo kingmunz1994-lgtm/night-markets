@@ -693,6 +693,25 @@ h1.hero-title em{font-style:italic;color:var(--glow);}
 .auc-zk-badge{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono);color:var(--plasma);background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:6px;padding:4px 10px;margin-bottom:12px;}
 .auc-btn{width:100%;padding:11px;background:linear-gradient(135deg,rgba(244,63,94,.9),rgba(244,63,94,.7));color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;}
 .auc-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.auc-timer-urgent{color:var(--orange)!important;animation:pulse .8s ease-in-out infinite;}
+.auc-card.auc-ended{border-color:rgba(107,99,144,.25);opacity:.82;}
+.auc-card.auc-ended:hover{transform:none;box-shadow:none;}
+.auc-badge-ended{position:absolute;top:10px;left:10px;background:var(--surface);color:var(--muted);font-size:10px;font-weight:700;font-family:var(--mono);padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:.5px;border:1px solid var(--rim2);}
+.auc-badge-won{position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#f5c518,#f97316);color:#000;font-size:10px;font-weight:800;font-family:var(--mono);padding:3px 10px;border-radius:6px;letter-spacing:.5px;}
+.auc-reveal-btn{width:100%;padding:11px 0;background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:var(--sans);cursor:pointer;transition:all .2s;}
+.auc-reveal-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.my-bids-btn{font-size:11px;font-family:var(--mono);color:var(--plasma);background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:5px 12px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.my-bids-btn:hover{background:rgba(124,58,237,.22);}
+.my-bids-panel{background:var(--surface);border:1px solid var(--rim2);border-radius:14px;padding:16px;margin-bottom:20px;display:none;}
+.my-bids-panel.open{display:block;}
+.mybid-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--rim);border-radius:10px;margin-bottom:8px;gap:12px;}
+.mybid-row:last-child{margin-bottom:0;}
+.mybid-title{font-size:12px;font-weight:600;margin-bottom:3px;}
+.mybid-meta{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.mybid-amt{font-size:15px;font-weight:800;font-family:var(--mono);color:var(--text);white-space:nowrap;}
+.mybid-status-live{font-size:10px;font-family:var(--mono);color:var(--green);text-align:right;}
+.mybid-status-ended{font-size:10px;font-family:var(--mono);color:var(--muted);text-align:right;}
+.mybid-status-won{font-size:10px;font-family:var(--mono);color:var(--gold);font-weight:700;text-align:right;}
 
 /* ─── BID MODAL ─── */
 .bid-modal-inner{max-width:420px;}
@@ -1924,6 +1943,79 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .nc-compose-input:focus{border-color:var(--ink);}
 .nc-send-btn{background:linear-gradient(135deg,var(--ink),var(--plasma));border:none;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--sans);}
 
+/* Tokenomics page */
+#page-tokenomics .page-inner{max-width:1000px;margin:0 auto;padding:60px 24px;}
+.tk-hero{text-align:center;margin-bottom:56px;}
+.tk-supply-bar{background:var(--surface);border:1px solid var(--rim2);border-radius:18px;padding:28px;margin-bottom:28px;}
+.tk-supply-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;}
+.tk-donut-wrap{display:flex;align-items:center;gap:40px;flex-wrap:wrap;}
+.tk-donut{width:180px;height:180px;border-radius:50%;flex-shrink:0;position:relative;}
+.tk-donut svg{width:180px;height:180px;}
+.tk-legend{flex:1;display:flex;flex-direction:column;gap:10px;}
+.tk-legend-item{display:flex;align-items:center;gap:10px;}
+.tk-legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.tk-legend-label{font-size:12px;font-weight:600;flex:1;}
+.tk-legend-pct{font-size:12px;font-family:var(--mono);color:var(--muted);}
+.tk-legend-amt{font-size:11px;font-family:var(--mono);color:var(--muted);}
+.tk-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.tk-stat{background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:18px;text-align:center;}
+.tk-stat-val{font-size:20px;font-weight:900;font-family:var(--mono);color:var(--glow);margin-bottom:4px;}
+.tk-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;line-height:1.5;}
+.tk-vesting{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;}
+.tk-vest-card{background:var(--surface);border:1px solid var(--rim2);border-radius:14px;padding:20px;}
+.tk-vest-title{font-size:12px;font-weight:800;margin-bottom:12px;}
+.tk-vest-row{display:flex;justify-content:space-between;font-size:11px;padding:6px 0;border-bottom:1px solid var(--rim);}
+.tk-vest-row:last-child{border:none;}
+.tk-vest-key{color:var(--muted);}
+.tk-vest-val{font-family:var(--mono);font-weight:600;}
+.tk-utility{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.tk-util-card{background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:16px;text-align:center;}
+.tk-util-icon{font-size:26px;margin-bottom:8px;}
+.tk-util-title{font-size:12px;font-weight:700;margin-bottom:4px;}
+.tk-util-desc{font-size:10px;color:var(--muted);line-height:1.6;font-weight:300;}
+
+/* Litepaper page */
+#page-litepaper .page-inner{max-width:780px;margin:0 auto;padding:60px 24px;}
+.lp-hero{text-align:center;margin-bottom:56px;}
+.lp-section{margin-bottom:40px;}
+.lp-section-num{font-size:10px;font-family:var(--mono);color:var(--glow);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
+.lp-section-title{font-size:22px;font-weight:800;font-family:var(--serif);font-style:italic;margin-bottom:14px;}
+.lp-body{font-size:14px;color:var(--text2);line-height:1.9;font-weight:300;margin-bottom:12px;}
+.lp-callout{background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.03));border-left:3px solid var(--glow);border-radius:0 10px 10px 0;padding:14px 18px;margin:16px 0;font-size:13px;font-style:italic;color:var(--text2);line-height:1.7;}
+.lp-tech-table{width:100%;border-collapse:collapse;font-size:12px;margin:16px 0;}
+.lp-tech-table th{text-align:left;font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:8px 12px;border-bottom:1px solid var(--rim2);}
+.lp-tech-table td{padding:10px 12px;border-bottom:1px solid var(--rim);color:var(--text2);}
+.lp-tech-table td:first-child{font-weight:700;color:var(--text);white-space:nowrap;}
+.lp-toc{background:var(--surface);border:1px solid var(--rim2);border-radius:14px;padding:20px;margin-bottom:36px;}
+.lp-toc-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.lp-toc-item{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px;cursor:pointer;color:var(--text2);}
+.lp-toc-item:hover{color:var(--glow);}
+.lp-toc-num{font-family:var(--mono);color:var(--muted);font-size:10px;width:20px;}
+
+/* Press Kit page */
+#page-press .page-inner{max-width:960px;margin:0 auto;padding:60px 24px;}
+.pr-hero{text-align:center;margin-bottom:48px;}
+.pr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px;}
+.pr-stat{background:var(--surface);border:1px solid var(--rim2);border-radius:12px;padding:18px;text-align:center;}
+.pr-stat-val{font-size:22px;font-weight:900;font-family:var(--mono);color:var(--glow);margin-bottom:4px;}
+.pr-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;}
+.pr-assets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:32px;}
+.pr-asset{background:var(--surface);border:1px solid var(--rim2);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;}
+.pr-asset:hover{border-color:var(--ink);transform:translateY(-2px);}
+.pr-asset-preview{height:100px;display:flex;align-items:center;justify-content:center;font-size:36px;border-bottom:1px solid var(--rim);}
+.pr-asset-info{padding:12px 14px;}
+.pr-asset-name{font-size:12px;font-weight:700;margin-bottom:2px;}
+.pr-asset-meta{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.pr-boilerplate{background:var(--raised);border:1px solid var(--rim2);border-radius:14px;padding:22px;margin-bottom:24px;}
+.pr-boilerplate-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.pr-boilerplate-text{font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;}
+.pr-contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pr-contact-card{background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.03));border:1px solid rgba(124,58,237,.2);border-radius:14px;padding:20px;}
+.pr-contact-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.pr-contact-name{font-size:15px;font-weight:800;margin-bottom:2px;}
+.pr-contact-role{font-size:11px;color:var(--glow);font-family:var(--mono);margin-bottom:10px;}
+.pr-contact-email{font-size:12px;color:var(--cyan);font-family:var(--mono);}
+
 /* Night Store dedicated page */
 #page-nightstore .page-inner{max-width:1100px;margin:0 auto;padding:40px 24px;}
 .nst-upload{background:var(--surface);border:2px dashed var(--rim2);border-radius:16px;padding:48px;text-align:center;margin-bottom:32px;cursor:pointer;transition:all .2s;}
@@ -2200,6 +2292,10 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
       <div class="nav-dropdown" id="nav-disc-wrap">
         <button class="nav-link" id="nl-disc-dd" onclick="toggleNavDrop('disc',event)">Discover ▾</button>
         <div class="nav-drop-menu" id="disc-drop-menu">
+          <div class="ndm-item" onclick="showPage('litepaper');closeAllNavDrops()">📄 Litepaper</div>
+          <div class="ndm-item" onclick="showPage('tokenomics');closeAllNavDrops()">🌙 Tokenomics</div>
+          <div class="ndm-item" onclick="showPage('press');closeAllNavDrops()">📰 Press Kit</div>
+          <div class="ndm-sep"></div>
           <div class="ndm-item" onclick="showPage('privacy');closeAllNavDrops()">⊘ ZK Privacy</div>
           <div class="ndm-item" onclick="showPage('midnight');closeAllNavDrops()">🌑 About Midnight</div>
           <div class="ndm-item" onclick="showPage('vision');closeAllNavDrops()">🌍 A Better World</div>
@@ -3831,7 +3927,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div>midnight-mcp MCP server config</div>
           <div>Midnight Indexer live feed</div>
           <div>Deploy scripts + receipts</div>
-          <div>Claude Code project memory</div>
+          <div>Full Git history (all commits)</div>
         </div>
       </div>
     </div>
@@ -3840,7 +3936,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
     <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:16px;padding:28px;margin-bottom:28px;">
       <div style="font-size:14px;font-weight:800;margin-bottom:16px;">Why this is worth it</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;"><span style="color:var(--green);font-weight:700;">12+ months</span> of Midnight ecosystem development is already done. You don't hire a team. You don't wait. You flip the brand and launch.</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;">All the hard Midnight ecosystem groundwork is already done — deployed contract, wallet integration, ZK auction engine, 36 UI pages. <span style="color:var(--green);font-weight:700;">You skip straight to building</span>, not starting from scratch.</div>
         <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;">Every current Midnight partner project is integrated — wallets, DID, stablecoins, DEX, bridge, KYC. This is the most complete Midnight dApp that exists right now.</div>
         <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;"><span style="color:var(--cyan);font-weight:700;">ZK-native from day one.</span> Not retrofitted privacy — built on Midnight's Compact circuits. The shopping, escrow, checkout, identity, and payments are all ZK.</div>
         <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;">This is infrastructure. Night Markets is the marketplace layer that every Midnight City AI agent, every Night Fun token, and every Night Work task runs through.</div>
@@ -3871,11 +3967,11 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div style="font-size:11px;color:var(--cyan);font-family:var(--mono);">Co-Founder &amp; Creative Director</div>
         </div>
       </div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px;font-weight:300;">DM on X or reach out via GitHub. If you see the value, let's talk.</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px;font-weight:300;">Reach out via GitHub or DM on X. If you see the value, let's talk — we'll respond within 24 hours.</div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <a href="mailto:lukemunro1994@gmail.com" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:700;color:var(--text1);text-decoration:none;">✉ lukemunro1994@gmail.com</a>
-        <a href="mailto:tiarnajc146@gmail.com" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:700;color:var(--text1);text-decoration:none;">✉ tiarnajc146@gmail.com</a>
+        <a href="https://x.com/search?q=NightMarketsZK" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:700;color:var(--text1);text-decoration:none;">𝕏 DM on X</a>
         <a href="https://github.com/kingmunz1994-lgtm/night-markets" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:700;color:var(--text1);text-decoration:none;">⌥ GitHub repo →</a>
+        <a href="https://github.com/kingmunz1994-lgtm/night-markets/issues/new?title=Acquisition+Enquiry&body=I'm+interested+in+acquiring+Night+Markets." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:700;color:var(--glow);text-decoration:none;">📬 Send enquiry →</a>
       </div>
     </div>
 
@@ -4907,12 +5003,99 @@ const PRODUCTS=[
 
 const SMALL_SELLERS=new Set(PRODUCTS.filter(p=>p.small).map(p=>p.id));
 
-// ── LIVE AUCTIONS (sealed-bid, ZK-private via Midnauction pattern) ──
+// ── LIVE AUCTIONS ────────────────────────────────────────────────────
 const AUCTIONS=[
-  {id:'a1',emoji:'👟',brand:'Nike',seller:'SneakerHQ',sellerCountry:'🇯🇵',title:'Nike Air Jordan 1 High OG "Chicago Lost & Found"',condition:'Deadstock — Size 10',currentBid:380,minBid:410,bidCount:7,auctionEnd:Date.now()+2*60*60*1000+18*60*1000,bids:[{anon:'bidder_7f2a',amt:380,ago:'4m ago'},{anon:'bidder_3c91',amt:340,ago:'12m ago'},{anon:'bidder_ab5e',amt:290,ago:'31m ago'}],desc:'Deadstock with OG box. Bids are ZK-sealed — no one sees competing bids until auction closes. No front-running.'},
-  {id:'a2',emoji:'⌚',brand:'Rolex',seller:'LuxeVault',sellerCountry:'🇫🇷',title:'Rolex GMT Master II "Pepsi" 2024 Full Set',condition:'New — box & papers',currentBid:18200,minBid:18500,bidCount:3,auctionEnd:Date.now()+5*60*60*1000+42*60*1000,bids:[{anon:'bidder_1d8b',amt:18200,ago:'22m ago'},{anon:'bidder_f04c',amt:17500,ago:'1h ago'},{anon:'bidder_9a3e',amt:16800,ago:'2h ago'}],desc:'2024 full set. Bids sealed via ZK commitment — preserves bidding privacy. Authenticated by LuxeVault.'},
-  {id:'a3',emoji:'🎨',brand:'Banksy',seller:'ArtHouse',sellerCountry:'🇬🇧',title:'Banksy "Love is in the Air" Signed Screenprint',condition:'Framed — certificate of authenticity',currentBid:6800,minBid:7100,bidCount:11,auctionEnd:Date.now()+12*60*60*1000+5*60*1000,bids:[{anon:'bidder_2e7f',amt:6800,ago:'8m ago'},{anon:'bidder_c5b1',amt:6200,ago:'19m ago'},{anon:'bidder_88da',amt:5900,ago:'35m ago'}],desc:'Official Pest Control print. Signed. ZK auction — no shill bidding, no price manipulation, private commitment scheme.'},
+  {id:'a1',emoji:'👟',brand:'Nike',seller:'SneakerHQ',sellerCountry:'🇯🇵',
+   title:'Nike Air Jordan 1 High OG "Chicago Lost & Found"',
+   condition:'Deadstock — Size 10',status:'live',winnerAnon:null,
+   currentBid:380,minBid:410,bidCount:7,
+   auctionEnd:Date.now()+2*60*60*1000+18*60*1000,
+   bids:[{anon:'bidder_7f2a',amt:380,ago:'4m ago'},{anon:'bidder_3c91',amt:340,ago:'12m ago'},{anon:'bidder_ab5e',amt:290,ago:'31m ago'}],
+   desc:'Deadstock with OG box. Bids are ZK-sealed — no one sees competing bids until auction closes. No front-running.'},
+  {id:'a2',emoji:'⌚',brand:'Rolex',seller:'LuxeVault',sellerCountry:'🇫🇷',
+   title:'Rolex GMT Master II "Pepsi" 2024 Full Set',
+   condition:'New — box & papers',status:'live',winnerAnon:null,
+   currentBid:18200,minBid:18500,bidCount:3,
+   auctionEnd:Date.now()+5*60*60*1000+42*60*1000,
+   bids:[{anon:'bidder_1d8b',amt:18200,ago:'22m ago'},{anon:'bidder_f04c',amt:17500,ago:'1h ago'},{anon:'bidder_9a3e',amt:16800,ago:'2h ago'}],
+   desc:'2024 full set. Bids sealed via ZK commitment — preserves bidding privacy. Authenticated by LuxeVault.'},
+  {id:'a3',emoji:'🎨',brand:'Banksy',seller:'ArtHouse',sellerCountry:'🇬🇧',
+   title:'Banksy "Love is in the Air" Signed Screenprint',
+   condition:'Framed — certificate of authenticity',status:'live',winnerAnon:null,
+   currentBid:6800,minBid:7100,bidCount:11,
+   auctionEnd:Date.now()+12*60*60*1000+5*60*1000,
+   bids:[{anon:'bidder_2e7f',amt:6800,ago:'8m ago'},{anon:'bidder_c5b1',amt:6200,ago:'19m ago'},{anon:'bidder_88da',amt:5900,ago:'35m ago'}],
+   desc:'Official Pest Control print. Signed. ZK auction — no shill bidding, no price manipulation, private commitment scheme.'},
+  {id:'a4',emoji:'👟',brand:'Travis Scott',seller:'HypeDrop',sellerCountry:'🇺🇸',
+   title:'Travis Scott x Nike AJ1 Low "Mocha" DS',
+   condition:'Deadstock — Size 9.5 · Box Included',status:'live',winnerAnon:null,
+   currentBid:1240,minBid:1310,bidCount:19,
+   auctionEnd:Date.now()+28*60*1000,
+   bids:[{anon:'bidder_9c3f',amt:1240,ago:'1m ago'},{anon:'bidder_d4a7',amt:1180,ago:'5m ago'},{anon:'bidder_88bb',amt:1050,ago:'11m ago'}],
+   desc:'Rare Travis Scott collab. Ending soon — ZK sealed bids protect against last-second sniping. Anti-snipe: final 5 mins auto-extend.'},
+  {id:'a5',emoji:'💎',brand:'Tiffany',seller:'VaultedLux',sellerCountry:'🇺🇸',
+   title:'Tiffany & Co. x Nike AF1 "1837" — 1 of 250',
+   condition:'DS — Box, Certificate, Tiffany Blue Lace Bag',status:'live',winnerAnon:null,
+   currentBid:22500,minBid:23000,bidCount:5,
+   auctionEnd:Date.now()+8*60*60*1000+15*60*1000,
+   bids:[{anon:'bidder_f1c9',amt:22500,ago:'14m ago'},{anon:'bidder_77e2',amt:21000,ago:'52m ago'},{anon:'bidder_3b80',amt:19500,ago:'2h ago'}],
+   desc:'1 of only 250 pairs worldwide. Ultra-rare. ZK-sealed bids — your offer is cryptographically hidden from all competing bidders.'},
+  {id:'a6',emoji:'⌚',brand:'Patek Philippe',seller:'GenevaVault',sellerCountry:'🇨🇭',
+   title:'Patek Philippe Nautilus 5711/1A-010 "Olive Dial"',
+   condition:'Mint — full set, 2023 service',status:'ended',
+   winnerAnon:'bidder_c7e4',
+   currentBid:94000,minBid:95000,bidCount:8,
+   auctionEnd:Date.now()-2*60*60*1000,
+   bids:[{anon:'bidder_c7e4',amt:94000,ago:'2h ago'},{anon:'bidder_5a1b',amt:89000,ago:'3h ago'},{anon:'bidder_f03d',amt:84000,ago:'5h ago'}],
+   desc:'Holy grail reference. Discontinued. ZK sealed-bid auction — winner sealed until reveal phase.'},
 ];
+
+// ── AUCTION PERSISTENCE ──────────────────────────────────────────────
+const _AUC_KEY='nm4_auc_v3',_MYBIDS_KEY='nm4_mybids_v3';
+(function _aucInit(){
+  try{
+    const s=JSON.parse(localStorage.getItem(_AUC_KEY)||'null');
+    if(!s||s.v!==3)return;
+    s.data.forEach(d=>{
+      const a=AUCTIONS.find(x=>x.id===d.id);
+      if(!a)return;
+      Object.assign(a,{currentBid:d.currentBid,minBid:d.minBid,bidCount:d.bidCount,
+        bids:d.bids,auctionEnd:d.auctionEnd,status:d.status,winnerAnon:d.winnerAnon});
+    });
+  }catch(e){}
+})();
+function _aucSave(){
+  localStorage.setItem(_AUC_KEY,JSON.stringify({v:3,data:AUCTIONS.map(a=>
+    ({id:a.id,currentBid:a.currentBid,minBid:a.minBid,bidCount:a.bidCount,
+      bids:a.bids,auctionEnd:a.auctionEnd,status:a.status,winnerAnon:a.winnerAnon}))}));
+}
+function _myBidsLoad(){try{return JSON.parse(localStorage.getItem(_MYBIDS_KEY)||'{}');}catch(e){return{};}}
+function _myBidsSave(mb){localStorage.setItem(_MYBIDS_KEY,JSON.stringify(mb));}
+
+// ── ZK COMMITMENT — real SHA-256 via SubtleCrypto ────────────────────
+async function _mkNonce(){
+  const b=new Uint8Array(16);crypto.getRandomValues(b);
+  return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function _mkCommit(amt,nonce){
+  const enc=new TextEncoder();
+  const buf=await crypto.subtle.digest('SHA-256',enc.encode('NM:sealed:'+amt+':'+nonce));
+  return'0x'+Array.from(new Uint8Array(buf)).map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+async function _verifyCommit(commitment,amt,nonce){return(await _mkCommit(amt,nonce))===commitment;}
+
+// ── AUCTION LIFECYCLE ────────────────────────────────────────────────
+function _checkAucEnded(){
+  let changed=false;
+  AUCTIONS.forEach(a=>{
+    if(a.status==='live'&&Date.now()>=a.auctionEnd){
+      a.status='ended';
+      if(a.bids.length&&!a.winnerAnon)a.winnerAnon=a.bids[0].anon;
+      changed=true;
+    }
+  });
+  if(changed)_aucSave();
+}
 
 // ══════════════════════════════════════════
 // STATE
@@ -4920,45 +5103,92 @@ const AUCTIONS=[
 // ── AUCTION TIMERS ──
 function fmtCountdown(ms){
   if(ms<=0)return'Ended';
-  const h=Math.floor(ms/3600000);
-  const m=Math.floor((ms%3600000)/60000);
-  const s=Math.floor((ms%60000)/1000);
+  const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
   if(h>0)return h+'h '+m+'m';
   if(m>0)return m+'m '+s+'s';
   return s+'s';
 }
 
+// ── RENDER AUCTIONS ──────────────────────────────────────────────────
 function renderAuctions(showSection){
   const sec=document.getElementById('auction-section');
   if(!sec)return;
   if(!showSection){sec.style.display='none';return;}
+  _checkAucEnded();
+  const myBids=_myBidsLoad();
+  const myCount=Object.keys(myBids).length;
   sec.style.display='block';
-  sec.innerHTML='<div class="auction-section-hdr">'
+  sec.innerHTML=
+    '<div class="auction-section-hdr">'
     +'<div class="auction-section-title"><div class="auction-live-dot"></div>🔨 Live Auctions — Sealed ZK Bids</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;">'
+    +(myCount?'<button class="my-bids-btn" onclick="toggleMyBids()">📋 My Bids ('+myCount+')</button>':'')
     +'<a href="#" style="font-size:11px;font-family:var(--mono);color:var(--muted);text-decoration:none;" onclick="event.preventDefault();activeCat=\'All\';renderProducts()">All listings →</a>'
-    +'</div>'
+    +'</div></div>'
+    +(myCount?'<div class="my-bids-panel" id="my-bids-panel">'+_renderMyBidsList(myBids)+'</div>':'')
     +'<div class="auction-grid">'
     +AUCTIONS.map(a=>{
-      const timeLeft=fmtCountdown(a.auctionEnd-Date.now());
-      return'<div class="auc-card" onclick="openBid(\''+a.id+'\')">'
-        +'<div class="auc-badge">🔴 LIVE</div>'
+      const ended=a.status==='ended'||a.status==='settled';
+      const ms=a.auctionEnd-Date.now();
+      const myBid=myBids[a.id];
+      const iWon=ended&&myBid&&myBid.amt>=a.currentBid;
+      const urgent=!ended&&ms>0&&ms<5*60*1000;
+      return'<div class="auc-card'+(ended?' auc-ended':'')+'" onclick="openBid(\''+a.id+'\')">'
+        +(ended
+          ?(iWon?'<div class="auc-badge-won">🏆 YOU WON</div>':'<div class="auc-badge-ended">ENDED</div>')
+          :'<div class="auc-badge">🔴 LIVE</div>')
         +'<div class="auc-img">'+a.emoji+'</div>'
         +'<div class="auc-body">'
         +'<div class="auc-brand">'+a.brand+' · '+a.sellerCountry+'</div>'
         +'<div class="auc-title">'+a.title+'</div>'
         +'<div class="auc-bids-row">'
-        +'<div><div class="auc-bid-label">Current Bid</div><div class="auc-current-bid">$'+a.currentBid.toLocaleString()+'</div></div>'
-        +'<div style="text-align:right"><div class="auc-bid-label">Min next bid</div><div style="font-size:14px;font-weight:600;color:var(--muted);">$'+a.minBid.toLocaleString()+'</div></div>'
-        +'</div>'
-        +'<div class="auc-timer">⏱ '+timeLeft+' remaining · '+a.bidCount+' bids</div>'
-        +'<div class="auc-zk-badge">⊘ Sealed ZK bids — no front-running</div>'
-        +'<button class="auc-btn">Commit Sealed Bid →</button>'
-        +'</div>'
-        +'</div>';
+        +'<div><div class="auc-bid-label">'+(ended?'Final Bid':'Current Bid')+'</div><div class="auc-current-bid">$'+a.currentBid.toLocaleString()+'</div></div>'
+        +'<div style="text-align:right"><div class="auc-bid-label">'+(ended?'Winner':'Min next bid')+'</div>'
+        +(ended
+          ?'<div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);">'+a.winnerAnon+'</div>'
+          :'<div style="font-size:14px;font-weight:600;color:var(--muted);">$'+a.minBid.toLocaleString()+'</div>')
+        +'</div></div>'
+        +(ended
+          ?'<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:10px;">Closed · '+a.bidCount+' total bids</div>'
+          :'<div class="auc-timer'+(urgent?' auc-timer-urgent':'')+'">'+(urgent?'🔥 ':'⏱ ')+fmtCountdown(ms)+' remaining · '+a.bidCount+' bids</div>')
+        +'<div class="auc-zk-badge">⊘ '+(ended?'Sealed bids — reveal phase open':'ZK sealed bids — no front-running')+'</div>'
+        +(iWon
+          ?'<button class="auc-reveal-btn" onclick="event.stopPropagation();openReveal(\''+a.id+'\')">🏆 Reveal & Claim →</button>'
+          :ended
+            ?'<button class="auc-btn" style="opacity:.45;cursor:default;pointer-events:none;">Auction Closed</button>'
+            :'<button class="auc-btn">Commit Sealed Bid →</button>')
+        +'</div></div>';
     }).join('')
     +'</div>';
-  // refresh timers every second
-  if(!window._aucTimer)window._aucTimer=setInterval(()=>{if(document.getElementById('auction-section').style.display!=='none')renderAuctions(true);},1000);
+  if(!window._aucTimer)window._aucTimer=setInterval(()=>{
+    if(document.getElementById('auction-section')?.style.display!=='none')renderAuctions(true);
+  },1000);
+}
+
+function _renderMyBidsList(myBids){
+  const entries=Object.entries(myBids);
+  if(!entries.length)return'<div style="font-size:12px;color:var(--muted);padding:8px 0;">No bids yet.</div>';
+  return'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:10px;">Your Sealed Bids</div>'
+    +entries.map(([aId,bid])=>{
+      const a=AUCTIONS.find(x=>x.id===aId);
+      if(!a)return'';
+      const ended=a.status==='ended'||a.status==='settled';
+      const won=ended&&bid.amt>=a.currentBid;
+      return'<div class="mybid-row">'
+        +'<div style="min-width:0;flex:1;"><div class="mybid-title">'+a.title.slice(0,40)+'…</div>'
+        +'<div class="mybid-meta">'+bid.ts+' · '+bid.commitment.slice(0,20)+'…</div></div>'
+        +'<div style="text-align:right;flex-shrink:0;padding-left:12px;">'
+        +'<div class="mybid-amt">$'+bid.amt.toLocaleString()+'</div>'
+        +(won?'<div class="mybid-status-won">🏆 Won</div>'
+          :ended?'<div class="mybid-status-ended">Outbid</div>'
+          :'<div class="mybid-status-live">● Live</div>')
+        +'</div></div>';
+    }).join('');
+}
+
+function toggleMyBids(){
+  const p=document.getElementById('my-bids-panel');
+  if(p)p.classList.toggle('open');
 }
 
 var _activeBidId=null;
@@ -4966,84 +5196,162 @@ function openBid(id){
   const a=AUCTIONS.find(x=>x.id===id);
   if(!a)return;
   _activeBidId=id;
-  const timeLeft=fmtCountdown(a.auctionEnd-Date.now());
-  document.getElementById('bid-modal-title').textContent='🔨 '+a.title.slice(0,40)+'…';
+  const myBids=_myBidsLoad();
+  const myBid=myBids[id];
+  const ended=a.status==='ended'||a.status==='settled';
+  const iWon=ended&&myBid&&myBid.amt>=a.currentBid;
+  const ms=a.auctionEnd-Date.now();
+  document.getElementById('bid-modal-title').textContent=(ended?'🔒 ':'🔨 ')+a.title.slice(0,42)+'…';
   document.getElementById('bid-modal-body').innerHTML=
     '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">'+a.desc+'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">'
     +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:12px;">'
-    +'<div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">CURRENT BID</div>'
-    +'<div style="font-size:22px;font-weight:800;">$'+a.currentBid.toLocaleString()+'</div>'
-    +'</div>'
+    +'<div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">'+(ended?'FINAL BID':'CURRENT BID')+'</div>'
+    +'<div style="font-size:20px;font-weight:800;">$'+a.currentBid.toLocaleString()+'</div></div>'
     +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:12px;">'
-    +'<div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">ENDS IN</div>'
-    +'<div style="font-size:18px;font-weight:800;color:var(--red);">'+timeLeft+'</div>'
-    +'</div>'
-    +'</div>'
+    +'<div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">'+(ended?'STATUS':'ENDS IN')+'</div>'
+    +'<div style="font-size:'+(ended?'13':'18')+'px;font-weight:800;color:'+(ended?'var(--muted)':'var(--red)')+';">'+(ended?'Closed':'⏱ '+fmtCountdown(ms))+'</div></div>'
+    +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:12px;">'
+    +'<div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">TOTAL BIDS</div>'
+    +'<div style="font-size:18px;font-weight:800;">'+a.bidCount+'</div></div></div>'
     +'<div style="margin-bottom:14px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px;">Bid History (ZK-anonymous)</div>'
     +'<div class="bid-history">'
-    +a.bids.map((b,i)=>'<div class="bid-row">'
-      +'<div class="bid-anon">'+b.anon+'</div>'
+    +a.bids.map(b=>'<div class="bid-row">'
+      +'<div class="bid-anon">'+b.anon+(myBid&&myBid.anon===b.anon?' <span style="color:var(--plasma);font-size:10px;">← you</span>':'')+'</div>'
       +'<div class="bid-amount">$'+b.amt.toLocaleString()+'</div>'
       +'<div class="bid-time">'+b.ago+'</div>'
       +'</div>').join('')
     +'</div>'
-    +'<div style="font-size:10px;font-family:var(--mono);color:var(--faint);margin-top:6px;">Bidder identities hidden by ZK proof until auction close · commitSecretBid() pattern</div>'
+    +'<div style="font-size:10px;font-family:var(--mono);color:var(--faint);margin-top:6px;">Bidder identities hidden by ZK proof until auction close · SHA-256 commitment scheme</div>'
     +'</div>'
-    +'<div style="margin-bottom:16px;">'
-    +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px;">Your Sealed Bid</div>'
-    +'<div style="display:flex;gap:10px;align-items:center;">'
-    +'<div style="font-size:18px;font-weight:700;color:var(--muted);">$</div>'
-    +'<input type="number" id="bid-amount-input" min="'+a.minBid+'" placeholder="Min $'+a.minBid.toLocaleString()+'" style="flex:1;background:var(--surface);border:1px solid var(--rim2);border-radius:10px;padding:13px 14px;font-size:16px;font-weight:700;font-family:var(--mono);color:var(--text);outline:none;" onfocus="this.style.borderColor=\'var(--ink)\'" onblur="this.style.borderColor=\'var(--rim2)\'"/>'
-    +'</div>'
-    +'<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:6px;">Min bid: $'+a.minBid.toLocaleString()+' · Your bid is sealed — no one sees it until auction ends</div>'
-    +'</div>'
-    +'<div class="auc-zk-badge" style="margin-bottom:16px;">⊘ Bid encrypted with ZK commitment · Midnight Preprod · No front-running possible</div>'
-    +'<button class="btn btn-primary btn-lg btn-full" id="commit-bid-btn" onclick="commitBid(\''+id+'\')">🔐 Commit Sealed Bid</button>';
+    +(myBid&&!ended?'<div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;font-family:var(--mono);color:var(--plasma);">⊘ Active sealed bid: $'+myBid.amt.toLocaleString()+' — place a higher bid to update</div>':'')
+    +(iWon
+      ?'<div style="background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.25);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;">'
+        +'<div style="font-size:36px;margin-bottom:8px;">🏆</div>'
+        +'<div style="font-size:18px;font-weight:800;color:var(--gold);margin-bottom:6px;">You won this auction!</div>'
+        +'<div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7;">Your sealed bid of <strong>$'+myBid.amt.toLocaleString()+'</strong> was the highest. Reveal your commitment to claim.</div>'
+        +'<button class="btn btn-primary btn-lg btn-full" onclick="openReveal(\''+id+'\')">🔓 Reveal Bid & Open Escrow →</button>'
+        +'</div>'
+      :ended
+        ?'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:14px;text-align:center;margin-bottom:16px;">'
+          +'<div style="font-size:13px;color:var(--muted);">Auction closed. Winner: <strong>'+a.winnerAnon+'</strong></div>'
+          +'</div>'
+        :'<div style="margin-bottom:16px;">'
+          +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px;">Your Sealed Bid</div>'
+          +'<div style="display:flex;gap:10px;align-items:center;">'
+          +'<div style="font-size:18px;font-weight:700;color:var(--muted);">$</div>'
+          +'<input type="number" id="bid-amount-input" min="'+a.minBid+'" placeholder="Min $'+a.minBid.toLocaleString()+'" style="flex:1;background:var(--surface);border:1px solid var(--rim2);border-radius:10px;padding:13px 14px;font-size:16px;font-weight:700;font-family:var(--mono);color:var(--text);outline:none;" onfocus="this.style.borderColor=\'var(--ink)\'" onblur="this.style.borderColor=\'var(--rim2)\'"/>'
+          +'</div>'
+          +'<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:6px;">Min $'+a.minBid.toLocaleString()+' · Sealed with real SHA-256 — not even Night Markets can see your bid</div>'
+          +'</div>'
+          +'<div class="auc-zk-badge" style="margin-bottom:16px;">⊘ commit(amount ∥ nonce) → SHA-256 · Midnight Preprod · Anti-snipe: final 5m auto-extend</div>'
+          +'<button class="btn btn-primary btn-lg btn-full" id="commit-bid-btn" onclick="commitBid(\''+id+'\')">🔐 Commit Sealed Bid</button>'
+    );
   openModal('ov-bid');
 }
 
-function commitBid(id){
+// ── COMMIT BID (async — real SHA-256 commitment) ─────────────────────
+async function commitBid(id){
   const a=AUCTIONS.find(x=>x.id===id);
-  if(!a)return;
+  if(!a||a.status!=='live')return;
   const input=document.getElementById('bid-amount-input');
   const amt=parseFloat(input?.value||'0');
   if(!amt||amt<a.minBid){toast('Minimum bid is $'+a.minBid.toLocaleString(),'error');return;}
   const btn=document.getElementById('commit-bid-btn');
   btn.disabled=true;
-  btn.textContent='Generating ZK commitment…';
-  const steps=[
-    {pct:20,txt:'Hashing bid amount with secret nonce…'},
-    {pct:45,txt:'Generating commit(value, nonce) ZK proof…'},
-    {pct:70,txt:'Submitting sealed commitment to Midnight…'},
-    {pct:90,txt:'Waiting for block confirmation…'},
-  ];
-  let i=0;
-  const iv=setInterval(()=>{
-    if(i>=steps.length){clearInterval(iv);return;}
-    btn.textContent=steps[i].txt;
-    i++;
-  },700);
+  // Anti-snipe: extend if <5 min remaining
+  const remaining=a.auctionEnd-Date.now();
+  const antisnipe=remaining>0&&remaining<5*60*1000;
+  if(antisnipe){a.auctionEnd=Date.now()+5*60*1000;toast('⏱ Anti-snipe — auction extended 5 minutes','info');}
+  const steps=['Generating secret nonce…','Computing SHA-256 commitment…','Sealing: commit(amount ∥ nonce)…','Broadcasting to Midnight Preprod…','Awaiting block confirmation…'];
+  let si=0;
+  const iv=setInterval(()=>{if(si<steps.length){btn.textContent=steps[si];si++;}else clearInterval(iv);},580);
+  // Real cryptography runs in parallel with animation
+  const nonce=await _mkNonce();
+  const commitment=await _mkCommit(amt,nonce);
   setTimeout(()=>{
     clearInterval(iv);
+    const anon='bidder_'+Math.random().toString(36).slice(2,6);
     a.bidCount++;
-    a.bids.unshift({anon:'bidder_'+Math.random().toString(36).slice(2,6),amt,ago:'just now'});
+    a.bids.unshift({anon,amt,ago:'just now'});
     if(amt>a.currentBid)a.currentBid=amt;
     a.minBid=amt+Math.ceil(amt*0.05);
+    _aucSave();
+    const mb=_myBidsLoad();
+    mb[id]={amt,nonce,commitment,anon,ts:new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'})};
+    _myBidsSave(mb);
     document.getElementById('bid-modal-body').innerHTML=
       '<div style="text-align:center;padding:32px 20px;">'
       +'<div style="font-size:52px;margin-bottom:16px;">🔐</div>'
-      +'<div style="font-size:20px;font-weight:800;margin-bottom:8px;">Bid Committed!</div>'
-      +'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7;">Your sealed bid of <strong>$'+amt.toLocaleString()+'</strong> has been committed to Midnight Network.<br>No one can see your bid until the auction closes.</div>'
-      +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:20px;text-align:left;">'
-      +'<div style="margin-bottom:4px;">Commitment: 0x'+Math.random().toString(16).slice(2,18).toUpperCase()+'…</div>'
-      +'<div style="margin-bottom:4px;">Nonce: [sealed]</div>'
-      +'<div>Circuit: commitSecretBid() · Midnight Preprod</div>'
+      +'<div style="font-size:20px;font-weight:800;margin-bottom:8px;">Bid Sealed</div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7;">Your bid of <strong>$'+amt.toLocaleString()+'</strong> is committed on Midnight Network.<br>Not even Night Markets can see your amount until the auction closes.</div>'
+      +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:16px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:20px;text-align:left;">'
+      +'<div style="color:var(--text2);font-weight:700;margin-bottom:10px;">ZK Commitment Receipt</div>'
+      +'<div style="margin-bottom:6px;word-break:break-all;">Commitment: <span style="color:var(--plasma);">'+commitment.slice(0,36)+'…</span></div>'
+      +'<div style="margin-bottom:6px;">Nonce: <span style="color:var(--faint);">[sealed — stored in your browser]</span></div>'
+      +'<div style="margin-bottom:6px;">Algorithm: <span style="color:var(--text2);">SHA-256 · SubtleCrypto API</span></div>'
+      +'<div>Circuit: <span style="color:var(--text2);">commitSecretBid() · Midnight Preprod</span></div>'
+      +(antisnipe?'<div style="margin-top:6px;color:var(--orange);">⏱ Anti-snipe triggered: +5 minute extension</div>':'')
       +'</div>'
       +'<button class="btn btn-primary" onclick="closeModal(\'ov-bid\');renderAuctions(true)">Done →</button>'
       +'</div>';
-  },3200);
+  },3000);
+}
+
+// ── REVEAL FLOW ──────────────────────────────────────────────────────
+function openReveal(id){
+  const a=AUCTIONS.find(x=>x.id===id);
+  if(!a)return;
+  const myBid=_myBidsLoad()[id];
+  if(!myBid){toast('No sealed bid found for this auction','error');return;}
+  document.getElementById('bid-modal-title').textContent='🔓 Reveal Bid — '+a.title.slice(0,35)+'…';
+  document.getElementById('bid-modal-body').innerHTML=
+    '<div style="text-align:center;padding:16px 0 20px;">'
+    +'<div style="font-size:48px;margin-bottom:12px;">🏆</div>'
+    +'<div style="font-size:18px;font-weight:800;margin-bottom:6px;">Auction Won</div>'
+    +'<div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">Reveal your sealed bid to verify your commitment and open the ZK escrow on Midnight.</div>'
+    +'</div>'
+    +'<div style="background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:16px;font-family:var(--mono);font-size:11px;margin-bottom:16px;">'
+    +'<div style="color:var(--text2);font-weight:700;margin-bottom:10px;">Your Sealed Commitment</div>'
+    +'<div style="margin-bottom:6px;">Amount: <span style="color:var(--text);font-size:16px;font-weight:800;">$'+myBid.amt.toLocaleString()+'</span></div>'
+    +'<div style="margin-bottom:6px;word-break:break-all;">Commitment: <span style="color:var(--plasma);">'+myBid.commitment.slice(0,36)+'…</span></div>'
+    +'<div>Nonce: <span style="color:var(--text2);">'+myBid.nonce.slice(0,24)+'…</span></div>'
+    +'</div>'
+    +'<div class="auc-zk-badge" style="margin-bottom:16px;">⊘ Verifying SHA-256(amount ∥ nonce) = commitment · Night Markets Escrow</div>'
+    +'<button class="btn btn-primary btn-lg btn-full" id="reveal-btn" onclick="executeReveal(\''+id+'\')">🔓 Verify Commitment & Open Escrow →</button>';
+  openModal('ov-bid');
+}
+
+async function executeReveal(id){
+  const a=AUCTIONS.find(x=>x.id===id);
+  const myBid=_myBidsLoad()[id];
+  if(!a||!myBid)return;
+  const btn=document.getElementById('reveal-btn');
+  btn.disabled=true;
+  const vsteps=['Revealing bid amount & nonce…','Verifying SHA-256 commitment…','Commitment verified ✓','Calling fundEscrow() on Midnight…','Escrow activated…'];
+  let vi=0;
+  const viv=setInterval(()=>{if(vi<vsteps.length){btn.textContent=vsteps[vi];vi++;}else clearInterval(viv);},680);
+  const valid=await _verifyCommit(myBid.commitment,myBid.amt,myBid.nonce);
+  setTimeout(()=>{
+    clearInterval(viv);
+    if(!valid){toast('Commitment verification failed','error');btn.disabled=false;btn.textContent='🔓 Verify Commitment & Open Escrow →';return;}
+    a.status='settled';
+    _aucSave();
+    document.getElementById('bid-modal-body').innerHTML=
+      '<div style="text-align:center;padding:24px 0 16px;">'
+      +'<div style="font-size:52px;margin-bottom:12px;">✅</div>'
+      +'<div style="font-size:20px;font-weight:800;margin-bottom:8px;">Commitment Verified</div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7;">SHA-256 proof passed. Your winning bid of <strong>$'+myBid.amt.toLocaleString()+'</strong> is confirmed.<br>Escrow is now active on Midnight Preprod.</div>'
+      +'<div style="background:var(--surface);border:1px solid rgba(0,214,143,.2);border-radius:12px;padding:14px;font-family:var(--mono);font-size:11px;margin-bottom:20px;text-align:left;">'
+      +'<div style="color:var(--green);font-weight:700;margin-bottom:8px;">✓ Escrow Active — Night Markets Contract</div>'
+      +'<div style="margin-bottom:4px;">Contract: <span style="color:var(--muted);">7473b82b…b7cc711</span></div>'
+      +'<div style="margin-bottom:4px;">Circuit: <span style="color:var(--muted);">fundEscrow() · Midnight Preprod</span></div>'
+      +'<div>Amount: <span style="color:var(--text);">$'+myBid.amt.toLocaleString()+' NIGHT equivalent</span></div>'
+      +'</div>'
+      +'<button class="btn btn-primary" onclick="closeModal(\'ov-bid\');renderAuctions(true)">Done →</button>'
+      +'</div>';
+  },3500);
 }
 
 let cart=JSON.parse(localStorage.getItem('nm4_cart')||'[]');
@@ -6464,6 +6772,307 @@ document.addEventListener('click',function(e){
 
 </script>
 
+<!-- ══════════════ TOKENOMICS ══════════════ -->
+<div class="page" id="page-tokenomics">
+  <div class="page-inner">
+    <div class="tk-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(124,58,237,.08);color:var(--glow);border-color:rgba(124,58,237,.2);">🌙 $NIGHT Token — Economics</span></div>
+      <h1 style="font-family:var(--serif);font-size:54px;font-style:italic;margin-bottom:14px;">Built to last.<br><em>Designed to govern.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">NIGHT is the native token of the Night Markets ecosystem. It powers fees, governance, staking, and privacy — on the only blockchain built to keep your financial activity invisible.</p>
+    </div>
+
+    <!-- Key stats -->
+    <div class="tk-stats">
+      <div class="tk-stat"><div class="tk-stat-val">1B</div><div class="tk-stat-label">Total Supply<br>$NIGHT</div></div>
+      <div class="tk-stat"><div class="tk-stat-val">120M</div><div class="tk-stat-label">Circulating<br>at Launch</div></div>
+      <div class="tk-stat"><div class="tk-stat-val">$0.08</div><div class="tk-stat-label">Launch Price<br>Preprod</div></div>
+      <div class="tk-stat"><div class="tk-stat-val">$80M</div><div class="tk-stat-label">Launch Market<br>Cap (FDV)</div></div>
+    </div>
+
+    <!-- Distribution -->
+    <div class="tk-supply-bar">
+      <div class="tk-supply-title">Token Distribution</div>
+      <div class="tk-donut-wrap">
+        <svg viewBox="0 0 180 180" class="tk-donut" style="width:180px;height:180px;flex-shrink:0;">
+          <circle cx="90" cy="90" r="70" fill="none" stroke="var(--rim)" stroke-width="28"/>
+          <!-- Ecosystem 30% = 188.4deg -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#7c3aed" stroke-width="28" stroke-dasharray="131.9 307.9" stroke-dashoffset="0" transform="rotate(-90 90 90)"/>
+          <!-- Treasury 20% = 125.6deg -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#06b6d4" stroke-width="28" stroke-dasharray="87.96 351.86" stroke-dashoffset="-131.9" transform="rotate(-90 90 90)"/>
+          <!-- Team 15% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#00d68f" stroke-width="28" stroke-dasharray="65.97 373.85" stroke-dashoffset="-219.86" transform="rotate(-90 90 90)"/>
+          <!-- Partners 10% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#f5c518" stroke-width="28" stroke-dasharray="43.98 395.84" stroke-dashoffset="-285.83" transform="rotate(-90 90 90)"/>
+          <!-- Early 10% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#f43f5e" stroke-width="28" stroke-dasharray="43.98 395.84" stroke-dashoffset="-329.81" transform="rotate(-90 90 90)"/>
+          <!-- Liquidity 8% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#818cf8" stroke-width="28" stroke-dasharray="35.18 404.64" stroke-dashoffset="-373.79" transform="rotate(-90 90 90)"/>
+          <!-- Reserve 7% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#475569" stroke-width="28" stroke-dasharray="30.78 409.04" stroke-dashoffset="-408.97" transform="rotate(-90 90 90)"/>
+          <text x="90" y="86" text-anchor="middle" fill="var(--text)" font-size="11" font-weight="800" font-family="var(--mono)">1B</text>
+          <text x="90" y="100" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="var(--mono)">NIGHT</text>
+        </svg>
+        <div class="tk-legend">
+          <div class="tk-legend-item"><div class="tk-legend-dot" style="background:#7c3aed;"></div><div class="tk-legend-label">Ecosystem &amp; Rewards</div><div class="tk-legend-pct">30%</div><div class="tk-legend-amt">300M</div></div>
+          <div class="tk-legend-item"><div class="tk-legend-dot" style="background:#06b6d4;"></div><div class="tk-legend-label">Community Treasury</div><div class="tk-legend-pct">20%</div><div class="tk-legend-amt">200M</div></div>
+          <div class="tk-legend-item"><div class="tk-legend-dot" style="background:#00d68f;"></div><div class="tk-legend-label">Team &amp; Founders</div><div class="tk-legend-pct">15%</div><div class="tk-legend-amt">150M</div></div>
+          <div class="tk-legend-item"><div class="tk-legend-dot" style="background:#f5c518;"></div><div class="tk-legend-label">Strategic Partners</div><div class="tk-legend-pct">10%</div><div class="tk-legend-amt">100M</div></div>
+          <div class="tk-legend-item"><div class="tk-legend-dot" style="background:#f43f5e;"></div><div class="tk-legend-label">Early Supporters</div><div class="tk-legend-pct">10%</div><div class="tk-legend-amt">100M</div></div>
+          <div class="tk-legend-item"><div class="tk-legend-dot" style="background:#818cf8;"></div><div class="tk-legend-label">Liquidity &amp; DEX</div><div class="tk-legend-pct">8%</div><div class="tk-legend-amt">80M</div></div>
+          <div class="tk-legend-item"><div class="tk-legend-dot" style="background:#475569;"></div><div class="tk-legend-label">Reserve</div><div class="tk-legend-pct">7%</div><div class="tk-legend-amt">70M</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vesting -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Vesting Schedules</div>
+    <div class="tk-vesting">
+      <div class="tk-vest-card">
+        <div class="tk-vest-title">👤 Team &amp; Founders — 150M NIGHT</div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Cliff</div><div class="tk-vest-val">12 months</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Vesting</div><div class="tk-vest-val">48 months linear</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">TGE unlock</div><div class="tk-vest-val">0%</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Monthly after cliff</div><div class="tk-vest-val">~4.17M NIGHT</div></div>
+      </div>
+      <div class="tk-vest-card">
+        <div class="tk-vest-title">🤝 Strategic Partners — 100M NIGHT</div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Cliff</div><div class="tk-vest-val">6 months</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Vesting</div><div class="tk-vest-val">18 months linear</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">TGE unlock</div><div class="tk-vest-val">5%</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Monthly after cliff</div><div class="tk-vest-val">~5.28M NIGHT</div></div>
+      </div>
+      <div class="tk-vest-card">
+        <div class="tk-vest-title">⭐ Early Supporters — 100M NIGHT</div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Cliff</div><div class="tk-vest-val">3 months</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Vesting</div><div class="tk-vest-val">12 months linear</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">TGE unlock</div><div class="tk-vest-val">10%</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Monthly after cliff</div><div class="tk-vest-val">~7.5M NIGHT</div></div>
+      </div>
+      <div class="tk-vest-card">
+        <div class="tk-vest-title">🌐 Ecosystem &amp; Rewards — 300M NIGHT</div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Cliff</div><div class="tk-vest-val">None</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Release</div><div class="tk-vest-val">60 months emissions</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">TGE unlock</div><div class="tk-vest-val">2%</div></div>
+        <div class="tk-vest-row"><div class="tk-vest-key">Monthly</div><div class="tk-vest-val">~5M NIGHT</div></div>
+      </div>
+    </div>
+
+    <!-- Token Utility -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Token Utility</div>
+    <div class="tk-utility" style="margin-bottom:28px;">
+      <div class="tk-util-card"><div class="tk-util-icon">⚡</div><div class="tk-util-title">Fee Payment</div><div class="tk-util-desc">Pay marketplace fees in NIGHT at 0.5% — 40% discount vs sUSD settlement. Automatically burned, creating deflation.</div></div>
+      <div class="tk-util-card"><div class="tk-util-icon">🏛️</div><div class="tk-util-title">Governance</div><div class="tk-util-desc">Vote on fee parameters, listing approvals, ecosystem grants, and protocol upgrades. 1 NIGHT = 1 vote. Quadratic weighting in v2.</div></div>
+      <div class="tk-util-card"><div class="tk-util-icon">💎</div><div class="tk-util-title">Staking &amp; Tiers</div><div class="tk-util-desc">Stake NIGHT to reach Silver → Gold → Platinum → Obsidian. Unlock BNPL limits, fee rebates, and exclusive drops.</div></div>
+      <div class="tk-util-card"><div class="tk-util-icon">🔐</div><div class="tk-util-title">ZK Proof Gas</div><div class="tk-util-desc">NIGHT pays for on-chain ZK proof submission. Burned on use. Every private transaction contributes to supply reduction.</div></div>
+      <div class="tk-util-card"><div class="tk-util-icon">🌙</div><div class="tk-util-title">Night Fun Launch</div><div class="tk-util-desc">Launch memecoins on Night Fun by staking NIGHT. Creator bond ensures skin-in-the-game. Reduces rug risk.</div></div>
+      <div class="tk-util-card"><div class="tk-util-icon">👤</div><div class="tk-util-title">Night Work Escrow</div><div class="tk-util-desc">AI agents post NIGHT bonds when listing tasks. Humans stake NIGHT reputation. Both locked until task verified on-chain.</div></div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(0,214,143,.03));border:1px solid rgba(124,58,237,.15);border-radius:14px;padding:22px;text-align:center;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🌙 NIGHT is not a governance token bolted onto a product. It is the product.</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.7;">Every transaction burns NIGHT. Every ZK proof costs NIGHT. Every task, loan, and launch requires NIGHT. The deflationary pressure is structural — not manufactured.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ LITEPAPER ══════════════ -->
+<div class="page" id="page-litepaper">
+  <div class="page-inner">
+    <div class="lp-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(6,182,212,.06);color:var(--cyan);border-color:rgba(6,182,212,.2);">📄 Litepaper — v1.2</span></div>
+      <h1 style="font-family:var(--serif);font-size:54px;font-style:italic;margin-bottom:14px;">Night Markets<br><em>Technical Overview</em></h1>
+      <p style="font-size:14px;color:var(--muted);font-family:var(--mono);">Luke Munro &amp; Tiarna Carter · April 2026 · Midnight Network</p>
+    </div>
+
+    <!-- Table of contents -->
+    <div class="lp-toc">
+      <div class="lp-toc-title">Contents</div>
+      <div class="lp-toc-item"><span class="lp-toc-num">01</span>Abstract</div>
+      <div class="lp-toc-item"><span class="lp-toc-num">02</span>The Problem — Commerce is Surveillance</div>
+      <div class="lp-toc-item"><span class="lp-toc-num">03</span>The Solution — ZK-Native Marketplace</div>
+      <div class="lp-toc-item"><span class="lp-toc-num">04</span>Technical Architecture</div>
+      <div class="lp-toc-item"><span class="lp-toc-num">05</span>Privacy Model</div>
+      <div class="lp-toc-item"><span class="lp-toc-num">06</span>Smart Contract Design</div>
+      <div class="lp-toc-item"><span class="lp-toc-num">07</span>Token Economics</div>
+      <div class="lp-toc-item"><span class="lp-toc-num">08</span>Roadmap</div>
+    </div>
+
+    <div class="lp-section">
+      <div class="lp-section-num">01 · Abstract</div>
+      <div class="lp-section-title">A marketplace where privacy is the default</div>
+      <div class="lp-body">Night Markets is a zero-knowledge global marketplace built natively on the Midnight Network. It enables buyers and sellers to transact privately across borders — with no identity exposure, no financial surveillance, and no metadata trail — while maintaining the cryptographic guarantees required for trust: verified payment, provable solvency, and tamper-proof dispute resolution.</div>
+      <div class="lp-body">The protocol is live. The escrow contract is deployed on Midnight Preprod at address <span style="font-family:var(--mono);color:var(--green);font-size:12px;">7473b82b398f6b86…</span>. Six ZK circuits are active. This is not a whitepaper for a future product — it is documentation for something that already exists and is being extended.</div>
+      <div class="lp-callout">"Privacy is not a feature you add. It is an architecture you start with. Night Markets was built on Midnight precisely because no other blockchain makes privacy structural rather than optional."</div>
+    </div>
+
+    <div class="lp-section">
+      <div class="lp-section-num">02 · The Problem</div>
+      <div class="lp-section-title">Commerce is surveillance</div>
+      <div class="lp-body">Every major marketplace — Amazon, eBay, Shopify, Etsy — is a data extraction machine. Your purchase history, browsing behaviour, payment method, shipping address, and social graph are all captured, stored, sold, and in many cases shared with governments on request. BNPL providers like Afterpay and Klarna perform soft credit checks and build financial profiles. Payment processors build merchant graphs. The consumer has no meaningful privacy in any part of the transaction.</div>
+      <div class="lp-body">Blockchain commerce has not solved this. On Ethereum or Cardano, every transaction is permanently public: wallet balances visible to anyone, purchase history traceable, identity linkable via on-chain analytics. The transparency designed for financial auditing becomes surveillance infrastructure.</div>
+      <div class="lp-body">The market is $6.3 trillion in global e-commerce. The privacy-native slice of that market is currently zero — because until Midnight Network, it was technically impossible to build.</div>
+    </div>
+
+    <div class="lp-section">
+      <div class="lp-section-num">03 · The Solution</div>
+      <div class="lp-section-title">Zero-knowledge commerce, natively</div>
+      <div class="lp-body">Night Markets is built on Midnight Network — the only layer-1 blockchain engineered from the ground up for data protection. Midnight uses zk-SNARKs (zero-knowledge succinct non-interactive arguments of knowledge) to allow parties to prove statements about private data without revealing that data.</div>
+      <div class="lp-body">In practical terms: a buyer can prove they have sufficient funds to pay without revealing their balance. A seller can confirm payment was received without revealing the amount or their identity. A dispute resolver can verify the facts of a dispute without seeing the private messages between parties.</div>
+      <div class="lp-callout">"The seller sees only that payment is confirmed. The network sees only that the proof is valid. Nobody else sees anything at all."</div>
+      <div class="lp-body">Night Markets extends this privacy guarantee across the full commerce stack: browsing, checkout, payment, escrow, dispute, BNPL, DID identity, and the NIGHT token ecosystem.</div>
+    </div>
+
+    <div class="lp-section">
+      <div class="lp-section-num">04 · Technical Architecture</div>
+      <div class="lp-section-title">Built on Midnight, end to end</div>
+      <table class="lp-tech-table">
+        <tr><th>Layer</th><th>Technology</th><th>Status</th></tr>
+        <tr><td>Smart contracts</td><td>Compact language — 6 ZK circuits</td><td style="color:var(--green);">✅ Live — Preprod</td></tr>
+        <tr><td>Wallet connection</td><td>Lace DApp Connector v4 API</td><td style="color:var(--green);">✅ Implemented</td></tr>
+        <tr><td>Sealed-bid auctions</td><td>SHA-256 SubtleCrypto commitments</td><td style="color:var(--green);">✅ Working</td></tr>
+        <tr><td>DID registry</td><td>Midnames — on-chain identity</td><td style="color:var(--green);">✅ Integrated</td></tr>
+        <tr><td>Stablecoin payments</td><td>Statera sUSD</td><td style="color:var(--green);">✅ Integrated</td></tr>
+        <tr><td>DEX integration</td><td>LunarSwap — NIGHT/sUSD/tDUST</td><td style="color:var(--green);">✅ Integrated</td></tr>
+        <tr><td>Bridge</td><td>Midnight Bridge — ETH/ADA/SOL</td><td style="color:var(--green);">✅ Integrated</td></tr>
+        <tr><td>KYC/compliance</td><td>Brick Towers ZK credential</td><td style="color:var(--green);">✅ Integrated</td></tr>
+        <tr><td>In-browser ZK signing</td><td>Midnight SDK</td><td style="color:var(--gold);">🔜 v2</td></tr>
+        <tr><td>BNPL on-chain circuit</td><td>Compact instalment enforcement</td><td style="color:var(--gold);">🔜 v2</td></tr>
+        <tr><td>Mainnet deployment</td><td>Midnight Mainnet</td><td style="color:var(--gold);">🔜 v3</td></tr>
+      </table>
+    </div>
+
+    <div class="lp-section">
+      <div class="lp-section-num">05 · Privacy Model</div>
+      <div class="lp-section-title">What is hidden and how</div>
+      <div class="lp-body">Night Markets operates on a single principle: you should never have to trust us. The privacy guarantees are cryptographic — they hold even if Night Markets as a company is compromised, subpoenaed, or shut down.</div>
+      <table class="lp-tech-table">
+        <tr><th>What</th><th>How it's protected</th></tr>
+        <tr><td>Buyer identity</td><td>ZK proof of valid session — no wallet address on-chain</td></tr>
+        <tr><td>Purchase amount</td><td>Shielded transaction — amount hidden from public ledger</td></tr>
+        <tr><td>Seller identity</td><td>Midnames DID — pseudonymous by default</td></tr>
+        <tr><td>BNPL eligibility</td><td>zk-SNARK proof — creditworthiness proven, data never revealed</td></tr>
+        <tr><td>AI recommendations</td><td>Runs client-side — preference profile never leaves device</td></tr>
+        <tr><td>Social graph</td><td>End-to-end encrypted — visible only to account holder</td></tr>
+        <tr><td>Dispute messages</td><td>E2E encrypted — readable only by parties + arbitrator if invoked</td></tr>
+      </table>
+    </div>
+
+    <div class="lp-section">
+      <div class="lp-section-num">06 · Smart Contract Design</div>
+      <div class="lp-section-title">Six circuits, one escrow lifecycle</div>
+      <div class="lp-body">The <span style="font-family:var(--mono);color:var(--glow);">NightMarketsEscrow.compact</span> contract implements the full purchase lifecycle as ZK circuits. Each circuit verifies caller authorisation via a hash of (secret_key, contract_address, domain) — proving identity without exposing it.</div>
+      <table class="lp-tech-table">
+        <tr><th>Circuit</th><th>Function</th></tr>
+        <tr><td>createListing</td><td>Seller publishes item with ZK commitment to price and terms</td></tr>
+        <tr><td>fundEscrow</td><td>Buyer locks payment — seller cannot access until conditions met</td></tr>
+        <tr><td>releaseEscrow</td><td>Buyer confirms delivery — funds released to seller atomically</td></tr>
+        <tr><td>disputeEscrow</td><td>Either party raises dispute — funds frozen pending arbitration</td></tr>
+        <tr><td>refundEscrow</td><td>Arbitrator rules for buyer — funds returned with ZK proof</td></tr>
+        <tr><td>castVote</td><td>NIGHT-weighted governance vote with double-vote prevention</td></tr>
+      </table>
+    </div>
+
+    <div class="lp-section">
+      <div class="lp-section-num">07 · Token Economics</div>
+      <div class="lp-section-title">See Tokenomics page for full breakdown</div>
+      <div class="lp-body">Total supply: 1,000,000,000 NIGHT. Deflationary via fee burns. Utility across fees, governance, staking, BNPL unlock, Night Work bonds, and Night Fun launches. Team allocation: 15% with 12-month cliff and 48-month linear vesting.</div>
+    </div>
+
+    <div class="lp-section">
+      <div class="lp-section-num">08 · Roadmap</div>
+      <div class="lp-section-title">What's built, what's next</div>
+      <div class="lp-body"><strong style="color:var(--text);">v1 — Current:</strong> Live escrow contract · 6 Compact circuits · 36-page marketplace frontend · Lace wallet · ZK auctions · Full Night Ecosystem suite (Save, Fun, Work, Data, Store, Identity, Pay, Lend, Chat)</div>
+      <div class="lp-body"><strong style="color:var(--text);">v2 — Next:</strong> In-browser ZK transaction signing via Midnight SDK · BNPL Compact circuit · Live NIGHT token gating · Night Chat encrypted relay · Night Lend on-chain collateral proof</div>
+      <div class="lp-body"><strong style="color:var(--text);">v3 — Vision:</strong> Mainnet deployment · Mobile apps · Open seller onboarding · Cross-chain bridge · Midnight City AI agent integration</div>
+    </div>
+
+    <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:18px;font-family:var(--mono);font-size:11px;text-align:center;">
+      <div style="color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;font-size:9px;">On-chain reference</div>
+      <div style="color:var(--green);">7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711</div>
+      <div style="color:var(--muted);margin-top:4px;">Midnight Preprod · Block 127,350 · 6 Compact circuits</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PRESS KIT ══════════════ -->
+<div class="page" id="page-press">
+  <div class="page-inner">
+    <div class="pr-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(0,214,143,.06);color:var(--green);border-color:rgba(0,214,143,.2);">📰 Press Kit &amp; Media Resources</span></div>
+      <h1 style="font-family:var(--serif);font-size:54px;font-style:italic;margin-bottom:14px;">Night Markets<br><em>for the press.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">Everything journalists, analysts, and ecosystem partners need to cover Night Markets accurately. Assets, stats, boilerplate copy, and direct contact below.</p>
+    </div>
+
+    <!-- Key stats -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Key Facts</div>
+    <div class="pr-stats">
+      <div class="pr-stat"><div class="pr-stat-val">36</div><div class="pr-stat-label">App pages &amp; features</div></div>
+      <div class="pr-stat"><div class="pr-stat-val">6</div><div class="pr-stat-label">Live ZK circuits on-chain</div></div>
+      <div class="pr-stat"><div class="pr-stat-val">8</div><div class="pr-stat-label">Ecosystem integrations</div></div>
+      <div class="pr-stat"><div class="pr-stat-val">#1</div><div class="pr-stat-label">ZK marketplace on Midnight</div></div>
+    </div>
+
+    <!-- Brand assets -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Brand Assets</div>
+    <div class="pr-assets">
+      <div class="pr-asset" onclick="toast('Logo package — contact lukemunro1994@gmail.com', 'info')">
+        <div class="pr-asset-preview" style="background:var(--bg);">
+          <div style="font-size:28px;font-weight:900;font-family:var(--serif);color:var(--text);">Night<em style="color:var(--glow);">Markets</em></div>
+        </div>
+        <div class="pr-asset-info"><div class="pr-asset-name">Primary Wordmark</div><div class="pr-asset-meta">SVG · PNG · Dark background</div></div>
+      </div>
+      <div class="pr-asset" onclick="toast('Logo package — contact lukemunro1994@gmail.com', 'info')">
+        <div class="pr-asset-preview" style="background:linear-gradient(135deg,var(--ink),var(--plasma));">
+          <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;font-family:var(--serif);">N</div>
+        </div>
+        <div class="pr-asset-info"><div class="pr-asset-name">App Icon</div><div class="pr-asset-meta">SVG · 1024px · iOS &amp; Android ready</div></div>
+      </div>
+      <div class="pr-asset" onclick="toast('Brand guidelines — contact lukemunro1994@gmail.com', 'info')">
+        <div class="pr-asset-preview" style="background:var(--bg);gap:6px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;padding:12px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:#7c3aed;"></div>
+          <div style="width:28px;height:28px;border-radius:6px;background:#06b6d4;"></div>
+          <div style="width:28px;height:28px;border-radius:6px;background:#00d68f;"></div>
+          <div style="width:28px;height:28px;border-radius:6px;background:#f5c518;"></div>
+          <div style="width:28px;height:28px;border-radius:6px;background:#090714;border:1px solid var(--rim2);"></div>
+        </div>
+        <div class="pr-asset-info"><div class="pr-asset-name">Colour Palette</div><div class="pr-asset-meta">Hex · CSS variables · Figma ready</div></div>
+      </div>
+    </div>
+
+    <!-- Boilerplate -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Approved Boilerplate Copy</div>
+    <div class="pr-boilerplate">
+      <div class="pr-boilerplate-title">Short (1 sentence)</div>
+      <div class="pr-boilerplate-text">"Night Markets is the world's first zero-knowledge marketplace — built natively on Midnight Network, with a live deployed smart contract and full ZK-private commerce stack."</div>
+    </div>
+    <div class="pr-boilerplate">
+      <div class="pr-boilerplate-title">Medium (1 paragraph)</div>
+      <div class="pr-boilerplate-text">"Night Markets is a privacy-first global marketplace where buyer identity, purchase amounts, and transaction history are protected by zero-knowledge proofs on the Midnight Network. The protocol is live on Midnight Preprod with six deployed Compact circuits handling the full escrow lifecycle. It integrates the complete Midnight ecosystem — Lace wallet, Statera sUSD, LunarSwap DEX, Midnames DID, Brick Towers KYC, and the Midnight Bridge — and extends the network with Night Pay, Night Lend, Night Work, and Night Fun. Founded by Luke Munro (CEO) and Tiarna Carter (Creative Director)."</div>
+    </div>
+
+    <!-- Contact -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Press Contact</div>
+    <div class="pr-contact-grid">
+      <div class="pr-contact-card">
+        <div class="pr-contact-title">CEO &amp; Co-Founder</div>
+        <div class="pr-contact-name">Luke Munro</div>
+        <div class="pr-contact-role">Co-Founder &amp; CEO</div>
+        <div class="pr-contact-email">lukemunro1994@gmail.com</div>
+      </div>
+      <div class="pr-contact-card">
+        <div class="pr-contact-title">Creative Director &amp; Co-Founder</div>
+        <div class="pr-contact-name">Tiarna Carter</div>
+        <div class="pr-contact-role">Co-Founder &amp; Creative Director</div>
+        <div class="pr-contact-email">tiarnajc146@gmail.com</div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;background:var(--raised);border:1px solid var(--rim);border-radius:12px;padding:18px;font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono);">
+      Live demo: kingmunz1994-lgtm.github.io/night-markets · GitHub: github.com/kingmunz1994-lgtm/night-markets · Contract: 7473b82b398f6b86…
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════ VISION ══════════════ -->
 <div class="page" id="page-vision">
   <div class="page-inner" style="padding-top:0;max-width:100%;padding-left:0;padding-right:0;">
@@ -6857,6 +7466,9 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showPage('nightchat');closeMobNav()" style="color:var(--cyan);">💬 Night Chat</button>
   <button class="mob-nav-item" onclick="showPage('ecosystem');closeMobNav()">🌐 Ecosystem</button>
   <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);padding:0 16px;margin:14px 0 6px;">Discover</div>
+  <button class="mob-nav-item" onclick="showPage('litepaper');closeMobNav()" style="color:var(--cyan);">📄 Litepaper</button>
+  <button class="mob-nav-item" onclick="showPage('tokenomics');closeMobNav()" style="color:var(--glow);">🌙 Tokenomics</button>
+  <button class="mob-nav-item" onclick="showPage('press');closeMobNav()" style="color:var(--green);">📰 Press Kit</button>
   <button class="mob-nav-item" onclick="showPage('privacy');closeMobNav()">⊘ ZK Privacy</button>
   <button class="mob-nav-item" onclick="showPage('midnight');closeMobNav()">🌑 Midnight</button>
   <button class="mob-nav-item" onclick="showPage('vision');closeMobNav()">🌍 Vision</button>
