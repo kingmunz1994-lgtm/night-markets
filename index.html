@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Night Markets — Zero-Knowledge Global Marketplace</title>
+<title>Night Markets — Private Financial Ecosystem on Midnight Network</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════
@@ -2036,6 +2036,94 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .ent-step-desc{font-size:11px;color:var(--muted);line-height:1.7;}
 .ent-secret{background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(6,182,212,.04));border:1px solid rgba(124,58,237,.25);border-radius:18px;padding:28px;margin-bottom:32px;}
 
+/* ── Ecosystem product strip (homepage) ─────────────────── */
+.eco-product-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:8px;}
+.eps-card{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:22px 20px;cursor:pointer;transition:border-color .2s,transform .15s,background .2s;display:flex;flex-direction:column;gap:8px;}
+.eps-card:hover{border-color:var(--glow);background:rgba(0,0,254,.05);transform:translateY(-2px);}
+.eps-icon{font-size:24px;line-height:1;margin-bottom:2px;}
+.eps-name{font-size:14px;font-weight:900;color:var(--text);letter-spacing:.01em;}
+.eps-desc{font-size:12px;color:var(--muted);line-height:1.65;flex:1;}
+.eps-cta{font-size:11px;font-weight:700;color:var(--glow);font-family:var(--mono);margin-top:4px;}
+.eps-card:hover .eps-cta{text-decoration:underline;}
+
+/* ── Night ID page ──────────────────────────────────────── */
+#page-nightid .page-inner{max-width:1100px;margin:0 auto;padding:60px 24px;}
+.nid-hero{text-align:center;max-width:780px;margin:0 auto 60px;}
+.nid-hero h1{font-size:clamp(36px,6vw,68px);line-height:1.1;margin:20px 0 18px;}
+.nid-hero h1 em{font-style:italic;color:var(--glow);}
+.nid-hero p{font-size:16px;color:var(--muted);line-height:1.8;max-width:620px;margin:0 auto;}
+.nid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;margin:0 0 60px;background:var(--card);border:1px solid var(--rim2);border-radius:18px;overflow:hidden;}
+.nid-stat{padding:24px 20px;border-right:1px solid var(--rim2);}
+.nid-stat:last-child{border-right:none;}
+.nid-stat-val{font-size:34px;font-weight:900;font-family:var(--mono);}
+.nid-stat-val.red{color:var(--red);}
+.nid-stat-label{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5;}
+.nid-pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:24px 0 60px;}
+.nid-pillar{background:var(--card);border:1px solid var(--rim2);border-radius:18px;padding:28px;transition:border-color .2s;}
+.nid-pillar:hover{border-color:var(--glow);}
+.nid-pillar-icon{font-size:28px;margin-bottom:12px;}
+.nid-pillar-name{font-size:20px;font-weight:900;margin-bottom:5px;}
+.nid-pillar-tag{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.06em;margin-bottom:14px;}
+.nid-pillar p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px;}
+.nid-creds{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.nid-cred{font-size:12px;color:var(--green);font-family:var(--mono);}
+.nid-proof-box{background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:14px;margin-top:8px;}
+.nid-proof-line{font-size:11px;font-family:var(--mono);padding:3px 0;}
+.nid-proof-line.green{color:var(--green);}
+.nid-proof-line.red{color:var(--red);}
+.nid-score-build{display:flex;flex-direction:column;gap:8px;margin:12px 0;}
+.nsb-item{display:flex;align-items:center;gap:10px;font-size:12px;background:var(--raised);border-radius:8px;padding:8px 10px;}
+.nsb-icon{font-size:14px;flex-shrink:0;}
+.nsb-label{flex:1;color:var(--muted);}
+.nsb-val.green{color:var(--green);font-family:var(--mono);font-weight:700;}
+.nid-score-display{display:flex;align-items:center;gap:16px;background:var(--raised);border-radius:12px;padding:14px;margin-top:10px;}
+.nsd-ring{position:relative;width:80px;height:80px;flex-shrink:0;}
+.nsd-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:17px;font-weight:900;font-family:var(--mono);color:var(--glow);}
+.nid-data-offers{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.ndo-item{display:flex;align-items:center;gap:10px;font-size:11px;background:var(--raised);border-radius:8px;padding:10px 12px;}
+.ndo-buyer{font-weight:700;font-family:var(--mono);color:var(--text);width:72px;flex-shrink:0;}
+.ndo-query{flex:1;color:var(--muted);}
+.ndo-pay.green{color:var(--green);font-family:var(--mono);font-weight:700;}
+.nid-equifax{background:linear-gradient(135deg,rgba(255,59,59,.07),rgba(0,0,254,.04));border:1px solid rgba(255,59,59,.2);border-radius:20px;padding:36px;margin:0 0 60px;}
+.nid-eq-badge{display:inline-block;background:rgba(255,59,59,.12);border:1px solid rgba(255,59,59,.3);color:var(--red);font-size:11px;font-weight:700;font-family:var(--mono);letter-spacing:.08em;border-radius:20px;padding:5px 14px;margin-bottom:12px;}
+.nid-eq-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;}
+@media(max-width:600px){.nid-eq-compare{grid-template-columns:1fr;}}
+.nid-eq-col{border-radius:14px;padding:20px;}
+.nid-eq-col.bad{background:rgba(255,59,59,.06);border:1px solid rgba(255,59,59,.15);}
+.nid-eq-col.good{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);}
+.nid-eq-col-title{font-size:11px;font-weight:800;font-family:var(--mono);letter-spacing:.06em;margin-bottom:12px;}
+.nid-eq-col-title.red{color:var(--red);}
+.nid-eq-col-title.green{color:var(--green);}
+.nid-eq-item{font-size:12px;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--rim);line-height:1.5;}
+.nid-eq-item:last-child{border:none;}
+.nid-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0 60px;}
+.nid-step{background:var(--card);border:1px solid var(--rim2);border-radius:14px;padding:22px;}
+.nid-step-num{width:36px;height:36px;background:var(--glow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;margin-bottom:14px;}
+.nid-step-title{font-size:14px;font-weight:800;margin-bottom:8px;}
+.nid-step-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+.nid-market-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px 0 60px;}
+.nid-mkt-item{background:var(--card);border:1px solid var(--rim2);border-radius:14px;padding:22px;}
+.nid-mkt-val{font-size:32px;font-weight:900;font-family:var(--mono);color:var(--glow);margin-bottom:6px;}
+.nid-mkt-label{font-size:12px;font-weight:700;margin-bottom:4px;}
+.nid-mkt-sub{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.nid-why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0 60px;}
+.nid-why-item{background:var(--card);border:1px solid var(--rim2);border-radius:14px;padding:22px;}
+.nid-why-icon{font-size:24px;margin-bottom:12px;}
+.nid-why-title{font-size:14px;font-weight:800;margin-bottom:8px;}
+.nid-why-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+.nid-cta-block{text-align:center;background:linear-gradient(135deg,rgba(0,0,254,.08),rgba(6,182,212,.04));border:1px solid rgba(0,0,254,.2);border-radius:22px;padding:48px 32px;margin:0 0 60px;}
+.nid-cta-orb{font-size:40px;margin-bottom:16px;}
+.nid-cta-block h2{font-size:28px;margin-bottom:12px;}
+.nid-cta-block p{font-size:15px;color:var(--muted);max-width:500px;margin:0 auto;}
+
+/* ── Ecosystem suite grid (hero card) ────────────────────── */
+.eco-suite-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.eco-suite-item{background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+.eco-suite-item:hover{border-color:var(--glow);background:rgba(0,0,254,.07);}
+.esi-icon{font-size:18px;margin-bottom:4px;line-height:1;}
+.esi-name{font-size:10px;font-weight:800;color:var(--text);margin-bottom:2px;letter-spacing:.02em;}
+.esi-desc{font-size:9px;color:var(--muted);font-family:var(--mono);line-height:1.4;}
+
 .btc-input{width:100%;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:13px 14px;font-size:16px;color:var(--text);font-family:var(--mono);outline:none;box-sizing:border-box;text-align:center;font-weight:700;}
 .btc-input:focus{border-color:var(--gold);}
 .btc-rate-row{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);padding:6px 0;border-bottom:1px solid var(--rim);}
@@ -2401,6 +2489,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="ndm-item" onclick="showPage('ecosystem-vision');closeAllNavDrops()">🌐 Ecosystem Vision</div>
           <div class="ndm-item" onclick="showPage('biztoken');closeAllNavDrops()">🏢 Business Tokens</div>
           <div class="ndm-item" onclick="showPage('enterprise');closeAllNavDrops()" style="color:var(--glow);">💼 Enterprise Plans</div>
+          <div class="ndm-item" onclick="showPage('nightid');closeAllNavDrops()" style="color:#a78bfa;">🪪 Night ID — ZK Identity</div>
           <div class="ndm-sep"></div>
           <div class="ndm-item" onclick="showPage('privacy');closeAllNavDrops()">⊘ ZK Privacy</div>
           <div class="ndm-item" onclick="showPage('midnight');closeAllNavDrops()">🌑 About Midnight</div>
@@ -2497,19 +2586,19 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
     <div class="z1">
       <div class="hero-tag">
         <div class="ht-orb">⊘</div>
-        Buy now, pay later — your data stays yours
+        Midnight Network Ecosystem — Mainnet Live March 2026
       </div>
       <h1 class="hero-title">
-        Shop global.<br>
-        <em>Pay in 4.</em><br>
-        <span class="stroke">Your data, your rules.</span>
+        One ecosystem.<br>
+        Zero surveillance.<br>
+        <em>Everyone earns.</em>
       </h1>
       <p class="hero-sub">
-        Night Markets is the marketplace of tomorrow. <strong>Buy Now Pay Later</strong> on every single listing — verified by Midnight zero-knowledge proofs. No credit checks. No data shared. No financial footprint.
+        Night Markets is the world's first <strong>private financial ecosystem</strong> — ZK marketplace with BNPL, Business Tokens that pay automatic dividends, enterprise plans that eliminate transfer fees, a Bitcoin private vault, and a savings layer that generates real yield. All powered by Midnight zero-knowledge proofs. Nothing shared. Everything provable.
       </p>
       <div class="hero-btns">
-        <button class="btn btn-primary btn-lg" onclick="showPage('shop')">Browse Marketplace</button>
-        <button class="btn btn-outline-ink btn-lg" onclick="showPage('privacy')">How your privacy works</button>
+        <button class="btn btn-primary btn-lg" onclick="showPage('ecosystem-vision')">Explore the Ecosystem</button>
+        <button class="btn btn-outline-ink btn-lg" onclick="showPage('privacy')">How ZK privacy works</button>
       </div>
       <!-- Live ZK stats -->
       <div class="zk-strip">
@@ -2518,12 +2607,12 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="zk-stat-label">ZK proofs today</div>
         </div>
         <div class="zk-stat">
-          <div class="zk-stat-val green">0</div>
-          <div class="zk-stat-label">Credit checks — ever</div>
+          <div class="zk-stat-val green">6</div>
+          <div class="zk-stat-label">Ecosystem products live</div>
         </div>
         <div class="zk-stat">
           <div class="zk-stat-val green">$0</div>
-          <div class="zk-stat-label">Interest, always</div>
+          <div class="zk-stat-label">Transfer fees w/ NIGHT stake</div>
         </div>
         <div class="zk-stat" style="cursor:pointer" onclick="showPage('privacy')" title="Live price — click for token details">
           <div style="display:flex;align-items:baseline;gap:6px">
@@ -2579,46 +2668,100 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div style="font-size:9px;color:var(--faint);font-family:var(--mono);text-align:center;margin-top:6px">Chart reflects relative price movement since launch. Source: CoinMarketCap · CoinGecko</div>
       </div>
 
-      <!-- Pay in 4 mini -->
+      <!-- Ecosystem suite mini -->
       <div class="hero-card">
         <div class="hc-glow-line"></div>
-        <div class="p4-header">
-          <div class="p4-zk-badge">⊘ ZK-verified Pay in 4</div>
-          <div class="tag tag-ink" style="font-size:9px">ALL ITEMS</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:.08em">NIGHT MARKETS · ECOSYSTEM</div>
+          <div class="tag tag-green" style="font-size:9px">● 6 LIVE</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 8px 1fr 8px 1fr 8px 1fr;align-items:center;gap:0;margin-bottom:8px;">
-          <div class="p4s">
-            <div class="p4s-node active">✓</div>
-            <div class="p4s-when">Today</div>
-            <div class="p4s-amt" style="color:var(--glow)">$74.99</div>
+        <div class="eco-suite-grid">
+          <div class="eco-suite-item" onclick="showPage('shop')">
+            <div class="esi-icon">⊛</div>
+            <div class="esi-name">Night Shop</div>
+            <div class="esi-desc">ZK marketplace + BNPL</div>
           </div>
-          <div style="height:1px;background:linear-gradient(90deg,var(--ink),var(--rim2));margin-bottom:14px;"></div>
-          <div class="p4s">
-            <div class="p4s-node next">2</div>
-            <div class="p4s-when">+2 wks</div>
-            <div class="p4s-amt">$74.99</div>
+          <div class="eco-suite-item" onclick="showPage('biztoken')">
+            <div class="esi-icon">◈</div>
+            <div class="esi-name">Business Token</div>
+            <div class="esi-desc">Auto dividend payback</div>
           </div>
-          <div style="height:1px;background:var(--rim);margin-bottom:14px;"></div>
-          <div class="p4s">
-            <div class="p4s-node">3</div>
-            <div class="p4s-when">+4 wks</div>
-            <div class="p4s-amt" style="color:var(--muted)">$74.99</div>
+          <div class="eco-suite-item" onclick="showPage('enterprise')">
+            <div class="esi-icon">⬡</div>
+            <div class="esi-name">Enterprise</div>
+            <div class="esi-desc">$0 transfer fees forever</div>
           </div>
-          <div style="height:1px;background:var(--rim);margin-bottom:14px;"></div>
-          <div class="p4s">
-            <div class="p4s-node">4</div>
-            <div class="p4s-when">+6 wks</div>
-            <div class="p4s-amt" style="color:var(--muted)">$74.99</div>
+          <div class="eco-suite-item" onclick="openBtcOnramp()">
+            <div class="esi-icon">₿</div>
+            <div class="esi-name">BTC Vault</div>
+            <div class="esi-desc">Private ZK shield layer</div>
+          </div>
+          <div class="eco-suite-item" onclick="showPage('stake')">
+            <div class="esi-icon">◎</div>
+            <div class="esi-name">Night Save</div>
+            <div class="esi-desc">Stake NIGHT · earn yield</div>
+          </div>
+          <div class="eco-suite-item" onclick="showPage('nightid')">
+            <div class="esi-icon">🪪</div>
+            <div class="esi-name">Night ID</div>
+            <div class="esi-desc">ZK financial identity</div>
           </div>
         </div>
-        <div style="text-align:center;font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px;">Eligibility proven by ZK proof · Zero data shared · $299.96 total</div>
+        <div style="text-align:center;font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:10px;padding-top:8px;border-top:1px solid var(--rim)">Everyone earns · Everything proven by ZK · Nothing shared</div>
       </div>
     </div>
   </div>
 
   <div class="page-inner" style="padding-top:0;">
+    <!-- ECOSYSTEM STRIP -->
+    <div class="eyebrow" style="margin-top:40px">The Night Markets ecosystem — one stake, everything runs</div>
+    <div class="eco-product-strip">
+      <div class="eps-card" onclick="showPage('shop')">
+        <div class="eps-icon">⊛</div>
+        <div class="eps-name">Night Shop</div>
+        <div class="eps-desc">Private global marketplace. BNPL on every listing — no credit check, no data shared. ZK proof of eligibility only.</div>
+        <div class="eps-cta">Browse →</div>
+      </div>
+      <div class="eps-card" onclick="showPage('biztoken')">
+        <div class="eps-icon">◈</div>
+        <div class="eps-name">Business Token</div>
+        <div class="eps-desc">Any seller launches a revenue-sharing token. Every sale triggers automatic ZK dividend payback to token holders.</div>
+        <div class="eps-cta">Launch →</div>
+      </div>
+      <div class="eps-card" onclick="showPage('enterprise')">
+        <div class="eps-icon">⬡</div>
+        <div class="eps-name">Enterprise Plans</div>
+        <div class="eps-desc">Stake NIGHT once. Generate DUST forever. Eliminate transfer fees permanently — Stripe, SWIFT, PayPal — gone.</div>
+        <div class="eps-cta">Calculate savings →</div>
+      </div>
+      <div class="eps-card" onclick="openBtcOnramp()">
+        <div class="eps-icon">₿</div>
+        <div class="eps-name">Bitcoin Vault</div>
+        <div class="eps-desc">One-tap BTC → shielded NIGHT vault. The private spending layer Bitcoin holders have been waiting for.</div>
+        <div class="eps-cta">On-ramp →</div>
+      </div>
+      <div class="eps-card" onclick="showPage('stake')">
+        <div class="eps-icon">◎</div>
+        <div class="eps-name">Night Save</div>
+        <div class="eps-desc">Stake NIGHT, generate DUST for near-zero fees, earn real yield from platform revenue. Your money works for you.</div>
+        <div class="eps-cta">Start staking →</div>
+      </div>
+      <div class="eps-card" onclick="showPage('nightid')">
+        <div class="eps-icon">🪪</div>
+        <div class="eps-name">Night ID</div>
+        <div class="eps-desc">Own your financial identity forever. KYC once. Build Night Score from your on-chain behaviour. Earn from Night Data. Nobody can steal what was never stored.</div>
+        <div class="eps-cta">Own your identity →</div>
+      </div>
+      <div class="eps-card" onclick="showPage('ecosystem-vision')">
+        <div class="eps-icon">∞</div>
+        <div class="eps-name">ZK Vision</div>
+        <div class="eps-desc">100+ zero-knowledge use cases across healthcare, finance, governance, AI, supply chain and more. Filterable explorer.</div>
+        <div class="eps-cta">Explore all →</div>
+      </div>
+    </div>
+
     <!-- CATS -->
-    <div class="eyebrow">Browse by category</div>
+    <div class="eyebrow" style="margin-top:40px">Shop the marketplace — browse by category</div>
     <div class="cats-scroll" id="home-cats"></div>
 
     <!-- FEATURED BANNERS -->
@@ -7997,6 +8140,7 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showPage('ecosystem-vision');closeMobNav()" style="color:var(--cyan);">🌐 Ecosystem Vision</button>
   <button class="mob-nav-item" onclick="showPage('biztoken');closeMobNav()" style="color:var(--gold);">🏢 Business Tokens</button>
   <button class="mob-nav-item" onclick="showPage('enterprise');closeMobNav()" style="color:var(--glow);">💼 Enterprise Plans</button>
+  <button class="mob-nav-item" onclick="showPage('nightid');closeMobNav()" style="color:#a78bfa;">🪪 Night ID — ZK Identity</button>
   <button class="mob-nav-item" onclick="showPage('privacy');closeMobNav()">⊘ ZK Privacy</button>
   <button class="mob-nav-item" onclick="showPage('midnight');closeMobNav()">🌑 Midnight</button>
   <button class="mob-nav-item" onclick="showPage('vision');closeMobNav()">🌍 Vision</button>
@@ -8328,6 +8472,275 @@ document.addEventListener('click',function(e){
   <span class="ts-pulse"></span>
   Take the tour
 </button>
+
+<!-- ══════════════════════════════════════════════════════════
+     NIGHT ID — ZK Financial Identity
+══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nightid">
+  <div class="page-inner">
+
+    <!-- HERO -->
+    <div class="nid-hero">
+      <div class="tag" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);color:#a78bfa;font-size:11px;font-weight:700;font-family:var(--mono);letter-spacing:.08em;border-radius:20px;padding:5px 16px;display:inline-block;margin-bottom:16px;">🪪 ZK FINANCIAL IDENTITY · THE ULTIMATE MIDNIGHT USE CASE</div>
+      <h1>Your identity.<br>Your vault.<br><em>Nobody else's.</em></h1>
+      <p>Equifax, Experian, and TransUnion own your financial identity — and they've been hacked repeatedly. Night ID gives you a zero-knowledge credential you control forever. Prove anything about yourself to anyone. Share nothing.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px;">
+        <button class="btn btn-primary btn-lg" onclick="document.getElementById('nid-email').focus();document.getElementById('nid-email').scrollIntoView({behavior:'smooth'})">Join the waitlist</button>
+        <button class="btn btn-outline-ink btn-lg" onclick="showPage('privacy')">How ZK proofs work</button>
+      </div>
+    </div>
+
+    <!-- PROBLEM STATS -->
+    <div class="nid-stats">
+      <div class="nid-stat">
+        <div class="nid-stat-val">1.3B</div>
+        <div class="nid-stat-label">adults with no financial identity (World Bank 2025)</div>
+      </div>
+      <div class="nid-stat">
+        <div class="nid-stat-val red">148M</div>
+        <div class="nid-stat-label">records stolen — Equifax 2017 alone</div>
+      </div>
+      <div class="nid-stat">
+        <div class="nid-stat-val">$385B</div>
+        <div class="nid-stat-label">credit bureau market — owned by 3 companies</div>
+      </div>
+      <div class="nid-stat">
+        <div class="nid-stat-val red">$59B</div>
+        <div class="nid-stat-label">paid in remittance fees every year</div>
+      </div>
+    </div>
+
+    <!-- 3 PILLARS -->
+    <div class="eyebrow">Three products. One sovereign identity.</div>
+    <div class="nid-pillars">
+
+      <!-- Night ID -->
+      <div class="nid-pillar">
+        <div class="nid-pillar-icon">🪪</div>
+        <div class="nid-pillar-name">Night ID</div>
+        <div class="nid-pillar-tag">KYC once. Valid everywhere. Forever.</div>
+        <p>A licensed KYC partner verifies your identity once. Midnight issues a ZK credential stored in your private vault on your device. The underlying data — your passport, DOB, address — never touches a public ledger. Use it anywhere on Midnight instantly.</p>
+        <div class="nid-creds">
+          <div class="nid-cred">✓ Real human · anti-Sybil proof</div>
+          <div class="nid-cred">✓ Age verified (18+, 21+ or custom)</div>
+          <div class="nid-cred">✓ Jurisdiction verified · residency</div>
+          <div class="nid-cred">✓ Not sanctioned · AML cleared</div>
+          <div class="nid-cred">✓ KYC-cleared at a licensed institution</div>
+          <div class="nid-cred">✓ Accredited investor status</div>
+        </div>
+        <div class="nid-proof-box">
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;letter-spacing:.06em;">WHAT A LENDER / EXCHANGE RECEIVES</div>
+          <div class="nid-proof-line green">✓ KYC cleared</div>
+          <div class="nid-proof-line green">✓ Age: 18+ confirmed</div>
+          <div class="nid-proof-line green">✓ Jurisdiction: AU · permitted</div>
+          <div class="nid-proof-line green">✓ Not sanctioned · not PEP</div>
+          <div class="nid-proof-line red">✗ Name: [private]</div>
+          <div class="nid-proof-line red">✗ Passport: [private]</div>
+          <div class="nid-proof-line red">✗ Address: [private]</div>
+          <div class="nid-proof-line red">✗ Date of birth: [private]</div>
+        </div>
+      </div>
+
+      <!-- Night Score -->
+      <div class="nid-pillar">
+        <div class="nid-pillar-icon">◎</div>
+        <div class="nid-pillar-name">Night Score</div>
+        <div class="nid-pillar-tag">Private credit score. Built by you.</div>
+        <p>Every action on Night Markets generates a ZK behaviour credential — BNPL payments made on time, purchase activity, staking duration, dividend receipts. Your Night Score builds automatically. No credit bureau. No data sharing. Prove creditworthiness via ZK proof alone.</p>
+        <div class="nid-score-build">
+          <div class="nsb-item">
+            <div class="nsb-icon">💳</div>
+            <div class="nsb-label">BNPL instalment paid on time</div>
+            <div class="nsb-val green">+12 pts</div>
+          </div>
+          <div class="nsb-item">
+            <div class="nsb-icon">◈</div>
+            <div class="nsb-label">Business Token dividend received</div>
+            <div class="nsb-val green">+8 pts</div>
+          </div>
+          <div class="nsb-item">
+            <div class="nsb-icon">◎</div>
+            <div class="nsb-label">NIGHT staked 90+ days continuously</div>
+            <div class="nsb-val green">+15 pts</div>
+          </div>
+          <div class="nsb-item">
+            <div class="nsb-icon">🛒</div>
+            <div class="nsb-label">Regular marketplace activity</div>
+            <div class="nsb-val green">+6 pts</div>
+          </div>
+        </div>
+        <div class="nid-score-display">
+          <div class="nsd-ring">
+            <svg viewBox="0 0 80 80" width="80" height="80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--rim2)" stroke-width="6"/>
+              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--glow)" stroke-width="6"
+                stroke-dasharray="213.6" stroke-dashoffset="55" stroke-linecap="round"
+                transform="rotate(-90 40 40)"/>
+            </svg>
+            <div class="nsd-num">782</div>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:900;color:var(--green)">Excellent</div>
+            <div style="font-size:11px;color:var(--muted);font-family:var(--mono)">Your Night Score</div>
+            <div style="font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:5px;">Proves creditworthy · All data private</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Night Data -->
+      <div class="nid-pillar">
+        <div class="nid-pillar-icon">◑</div>
+        <div class="nid-pillar-name">Night Data</div>
+        <div class="nid-pillar-tag">Monetise your profile. Keep your privacy.</div>
+        <p>Businesses pay for financial insights. With Night Data you earn NIGHT when your anonymised, ZK-aggregated profile is queried for credit modelling, compliance, or market research. You set the price. You approve each query. The raw data never leaves your vault.</p>
+        <div class="nid-data-offers">
+          <div class="ndo-item">
+            <div class="ndo-buyer">Lender A</div>
+            <div class="ndo-query">"Prove income &gt;$5k/month"</div>
+            <div class="ndo-pay green">+50 NIGHT</div>
+          </div>
+          <div class="ndo-item">
+            <div class="ndo-buyer">Insurer B</div>
+            <div class="ndo-query">"Prove age 25–45, AU resident"</div>
+            <div class="ndo-pay green">+35 NIGHT</div>
+          </div>
+          <div class="ndo-item">
+            <div class="ndo-buyer">Exchange C</div>
+            <div class="ndo-query">"Prove KYC cleared + not PEP"</div>
+            <div class="ndo-pay green">+20 NIGHT</div>
+          </div>
+          <div class="ndo-item">
+            <div class="ndo-buyer">Bank D</div>
+            <div class="ndo-query">"Prove payment history 12mo clean"</div>
+            <div class="ndo-pay green">+40 NIGHT</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:14px;line-height:1.7;background:var(--raised);border-radius:8px;padding:10px 12px;">Each query answered by ZK proof only. Your name, account number, and raw balances are never shared. Businesses get the fact they need. You get paid.</div>
+      </div>
+    </div>
+
+    <!-- THE EQUIFAX MOMENT -->
+    <div class="nid-equifax">
+      <div class="nid-eq-badge">⚠ The Equifax Problem</div>
+      <h2 style="font-size:clamp(22px,4vw,32px);line-height:1.3;margin:16px 0;">In 2017, Equifax was hacked.<br><span style="color:var(--red)">148 million Americans</span> had their SSNs, dates of birth, and home addresses stolen.</h2>
+      <p style="color:var(--muted);font-size:15px;line-height:1.75;max-width:700px;">Equifax paid $700M and kept operating. They still own your financial data. They still sell it. You got nothing — except identity fraud risk for the rest of your life. TransUnion was breached again in July 2025. 4.4 million records. The same story, repeated.</p>
+      <p style="color:var(--text);font-size:15px;line-height:1.75;margin-top:14px;font-weight:600;">Night ID means that data never existed on a central server in the first place. A ZK credential is a mathematical proof — not a data record. There is nothing to steal.</p>
+      <div class="nid-eq-compare">
+        <div class="nid-eq-col bad">
+          <div class="nid-eq-col-title red">EQUIFAX · EXPERIAN · TRANSUNION</div>
+          <div class="nid-eq-item">Stores your full name, DOB, SSN, address</div>
+          <div class="nid-eq-item">Stores complete credit + payment history</div>
+          <div class="nid-eq-item">Sells your data to any paying customer</div>
+          <div class="nid-eq-item">Breached in 2015, 2017, 2025 and more</div>
+          <div class="nid-eq-item">You cannot delete your record</div>
+          <div class="nid-eq-item">1.3 billion unbanked adults excluded</div>
+        </div>
+        <div class="nid-eq-col good">
+          <div class="nid-eq-col-title green">NIGHT ID</div>
+          <div class="nid-eq-item">ZK credential — no raw data stored anywhere</div>
+          <div class="nid-eq-item">Private encrypted vault — only you can access</div>
+          <div class="nid-eq-item">You choose what to share, with whom, when</div>
+          <div class="nid-eq-item">Nothing to breach — no central data store</div>
+          <div class="nid-eq-item">You own and control your record completely</div>
+          <div class="nid-eq-item">Works for anyone with a phone — globally</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="eyebrow">How Night ID works — four steps</div>
+    <div class="nid-steps">
+      <div class="nid-step">
+        <div class="nid-step-num">1</div>
+        <div class="nid-step-title">Verify once</div>
+        <div class="nid-step-desc">A licensed Night Markets KYC partner verifies your identity. Two minutes. Done once, valid forever across every Midnight application. The source document is discarded — only the ZK credential is retained.</div>
+      </div>
+      <div class="nid-step">
+        <div class="nid-step-num">2</div>
+        <div class="nid-step-title">Build your profile</div>
+        <div class="nid-step-desc">Every Night Markets interaction generates Night Score credentials automatically — BNPL payment history, staking duration, dividend receipts, purchase activity. All private. All ZK-provable.</div>
+      </div>
+      <div class="nid-step">
+        <div class="nid-step-num">3</div>
+        <div class="nid-step-title">Prove anything</div>
+        <div class="nid-step-desc">Apply for credit, open an exchange account, pass AML checks, prove age at checkout — using a ZK proof generated in seconds. The verifier receives the fact they need. Nothing else. Ever.</div>
+      </div>
+      <div class="nid-step">
+        <div class="nid-step-num">4</div>
+        <div class="nid-step-title">Earn from your profile</div>
+        <div class="nid-step-desc">Night Data lets institutions query your ZK-anonymised profile for a NIGHT fee. You approve each query. You earn. Your raw data never moves. This is the data economy built the right way.</div>
+      </div>
+    </div>
+
+    <!-- MARKET SIZE -->
+    <div class="eyebrow">The market Night ID disrupts</div>
+    <div class="nid-market-grid">
+      <div class="nid-mkt-item">
+        <div class="nid-mkt-val">$385B</div>
+        <div class="nid-mkt-label">Credit bureau market by 2032</div>
+        <div class="nid-mkt-sub">Equifax · Experian · TransUnion — ripe for disruption</div>
+      </div>
+      <div class="nid-mkt-item">
+        <div class="nid-mkt-val">$45B</div>
+        <div class="nid-mkt-label">Self-sovereign identity by 2032</div>
+        <div class="nid-mkt-sub">Fastest-growing segment in identity technology</div>
+      </div>
+      <div class="nid-mkt-item">
+        <div class="nid-mkt-val">$16B</div>
+        <div class="nid-mkt-label">KYC software market by 2033</div>
+        <div class="nid-mkt-sub">Every regulated institution on earth spends on KYC</div>
+      </div>
+      <div class="nid-mkt-item">
+        <div class="nid-mkt-val">1.3B</div>
+        <div class="nid-mkt-label">Unbanked adults — no financial identity</div>
+        <div class="nid-mkt-sub">Night ID gives every one of them a starting point</div>
+      </div>
+    </div>
+
+    <!-- WHY ONLY MIDNIGHT -->
+    <div class="eyebrow">Why only Midnight can build this</div>
+    <div class="nid-why-grid">
+      <div class="nid-why-item">
+        <div class="nid-why-icon">🔒</div>
+        <div class="nid-why-title">Private state</div>
+        <div class="nid-why-desc">Credentials live in your encrypted vault off-chain. Nothing touches the public ledger except a cryptographic commitment. Every other ZK chain lacks this architecture — your behaviour would be visible.</div>
+      </div>
+      <div class="nid-why-item">
+        <div class="nid-why-icon">⊘</div>
+        <div class="nid-why-title">ZK proof circuits</div>
+        <div class="nid-why-desc">Compact circuits generate proofs of any financial fact — creditworthy, KYC-cleared, income above threshold, asset held for N days — without touching the underlying data at all.</div>
+      </div>
+      <div class="nid-why-item">
+        <div class="nid-why-icon">⚖️</div>
+        <div class="nid-why-title">Regulation-friendly</div>
+        <div class="nid-why-desc">Selective disclosure lets regulators and auditors receive ZK compliance proofs without ever seeing raw data. Midnight was designed for regulated industries — GDPR, HIPAA, AML all provable and private.</div>
+      </div>
+      <div class="nid-why-item">
+        <div class="nid-why-icon">🌐</div>
+        <div class="nid-why-title">Institutional rails already live</div>
+        <div class="nid-why-desc">Google Cloud, MoneyGram, Worldpay, Vodafone Pairpoint and eToro are live Midnight node operators. The identity and payment infrastructure is already connected. Monument Bank is already tokenizing £250M of deposits on it.</div>
+      </div>
+    </div>
+
+    <!-- WAITLIST CTA -->
+    <div class="nid-cta-block">
+      <div class="nid-cta-orb">🪪</div>
+      <h2>Be first to own your financial identity</h2>
+      <p>Night ID is in development. Join the waitlist and we'll reach out when it launches.</p>
+      <div style="display:flex;gap:10px;max-width:420px;margin:28px auto 0;align-items:center;">
+        <input id="nid-email" type="email" placeholder="your@email.com" style="flex:1;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:13px 14px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='var(--glow)'" onblur="this.style.borderColor='var(--rim2)'"/>
+        <button class="btn btn-primary" onclick="nightIdJoin()">Join</button>
+      </div>
+      <div id="nid-join-confirm" style="display:none;font-size:12px;color:var(--green);font-family:var(--mono);margin-top:12px;text-align:center;">✓ You're on the list. We'll reach out when Night ID launches.</div>
+      <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-outline-ink" onclick="showPage('litepaper')">Read the litepaper</button>
+        <button class="btn btn-outline-ink" onclick="showPage('enterprise')">Enterprise Plans</button>
+        <button class="btn btn-outline-ink" onclick="showPage('privacy')">How ZK works</button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 </body>
 
@@ -12244,7 +12657,24 @@ function btcRunShieldProof() {
   }, 900);
 }
 
-
+// ── Night ID ─────────────────────────────────────────────────
+function nightIdJoin(){
+  var email = document.getElementById('nid-email');
+  var confirm = document.getElementById('nid-join-confirm');
+  if(!email) return;
+  if(email.value && email.value.includes('@') && email.value.includes('.')){
+    var row = email.parentElement;
+    if(row) row.style.display = 'none';
+    if(confirm) confirm.style.display = 'block';
+  } else {
+    email.style.borderColor = 'var(--red)';
+    email.placeholder = 'Enter a valid email address';
+    setTimeout(function(){
+      email.style.borderColor = 'var(--rim2)';
+      email.placeholder = 'your@email.com';
+    }, 2000);
+  }
+}
 
 
 

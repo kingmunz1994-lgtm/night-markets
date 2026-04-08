@@ -1,83 +1,99 @@
-# Night Markets — Executive Summary
-**The flagship consumer dApp for Midnight mainnet · Kūkolu phase · April 2026**
+# Night Markets — Executive One-Pager
+**The private financial ecosystem built on Midnight Network**
+**Luke Munro & Tiarna Carter · lukemunro1994@gmail.com · tiarnajc146@gmail.com**
 
 ---
 
-## The Problem
+## The problem in two sentences
 
-Global e-commerce runs on surveillance. Every purchase, every credit check, every payment leaves a permanent data trail that exploits buyers, locks out the 1.4B unbanked, and benefits platforms — not users. Bitcoin millionaires built wealth on a transparent ledger and now have no private way to spend it. Small businesses in the global south have no access to capital without exposing their finances to banks, lawyers, and tax systems that don't serve them.
-
----
-
-## The Solution
-
-**Night Markets** is the privacy-first "Amazon + Shopify" super-app built on Midnight Network. Every flow uses ZK proofs to prove facts without revealing data. Privacy is invisible — users just see faster, cheaper, fairer commerce that pays them to participate.
-
-**Core product:**
-- Unified shopping feed + customizable seller mini-stores
-- ZK-BNPL — Pay-in-4 with zero credit check, zero data shared
-- Merch & Business Token launchpad — automatic payback dividends from sales revenue
-- Staking "savings account" — NIGHT generates DUST for near-zero fees + real yield from platform revenue
-- Opt-in paid data sharing — ZK-aggregated, user-controlled
-- Private remittances & bill pay — via Midnight partners (MoneyGram, Worldpay)
-- Bitcoin on-ramp — one-tap BTC → shielded NIGHT vault
+Equifax, Experian, and TransUnion own your financial identity — and they've been hacked repeatedly (148 million records stolen in 2017 alone; 4.4 million more in TransUnion's July 2025 breach). 1.3 billion adults have no financial identity at all. The entire global credit system is broken, centralised, and catastrophically insecure.
 
 ---
 
-## RWA Extensions (the Monument Bank bridge to consumers)
+## The solution: Night Markets — a private financial ecosystem
 
-Midnight just tokenized £250M in retail deposits with Monument Bank. Night Markets extends that institutional momentum to street level:
-- **Business Tokens** — any seller tokenizes revenue with automatic ZK-verified payback dividends
-- **Invoice Tokens** — unlock unpaid invoices as immediate liquidity
-- **Wage Advance Tokens** — workers tokenize future Night Markets earnings
-- **Community Co-op Tokens** — artisan groups raise capital collectively
+Night Markets is the world's first **private financial ecosystem** on Midnight Network — the only blockchain that can hold private state AND generate ZK proofs of financial facts without exposing the underlying data. It is not a marketplace. It is a new financial operating system where everyone earns, nothing is shared, and everything is provable.
 
 ---
 
-## The "Everyone Earns" Flywheel
+## The ultimate use case: Night ID
+
+**Night ID** replaces the credit bureau system with zero-knowledge credentials owned entirely by the user:
+
+- **KYC once** → ZK credential valid everywhere on Midnight, forever. The raw document is discarded — only the ZK proof is retained.
+- **Night Score** — private credit score built automatically from on-chain behaviour: BNPL payments, staking, dividends, purchase history
+- **Night Data** — earn NIGHT when institutions query your ZK-anonymised profile. You approve every query. Raw data never leaves your vault.
+
+A lender asks: *"Is this person creditworthy, over 18, KYC-cleared, not sanctioned?"* Night ID answers: ✓ ✓ ✓ ✓. The name, passport, address, and exact income are never disclosed. There is no central database to breach.
+
+**Markets disrupted:** $385B credit bureau industry + $45B SSI market + $16B KYC software + 1.3B unbanked given a financial identity from day one.
+
+---
+
+## The full ecosystem — six live products
+
+| Product | What it does |
+|---|---|
+| **Night ID** | ZK financial identity — KYC once, private Night Score, Night Data earnings |
+| **Night Shop** | ZK marketplace with BNPL on every listing — no credit check, no data shared |
+| **Business Token** | Any seller launches a revenue-sharing token with automatic ZK dividend payback |
+| **Enterprise Plans** | Stake NIGHT once → generate DUST → $0 transfer fees forever (vs. $M/year to Stripe/SWIFT) |
+| **Bitcoin Vault** | One-tap BTC → shielded NIGHT vault — the private spending layer Bitcoin holders need |
+| **Night Save** | Stake NIGHT, generate DUST, earn real yield from platform revenue |
+
+---
+
+## The "Everyone Earns" flywheel
 
 ```
-More GMV → more platform fees → higher NIGHT staking APY → more DUST capacity
-→ near-zero fees for users → more GMV
+More users → more DUST consumed → higher NIGHT demand → higher Night Save yield
+→ more stakers → more DUST capacity → near-zero fees → more users
 ```
 
-- **Buyers** earn cashback + dividends + data rewards
-- **Sellers** get instant capital via tokens + lower effective fees
-- **Stakers** earn real yield from platform activity (not inflation)
-- **Midnight ecosystem** gets DUST consumption + real GMV on mainnet
+Buyers earn cashback + dividends + Night Score. Sellers earn capital + token investors. Enterprises eliminate $M/year in fees. Stakers earn yield. Everyone earns. Nothing is shared.
 
 ---
 
-## Why Midnight · Why Now
+## Why only Midnight
 
-- Mainnet launched March 30 2026 (Kūkolu federated phase)
-- Deployed Compact contract: `7473b82b398f6b86…` — 6 circuits live on Preprod
-- Rational privacy via ZK-SNARKs — prove eligibility, dividends, collateral, compliance without exposing raw data
-- DUST self-funding — platform fees → NIGHT staker yield → renewable DUST → "free" user transactions
-- Tiered ZK-KYC + auditor escrow — regulators get what they need; users keep everything else private
-- Node operators already in place: Google Cloud, MoneyGram, Worldpay, Vodafone Pairpoint, eToro
+Every other ZK chain fails for this use case:
+- **Ethereum/Polygon** — public chain, financial behaviour visible
+- **Aztec** — privacy-first but not regulation-friendly (no compliant selective disclosure)
+- **Worldcoin** — proof of humanity only, no financial data layer
+- **Polygon ID** — ZK proofs only, no off-chain private state native to the chain
 
----
+Midnight has **both** private state (data lives in your vault, never on-chain) **and** ZK circuits (prove facts without revealing data) **and** regulatory-friendly selective disclosure for AML/KYC compliance. Nobody else has all three.
 
-## Market
-
-- $6.3T global e-commerce TAM (2026)
-- 1.4B unbanked adults — mobile-first, no bank account
-- $700B+ cross-border remittance volume
-- Growing RWA tokenization wave — Midnight is already institutional-grade
+**Node operators:** Google Cloud, MoneyGram, Worldpay, Vodafone Pairpoint, eToro.
+**Monument Bank** tokenized **£250M** of retail deposits on Midnight, March 25, 2026 — first FSCS-protected tokenized deposits on a public blockchain.
 
 ---
 
-## The Ask
+## What's already built
 
-**Acquisition / Accelerator partnership + co-build resources** for a 90-day pilot in Nigeria/Kenya targeting 1,000 sellers and 10,000 buyers. Asking price: **A$250,000** (negotiable; NIGHT/ADA/USD accepted).
+- ✅ Compact contract deployed — block 127,350, 6 circuits, Preprod mainnet
+- ✅ Night ID Compact contract — 7 circuits (issueCredential, proveIdentity, proveScore, proveIncomeRange, recordScoreEvent, revokeCredential, authorizeDataQuery)
+- ✅ Lace wallet integration (DApp Connector v4 — real ZK signing)
+- ✅ 40+ UI pages including Night ID, Enterprise ROI calculator, Business Token launchpad, BTC on-ramp
+- ✅ Ecosystem Vision (100+ ZK use cases), Night ID waitlist live
+- ✅ Litepaper, Tokenomics, Press Kit, 90-day Nigeria/Kenya pilot plan
 
-Also applying: Outlier Ventures PETs accelerator · Midnight ecosystem grant · Cardano Project Catalyst
-
----
-
-**Team:** Luke Munro — Co-Founder & CEO · Tiarna Carter — Co-Founder & Creative Director
-
-**Live site:** https://kingmunz1994-lgtm.github.io/night-markets/
+**Live:** https://kingmunz1994-lgtm.github.io/night-markets/
 **GitHub:** https://github.com/kingmunz1994-lgtm/night-markets
-**Contact:** lukemunro1994@gmail.com · tiarnajc146@gmail.com
+
+---
+
+## The ask
+
+**Strategic acquisition:** A$250,000 — covers the full 90-day Nigeria/Kenya pilot (1,000 sellers, $500k GMV, 50 Business Tokens live) with buffer for Month 4.
+
+**Midnight Foundation / Outlier Ventures PETs:** Grant or accelerator funding to complete Night ID circuit audit, deploy to mainnet, and launch the pilot.
+
+**Enterprise clients:** Send your monthly transaction volume and current fee rate — we return your exact savings calculation within 24 hours.
+
+---
+
+**Luke Munro — Co-Founder & CEO · Tiarna Carter — Co-Founder**
+lukemunro1994@gmail.com
+
+*Midnight Network mainnet live March 30, 2026. NIGHT token ~$700M market cap. Node operators include Google Cloud, MoneyGram, Worldpay, Vodafone Pairpoint, eToro.*
