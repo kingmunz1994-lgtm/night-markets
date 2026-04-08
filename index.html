@@ -2006,6 +2006,36 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .btc-proof-step{font-size:11px;font-family:var(--mono);color:var(--muted);padding:5px 0;transition:color .3s;}
 .btc-proof-step.done{color:var(--green);}
 .btc-proof-step.done::first-letter{content:'✓';}
+/* ══ ENTERPRISE PAGE ══ */
+#page-enterprise .page-inner{max-width:1000px;margin:0 auto;padding:60px 24px;}
+.ent-hero{text-align:center;margin-bottom:56px;}
+.ent-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:40px;}
+.ent-plan{background:var(--card);border:1px solid var(--rim2);border-radius:18px;padding:24px;position:relative;transition:border-color .3s,transform .2s;}
+.ent-plan:hover{border-color:var(--glow);transform:translateY(-2px);}
+.ent-plan.featured{border-color:var(--glow);background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(0,0,0,0));}
+.ent-plan.featured::before{content:'MOST POPULAR';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--glow);color:#fff;font-size:9px;font-weight:800;font-family:var(--mono);padding:3px 10px;border-radius:20px;letter-spacing:1px;}
+.ent-plan-name{font-size:13px;font-weight:800;margin-bottom:4px;}
+.ent-plan-night{font-size:26px;font-weight:900;font-family:var(--mono);color:var(--glow);margin-bottom:2px;}
+.ent-plan-usd{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:14px;}
+.ent-plan-coverage{font-size:12px;color:var(--green);font-weight:700;margin-bottom:4px;}
+.ent-plan-saving{font-size:11px;color:var(--muted);margin-bottom:16px;}
+.ent-plan-features{font-size:11px;color:var(--muted);line-height:2;font-family:var(--mono);}
+.ent-plan-features div::before{content:'✓ ';color:var(--green);}
+.ent-calc{background:var(--raised);border:1px solid var(--rim2);border-radius:18px;padding:28px;margin-bottom:32px;}
+.ent-calc-title{font-size:15px;font-weight:800;margin-bottom:20px;}
+.ent-calc-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.ent-calc-label{font-size:12px;color:var(--muted);min-width:180px;}
+.ent-calc-input{background:var(--card2);border:1px solid var(--rim2);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:700;font-family:var(--mono);color:var(--txt);width:160px;}
+.ent-calc-result{background:linear-gradient(135deg,rgba(0,214,143,.08),rgba(0,0,0,0));border:1px solid rgba(0,214,143,.2);border-radius:14px;padding:20px;margin-top:16px;}
+.ent-saving-num{font-size:36px;font-weight:900;font-family:var(--mono);color:var(--green);}
+.ent-payback{font-size:13px;color:var(--muted);margin-top:6px;}
+.ent-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:40px;}
+.ent-step{background:var(--card);border:1px solid var(--rim2);border-radius:14px;padding:20px;text-align:center;}
+.ent-step-num{width:32px;height:32px;background:var(--glow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;margin:0 auto 12px;}
+.ent-step-title{font-size:12px;font-weight:800;margin-bottom:6px;}
+.ent-step-desc{font-size:11px;color:var(--muted);line-height:1.7;}
+.ent-secret{background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(6,182,212,.04));border:1px solid rgba(124,58,237,.25);border-radius:18px;padding:28px;margin-bottom:32px;}
+
 .btc-input{width:100%;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:13px 14px;font-size:16px;color:var(--text);font-family:var(--mono);outline:none;box-sizing:border-box;text-align:center;font-weight:700;}
 .btc-input:focus{border-color:var(--gold);}
 .btc-rate-row{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);padding:6px 0;border-bottom:1px solid var(--rim);}
@@ -2370,6 +2400,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="ndm-item" onclick="showPage('press');closeAllNavDrops()">📰 Press Kit</div>
           <div class="ndm-item" onclick="showPage('ecosystem-vision');closeAllNavDrops()">🌐 Ecosystem Vision</div>
           <div class="ndm-item" onclick="showPage('biztoken');closeAllNavDrops()">🏢 Business Tokens</div>
+          <div class="ndm-item" onclick="showPage('enterprise');closeAllNavDrops()" style="color:var(--glow);">💼 Enterprise Plans</div>
           <div class="ndm-sep"></div>
           <div class="ndm-item" onclick="showPage('privacy');closeAllNavDrops()">⊘ ZK Privacy</div>
           <div class="ndm-item" onclick="showPage('midnight');closeAllNavDrops()">🌑 About Midnight</div>
@@ -7379,6 +7410,194 @@ document.addEventListener('click',function(e){
   </div>
 </div>
 
+<!-- ══════════════ ENTERPRISE ══════════════ -->
+<div class="page" id="page-enterprise">
+  <div class="page-inner">
+    <!-- Hero -->
+    <div class="ent-hero">
+      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(124,58,237,.08);color:var(--glow);border-color:rgba(124,58,237,.2);">🏢 Midnight Enterprise — For businesses paying millions in transfer fees</span></div>
+      <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:14px;">Stake once.<br><em>Transfer free. Forever.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:600px;margin:0 auto;line-height:1.8;font-weight:300;">Any company that holds enough NIGHT generates DUST automatically — the fuel for private, near-zero-cost transactions on Midnight Network. You paid your transfer fees last year. You don't have to pay them again.</p>
+    </div>
+
+    <!-- The CFO numbers -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">The three numbers your CFO cares about</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px;">
+      <div style="background:var(--card);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:22px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;">WHAT YOU PAID LAST YEAR</div>
+        <div style="font-size:28px;font-weight:900;font-family:var(--mono);color:var(--red);" id="ent-old-fees">$3,480,000</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Stripe/PayPal/SWIFT fees @ 2.9%</div>
+      </div>
+      <div style="background:var(--card);border:1px solid rgba(0,214,143,.2);border-radius:14px;padding:22px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;">WHAT YOU PAY WITH MIDNIGHT</div>
+        <div style="font-size:28px;font-weight:900;font-family:var(--mono);color:var(--green);">~$0</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">DUST generated by your NIGHT stake</div>
+      </div>
+      <div style="background:var(--card);border:1px solid rgba(245,197,24,.2);border-radius:14px;padding:22px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;">NIGHT STAKE COST TODAY</div>
+        <div style="font-size:28px;font-weight:900;font-family:var(--mono);color:var(--gold);" id="ent-stake-cost">$42,000</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">1M NIGHT @ $0.042 · one-time</div>
+      </div>
+    </div>
+
+    <!-- ROI Calculator -->
+    <div class="ent-calc">
+      <div class="ent-calc-title">💰 Calculate your savings</div>
+      <div class="ent-calc-row">
+        <div class="ent-calc-label">Monthly transaction volume ($)</div>
+        <input class="ent-calc-input" id="ent-volume" type="number" value="1000000" oninput="entCalc()"/>
+      </div>
+      <div class="ent-calc-row">
+        <div class="ent-calc-label">Current fee rate (%)</div>
+        <input class="ent-calc-input" id="ent-rate" type="number" value="2.9" step="0.1" oninput="entCalc()"/>
+      </div>
+      <div class="ent-calc-result" id="ent-result">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;">
+          <div><div class="ent-saving-num" id="ent-monthly-save">$29,000</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);">saved per month</div></div>
+          <div><div class="ent-saving-num" id="ent-annual-save">$348,000</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);">saved per year</div></div>
+          <div><div class="ent-saving-num" id="ent-payback-mo" style="color:var(--gold);">1.4 mo</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);">stake payback period</div></div>
+        </div>
+        <div class="ent-payback" id="ent-plan-rec">→ Recommended plan: <strong>Business (500k NIGHT)</strong></div>
+      </div>
+    </div>
+
+    <!-- Plans -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">Enterprise plans — stake once, transfer free forever</div>
+    <div class="ent-plans">
+      <div class="ent-plan">
+        <div class="ent-plan-name">Starter</div>
+        <div class="ent-plan-night">100,000 NIGHT</div>
+        <div class="ent-plan-usd">~$4,200 at today's price</div>
+        <div class="ent-plan-coverage">~$500k/month coverage</div>
+        <div class="ent-plan-saving">Replaces ~$174k/year in fees</div>
+        <div class="ent-plan-features">
+          <div>DUST auto-generation</div>
+          <div>ZK private transfers</div>
+          <div>Night Markets wallet setup</div>
+          <div>30-day onboarding support</div>
+        </div>
+        <button class="btn btn-outline-ink" onclick="entContact('Starter')" style="width:100%;margin-top:16px;padding:10px;font-size:12px;">Get started →</button>
+      </div>
+      <div class="ent-plan featured">
+        <div class="ent-plan-name">Business</div>
+        <div class="ent-plan-night">500,000 NIGHT</div>
+        <div class="ent-plan-usd">~$21,000 at today's price</div>
+        <div class="ent-plan-coverage">~$2.5M/month coverage</div>
+        <div class="ent-plan-saving">Replaces ~$870k/year in fees</div>
+        <div class="ent-plan-features">
+          <div>Everything in Starter</div>
+          <div>Custom wallet configuration</div>
+          <div>Compliance ZK reports</div>
+          <div>90-day dedicated support</div>
+          <div>Night Markets seller store</div>
+        </div>
+        <button class="btn btn-primary" onclick="entContact('Business')" style="width:100%;margin-top:16px;padding:10px;font-size:12px;">Get started →</button>
+      </div>
+      <div class="ent-plan">
+        <div class="ent-plan-name">Enterprise</div>
+        <div class="ent-plan-night">1,000,000 NIGHT</div>
+        <div class="ent-plan-usd">~$42,000 at today's price</div>
+        <div class="ent-plan-coverage">~$5M/month coverage</div>
+        <div class="ent-plan-saving">Replaces ~$1.74M/year in fees</div>
+        <div class="ent-plan-features">
+          <div>Everything in Business</div>
+          <div>White-glove integration</div>
+          <div>Custom ZK compliance setup</div>
+          <div>Dedicated account manager</div>
+          <div>API access + webhooks</div>
+        </div>
+        <button class="btn btn-outline-ink" onclick="entContact('Enterprise')" style="width:100%;margin-top:16px;padding:10px;font-size:12px;">Get started →</button>
+      </div>
+      <div class="ent-plan">
+        <div class="ent-plan-name">Custom</div>
+        <div class="ent-plan-night">Unlimited</div>
+        <div class="ent-plan-usd">Calculated on request</div>
+        <div class="ent-plan-coverage">Unlimited coverage</div>
+        <div class="ent-plan-saving">Built around your volume</div>
+        <div class="ent-plan-features">
+          <div>Everything in Enterprise</div>
+          <div>Custom NIGHT stake sizing</div>
+          <div>Multi-entity setup</div>
+          <div>Regulatory sandbox support</div>
+          <div>Co-development option</div>
+        </div>
+        <button class="btn btn-outline-ink" onclick="entContact('Custom')" style="width:100%;margin-top:16px;padding:10px;font-size:12px;">Talk to us →</button>
+      </div>
+    </div>
+
+    <!-- The secret sauce -->
+    <div class="ent-secret">
+      <div style="font-size:15px;font-weight:800;margin-bottom:16px;">⊘ The secret sauce — why this works and why competitors can't copy it</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--glow);margin-bottom:8px;">1. DUST is automatic</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;font-weight:300;">Midnight's tokenomics mean NIGHT holders generate DUST continuously — like a battery that recharges itself. No per-transaction billing. No monthly subscription. No hidden fees. Stake once, generate DUST forever.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--cyan);margin-bottom:8px;">2. Privacy is built-in by default</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;font-weight:300;">Every transfer on Midnight is ZK-private. Stripe sees every transaction. PayPal builds profiles on your customers. Midnight sees nothing — your transfer data never touches a public ledger. Competitors cannot offer this. Ever.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px;">3. Compliance without exposure</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;font-weight:300;">Regulators and auditors get ZK proofs — cryptographic confirmation that transfers happened, amounts were correct, and rules were followed. Without seeing the actual transaction data. HIPAA, GDPR, AML — all provable, all private.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px;">4. Night Markets handles the whole thing</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;font-weight:300;">You don't need to understand Midnight, Compact, wallets, or ZK proofs. We set it up, configure your stake, connect your payment flows, and hand you a dashboard. It just works — and your fees just disappear.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works steps -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">How it works — 4 steps</div>
+    <div class="ent-steps">
+      <div class="ent-step">
+        <div class="ent-step-num">1</div>
+        <div class="ent-step-title">Pick your plan</div>
+        <div class="ent-step-desc">We calculate how much NIGHT you need based on your monthly transaction volume. You pick a plan or we size a custom stake.</div>
+      </div>
+      <div class="ent-step">
+        <div class="ent-step-num">2</div>
+        <div class="ent-step-title">Acquire NIGHT</div>
+        <div class="ent-step-desc">Buy NIGHT via our partner exchanges or we facilitate an OTC purchase. NIGHT price today: ~$0.042. One-time cost.</div>
+      </div>
+      <div class="ent-step">
+        <div class="ent-step-num">3</div>
+        <div class="ent-step-title">We configure everything</div>
+        <div class="ent-step-desc">Night Markets sets up your Midnight wallet, stakes your NIGHT, connects your payment flows, and configures ZK compliance reports.</div>
+      </div>
+      <div class="ent-step">
+        <div class="ent-step-num">4</div>
+        <div class="ent-step-title">Transfer free. Forever.</div>
+        <div class="ent-step-desc">DUST generates automatically. Your transactions run privately on Midnight. Your old fees stop. Your CFO is happy.</div>
+      </div>
+    </div>
+
+    <!-- Who this is for -->
+    <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Who this is for</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px;">
+      <div style="background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;">💳 Payment processors</div>
+      <div style="background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;">🌍 Remittance companies</div>
+      <div style="background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;">🏪 High-volume marketplaces</div>
+      <div style="background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;">🏢 Cross-border B2B payments</div>
+      <div style="background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;">🏦 Payroll processors</div>
+      <div style="background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;">📈 Crypto exchanges</div>
+      <div style="background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;">🏥 Healthcare billing</div>
+      <div style="background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;">⚖️ Legal escrow services</div>
+    </div>
+
+    <!-- CTA -->
+    <div style="background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(0,0,0,0));border:1px solid rgba(124,58,237,.25);border-radius:18px;padding:32px;text-align:center;">
+      <div style="font-size:18px;font-weight:800;margin-bottom:8px;">Ready to stop paying transfer fees?</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Send us your monthly transaction volume. We'll calculate your NIGHT stake size and exact savings — free, no obligation.</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <a href="mailto:lukemunro1994@gmail.com?subject=Enterprise%20Midnight%20Enquiry&body=Hi%2C%20I%27m%20interested%20in%20the%20Midnight%20Enterprise%20plan.%20Our%20monthly%20transaction%20volume%20is%3A%20%0A%0AOur%20current%20fee%20rate%20is%3A%20" style="display:inline-flex;align-items:center;gap:8px;background:var(--glow);border:none;border-radius:10px;padding:13px 24px;font-size:13px;font-weight:700;color:#fff;text-decoration:none;">📧 Get my savings calculation</a>
+        <button class="btn btn-outline-ink" onclick="showPage('acquire')" style="padding:13px 24px;font-size:13px;">View acquisition details →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════ VISION ══════════════ -->
 <div class="page" id="page-vision">
   <div class="page-inner" style="padding-top:0;max-width:100%;padding-left:0;padding-right:0;">
@@ -7777,6 +7996,7 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showPage('press');closeMobNav()" style="color:var(--green);">📰 Press Kit</button>
   <button class="mob-nav-item" onclick="showPage('ecosystem-vision');closeMobNav()" style="color:var(--cyan);">🌐 Ecosystem Vision</button>
   <button class="mob-nav-item" onclick="showPage('biztoken');closeMobNav()" style="color:var(--gold);">🏢 Business Tokens</button>
+  <button class="mob-nav-item" onclick="showPage('enterprise');closeMobNav()" style="color:var(--glow);">💼 Enterprise Plans</button>
   <button class="mob-nav-item" onclick="showPage('privacy');closeMobNav()">⊘ ZK Privacy</button>
   <button class="mob-nav-item" onclick="showPage('midnight');closeMobNav()">🌑 Midnight</button>
   <button class="mob-nav-item" onclick="showPage('vision');closeMobNav()">🌍 Vision</button>
@@ -11670,6 +11890,51 @@ function ncSend() {
     ncSelectThread(ncActive);
   }, 1200);
 }
+
+// ══════════════════════════════════════════════════════════════
+// ENTERPRISE PAGE — ROI calculator + contact
+// ══════════════════════════════════════════════════════════════
+var NIGHT_PRICE = 0.042;
+var DUST_PER_NIGHT_MONTH = 0.0005; // approximate DUST generated per NIGHT per month
+
+function entCalc() {
+  var vol  = parseFloat(document.getElementById('ent-volume').value)  || 1000000;
+  var rate = parseFloat(document.getElementById('ent-rate').value)    || 2.9;
+
+  var monthlyFee = vol * (rate / 100);
+  var annualFee  = monthlyFee * 12;
+
+  // Recommend plan based on volume
+  var nightNeeded, planName, stakeUsd;
+  if(vol <= 500000)         { nightNeeded = 100000;  planName = 'Starter (100k NIGHT)'; }
+  else if(vol <= 2500000)   { nightNeeded = 500000;  planName = 'Business (500k NIGHT)'; }
+  else if(vol <= 5000000)   { nightNeeded = 1000000; planName = 'Enterprise (1M NIGHT)'; }
+  else                      { nightNeeded = Math.ceil(vol / 5000) * 1000; planName = 'Custom'; }
+
+  stakeUsd = nightNeeded * NIGHT_PRICE;
+  var paybackMonths = stakeUsd / monthlyFee;
+
+  // Update display
+  var fmt = function(n){ return '$' + Math.round(n).toLocaleString(); };
+  var el = function(id){ return document.getElementById(id); };
+
+  if(el('ent-monthly-save')) el('ent-monthly-save').textContent = fmt(monthlyFee);
+  if(el('ent-annual-save'))  el('ent-annual-save').textContent  = fmt(annualFee);
+  if(el('ent-payback-mo'))   el('ent-payback-mo').textContent   = paybackMonths.toFixed(1) + ' mo';
+  if(el('ent-stake-cost'))   el('ent-stake-cost').textContent   = fmt(stakeUsd);
+  if(el('ent-old-fees'))     el('ent-old-fees').textContent     = fmt(annualFee);
+  if(el('ent-plan-rec'))     el('ent-plan-rec').innerHTML       = '→ Recommended plan: <strong>' + planName + '</strong>';
+}
+
+function entContact(plan) {
+  var vol  = document.getElementById('ent-volume') ? document.getElementById('ent-volume').value : '1000000';
+  var subject = encodeURIComponent('Midnight Enterprise Enquiry — ' + plan + ' Plan');
+  var body    = encodeURIComponent('Hi,\n\nI\'m interested in the ' + plan + ' Midnight Enterprise plan.\n\nMonthly transaction volume: $' + parseInt(vol).toLocaleString() + '\n\nPlease send me a savings calculation.\n\nThanks');
+  window.location.href = 'mailto:lukemunro1994@gmail.com?subject=' + subject + '&body=' + body;
+}
+
+// Init calculator on page load
+document.addEventListener('DOMContentLoaded', function(){ entCalc(); });
 
 // ── LANGUAGE SYSTEM — wire in ─────────────────
 // Auto-detect browser language on first load
