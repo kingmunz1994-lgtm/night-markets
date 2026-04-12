@@ -207,6 +207,93 @@ GitHub: https://github.com/kingmunz1994-lgtm/night-markets
 
 ---
 
+## 8. MoneyGram — Night ID KYC Issuer Proposal
+
+**To:** partnerships@moneygram.com / business@moneygram.com
+**Subject:** Night ID × MoneyGram — ZK identity credential partnership on Midnight Network
+
+```
+Hi MoneyGram Partnerships team,
+
+MoneyGram is already running a Midnight Network node. I'm building Night ID —
+the ZK financial identity layer for Midnight — and I'd like to propose MoneyGram
+as the launch KYC issuer.
+
+The model is simple:
+- MoneyGram verifies identity once using your existing KYC/AML infrastructure
+- Midnight generates a ZK credential stored in the user's private vault
+- The user never needs to re-verify anywhere on the Midnight ecosystem again
+- Every credential issued and every proof generated consumes DUST on your node
+
+Why this matters for MoneyGram:
+1. Your node earns from every Night ID credential issuance and verification
+2. You become the identity anchor for the fastest-growing privacy blockchain ecosystem
+3. The pilot corridor (Nigeria → Kenya) is your #1 remittance route — users who get
+   a Night ID through MoneyGram can use it to send remittances with near-zero fees
+   via Night Markets, replacing 6.49% average fees with DUST-funded transactions
+4. Headline: "MoneyGram issues first reusable ZK identity credential in sub-Saharan Africa"
+
+Night Markets has a live Compact contract on Midnight Preprod, 40+ pages built,
+Lace wallet integration, and a 90-day Nigeria/Kenya pilot plan ready to execute.
+
+Night ID ZK contract: github.com/kingmunz1994-lgtm/night-markets/pitch/night-id-credential.compact
+Live site: https://kingmunz1994-lgtm.github.io/night-markets/
+
+I'd love 20 minutes to walk you through the technical integration and commercial model.
+
+Luke Munro — Co-Founder, Night Markets
+lukemunro1994@gmail.com
+```
+
+---
+
+## 9. Monument Bank — Night ID Launch Partner Proposal
+
+**To:** hello@monumentbank.co.uk / partnerships@monumentbank.co.uk
+**Subject:** Night ID × Monument Bank — The next step after the £250M Midnight tokenization
+
+```
+Hi Monument Bank team,
+
+Congratulations on the £250M tokenized deposit announcement with Midnight —
+that's a landmark moment for the entire ecosystem.
+
+I'm building Night Markets, the consumer application layer on top of Midnight,
+and I'd like to propose Monument Bank as the Night ID launch partner.
+
+You've already proved that Midnight works for regulated institutional finance.
+Night ID is the next logical step: extending that trust to the individual user.
+
+The proposition:
+- Monument Bank verifies identity using your existing FCA-regulated KYC process
+- Midnight issues a ZK credential to the user — private vault, never on-chain
+- Monument Bank customers get a Night ID that works across every Midnight app
+- Monument Bank becomes the identity anchor for the Midnight consumer ecosystem
+
+Why Monument Bank is the right partner:
+1. You're already on Midnight — zero new blockchain infrastructure needed
+2. You're FCA-regulated — Night ID credentials issued by Monument Bank carry
+   the highest trust level in the UK market
+3. It extends your £250M institutional story to the retail level:
+   "Monument Bank — the bank that brought regulated ZK identity to everyday users"
+4. Your FSCS-protected deposit holders get Night ID as a value-add product
+   included with their existing Monument relationship
+
+This doesn't require Monument Bank to change anything about how you operate.
+Your KYC process stays exactly as it is — we simply generate a ZK credential
+from the result, with the raw data staying in your control.
+
+Live site: https://kingmunz1994-lgtm.github.io/night-markets/
+Night ID page: click "Discover" → "Night ID — ZK Identity"
+
+Would love 20 minutes with whoever led the Midnight partnership on your side.
+
+Luke Munro — Co-Founder, Night Markets
+lukemunro1994@gmail.com
+```
+
+---
+
 ## 7. Acquire.com Listing
 
 **Category:** Developer Tools / Web3

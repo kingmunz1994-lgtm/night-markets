@@ -2111,6 +2111,16 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .nid-why-icon{font-size:24px;margin-bottom:12px;}
 .nid-why-title{font-size:14px;font-weight:800;margin-bottom:8px;}
 .nid-why-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+.nid-partner-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:8px;}
+.nid-partner-card{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:22px;transition:border-color .2s;}
+.nid-partner-card:hover{border-color:var(--glow);}
+.nid-partner-primary{border-color:rgba(0,255,136,.2);background:rgba(0,255,136,.03);}
+.nid-partner-primary:hover{border-color:var(--green);}
+.nid-partner-logo{font-size:18px;font-weight:900;margin-bottom:8px;}
+.nid-partner-type{display:inline-block;margin-bottom:10px;}
+.nid-partner-desc{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px;}
+.nid-partner-why{font-size:11px;color:var(--muted);font-family:var(--mono);background:var(--raised);border-radius:8px;padding:8px 10px;line-height:1.6;}
+.nid-partner-why strong{color:var(--text);}
 .nid-cta-block{text-align:center;background:linear-gradient(135deg,rgba(0,0,254,.08),rgba(6,182,212,.04));border:1px solid rgba(0,0,254,.2);border-radius:22px;padding:48px 32px;margin:0 0 60px;}
 .nid-cta-orb{font-size:40px;margin-bottom:16px;}
 .nid-cta-block h2{font-size:28px;margin-bottom:12px;}
@@ -8719,6 +8729,64 @@ document.addEventListener('click',function(e){
         <div class="nid-why-icon">🌐</div>
         <div class="nid-why-title">Institutional rails already live</div>
         <div class="nid-why-desc">Google Cloud, MoneyGram, Worldpay, Vodafone Pairpoint and eToro are live Midnight node operators. The identity and payment infrastructure is already connected. Monument Bank is already tokenizing £250M of deposits on it.</div>
+      </div>
+    </div>
+
+    <!-- KYC PARTNERS -->
+    <div class="eyebrow">Night ID issuers — who verifies the identity</div>
+    <p style="font-size:14px;color:var(--muted);max-width:700px;line-height:1.75;margin:0 0 28px;">Night ID needs a licensed KYC issuer to verify documents before the ZK credential is generated. The ideal partners are already running Midnight nodes — or purpose-built for blockchain identity.</p>
+
+    <div class="eyebrow" style="font-size:10px;margin-bottom:12px;">MIDNIGHT NODE OPERATORS — NATURAL ISSUERS</div>
+    <div class="nid-partner-grid">
+      <div class="nid-partner-card nid-partner-primary">
+        <div class="nid-partner-logo">MoneyGram</div>
+        <div class="nid-partner-type tag tag-green" style="font-size:9px;">● MIDNIGHT NODE OPERATOR</div>
+        <div class="nid-partner-desc">Licensed in 200+ countries. Full global KYC/AML infrastructure. Already running a Midnight node. MoneyGram as the Night ID issuer means instant global coverage — any adult with a phone and ID can get a Night ID credential.</div>
+        <div class="nid-partner-why"><strong>Why they'd say yes:</strong> Night ID drives DUST usage on their node and creates a new revenue stream from credential issuance fees.</div>
+      </div>
+      <div class="nid-partner-card nid-partner-primary">
+        <div class="nid-partner-logo">Monument Bank</div>
+        <div class="nid-partner-type tag tag-green" style="font-size:9px;">● FCA-REGULATED · £250M ON MIDNIGHT</div>
+        <div class="nid-partner-desc">UK FCA-regulated challenger bank. Already tokenized £250M of retail deposits on Midnight (March 2026). First bank globally to put FSCS-protected deposits on a public blockchain — the obvious partner to issue the first regulated Night ID credentials.</div>
+        <div class="nid-partner-why"><strong>Why they'd say yes:</strong> Night ID for their own customers is a natural extension. It positions Monument Bank as the identity anchor of the Midnight ecosystem.</div>
+      </div>
+      <div class="nid-partner-card nid-partner-primary">
+        <div class="nid-partner-logo">Worldpay</div>
+        <div class="nid-partner-type tag tag-green" style="font-size:9px;">● MIDNIGHT NODE OPERATOR</div>
+        <div class="nid-partner-desc">Global payment processor with existing KYC pipelines for merchant onboarding. Night ID for business verification — proving a seller is a legitimate registered entity — is a perfect enterprise fit alongside the Enterprise Plans product.</div>
+        <div class="nid-partner-why"><strong>Why they'd say yes:</strong> Enterprise Plans + Night ID = full business onboarding suite. Worldpay captures both the payment fees they're replacing and the credential layer above them.</div>
+      </div>
+    </div>
+
+    <div class="eyebrow" style="font-size:10px;margin:32px 0 12px;">BLOCKCHAIN-NATIVE KYC PROVIDERS — READY TO INTEGRATE</div>
+    <div class="nid-partner-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+      <div class="nid-partner-card">
+        <div class="nid-partner-logo" style="font-size:14px;">Fractal ID</div>
+        <div class="nid-partner-type tag tag-ink" style="font-size:9px;">WEB3-NATIVE KYC</div>
+        <div class="nid-partner-desc" style="font-size:11px;">Purpose-built on-chain KYC for DeFi. Already issues reusable verifiable credentials. Closest technical fit for Night ID's credential model.</div>
+      </div>
+      <div class="nid-partner-card">
+        <div class="nid-partner-logo" style="font-size:14px;">Blockpass</div>
+        <div class="nid-partner-type tag tag-ink" style="font-size:9px;">REUSABLE IDENTITY</div>
+        <div class="nid-partner-desc" style="font-size:11px;">Reusable on-chain identity for blockchain compliance. Single verification, reused across multiple platforms — exactly the Night ID model.</div>
+      </div>
+      <div class="nid-partner-card">
+        <div class="nid-partner-logo" style="font-size:14px;">Civic</div>
+        <div class="nid-partner-type tag tag-ink" style="font-size:9px;">WEB3 IDENTITY</div>
+        <div class="nid-partner-desc" style="font-size:11px;">Web3 identity verification with existing credential infrastructure. Already crypto-familiar and ZK-aligned.</div>
+      </div>
+      <div class="nid-partner-card">
+        <div class="nid-partner-logo" style="font-size:14px;">Synaps</div>
+        <div class="nid-partner-type tag tag-ink" style="font-size:9px;">CRYPTO KYC/AML</div>
+        <div class="nid-partner-desc" style="font-size:11px;">KYC/AML built specifically for crypto exchanges. Fast integration, familiar with blockchain credential flows.</div>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--rim2);border-radius:14px;padding:22px;margin:24px 0 60px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="font-size:28px;flex-shrink:0;">🎯</div>
+      <div>
+        <div style="font-size:13px;font-weight:800;margin-bottom:6px;">The launch strategy</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.75;max-width:700px;">Approach <strong style="color:var(--text)">MoneyGram first</strong> — they're a Midnight node operator, globally licensed, and have a natural incentive to drive DUST consumption on their own node. Propose them as the exclusive Night ID launch issuer for a 90-day pilot covering Nigeria and Kenya (their strongest remittance corridors). This aligns Night ID launch directly with the existing pilot plan and gives MoneyGram a headline story: <em>"First reusable ZK identity credential issued in sub-Saharan Africa."</em></div>
       </div>
     </div>
 
