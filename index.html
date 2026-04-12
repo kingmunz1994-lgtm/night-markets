@@ -2112,6 +2112,58 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .nid-why-title{font-size:14px;font-weight:800;margin-bottom:8px;}
 .nid-why-desc{font-size:12px;color:var(--muted);line-height:1.7;}
 /* ── Community Chests ───────────────────────────────────── */
+/* ── Night Lend ─────────────────────────────────────────── */
+#page-lend .page-inner{max-width:1100px;margin:0 auto;padding:60px 24px;}
+.lend-hero{text-align:center;max-width:760px;margin:0 auto 60px;}
+.lend-hero h1{font-size:clamp(32px,5vw,64px);line-height:1.1;margin:20px 0 18px;}
+.lend-hero h1 em{font-style:italic;color:var(--gold);}
+.lend-hero p{font-size:16px;color:var(--muted);line-height:1.8;max-width:620px;margin:0 auto;}
+.lend-sides{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 0 60px;}
+@media(max-width:640px){.lend-sides{grid-template-columns:1fr;}}
+.lend-side{border-radius:18px;padding:28px;}
+.lend-side.borrow{background:linear-gradient(135deg,rgba(251,191,36,.07),rgba(0,0,254,.04));border:1px solid rgba(251,191,36,.25);}
+.lend-side.earn{background:linear-gradient(135deg,rgba(0,230,118,.07),rgba(0,0,254,.04));border:1px solid rgba(0,230,118,.25);}
+.lend-side-icon{font-size:32px;margin-bottom:14px;}
+.lend-side-title{font-size:22px;font-weight:900;margin-bottom:8px;}
+.lend-side-sub{font-size:12px;font-family:var(--mono);color:var(--muted);margin-bottom:16px;}
+.lend-side p{font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:16px;}
+.lend-collateral{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.lend-col-tag{background:var(--raised);border:1px solid var(--rim2);border-radius:8px;padding:6px 12px;font-size:11px;font-family:var(--mono);font-weight:700;}
+.lend-calc{background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:18px;margin-top:8px;}
+.lend-calc-label{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:6px;letter-spacing:.06em;}
+.lend-calc-input{width:100%;background:var(--card);border:1px solid var(--rim2);border-radius:8px;padding:10px 12px;font-size:16px;color:var(--text);font-family:var(--mono);outline:none;font-weight:700;box-sizing:border-box;margin-bottom:10px;}
+.lend-calc-input:focus{border-color:var(--gold);}
+.lend-calc-result{display:flex;flex-direction:column;gap:6px;}
+.lend-calc-row{display:flex;justify-content:space-between;font-size:12px;font-family:var(--mono);padding:4px 0;border-bottom:1px solid var(--rim);}
+.lend-calc-row:last-child{border:none;font-weight:700;font-size:13px;}
+.lend-calc-row span:last-child{color:var(--gold);}
+.lend-apy-row{display:flex;justify-content:space-between;font-size:12px;font-family:var(--mono);padding:4px 0;border-bottom:1px solid var(--rim);}
+.lend-apy-row:last-child{border:none;font-weight:700;font-size:13px;}
+.lend-apy-row span:last-child{color:#00e676;}
+.lend-how{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:0 0 60px;}
+.lend-how-step{background:var(--card);border:1px solid var(--rim2);border-radius:14px;padding:20px;}
+.lend-how-num{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#000;margin-bottom:12px;}
+.lend-how-title{font-size:13px;font-weight:800;margin-bottom:6px;}
+.lend-how-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+.lend-tax-box{background:linear-gradient(135deg,rgba(251,191,36,.07),rgba(0,230,118,.04));border:1px solid rgba(251,191,36,.2);border-radius:18px;padding:32px;margin:0 0 60px;}
+
+/* ── The Playbook ───────────────────────────────────────── */
+#page-playbook .page-inner{max-width:1100px;margin:0 auto;padding:60px 24px;}
+.pb-hero{text-align:center;max-width:760px;margin:0 auto 60px;}
+.pb-hero h1{font-size:clamp(32px,5vw,64px);line-height:1.1;margin:20px 0 18px;}
+.pb-hero h1 em{font-style:italic;color:var(--gold);}
+.pb-hero p{font-size:16px;color:var(--muted);line-height:1.8;max-width:620px;margin:0 auto;}
+.pb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:24px 0 60px;}
+.pb-tip{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:26px;transition:border-color .2s,transform .15s;cursor:pointer;}
+.pb-tip:hover{border-color:var(--gold);transform:translateY(-2px);}
+.pb-tip-icon{font-size:28px;margin-bottom:12px;}
+.pb-tip-tag{font-size:9px;font-weight:700;font-family:var(--mono);letter-spacing:.1em;color:var(--muted);margin-bottom:8px;}
+.pb-tip-title{font-size:16px;font-weight:900;margin-bottom:8px;line-height:1.3;}
+.pb-tip-desc{font-size:12px;color:var(--muted);line-height:1.75;margin-bottom:12px;}
+.pb-tip-how{font-size:11px;font-family:var(--mono);background:var(--raised);border-radius:8px;padding:8px 10px;color:var(--text);line-height:1.6;}
+.pb-tip-cta{font-size:11px;font-weight:700;color:var(--gold);font-family:var(--mono);margin-top:12px;}
+.pb-tip:hover .pb-tip-cta{text-decoration:underline;}
+
 #page-chests .page-inner{max-width:1100px;margin:0 auto;padding:60px 24px;}
 .chest-hero{text-align:center;max-width:760px;margin:0 auto 60px;}
 .chest-hero h1{font-size:clamp(32px,5vw,64px);line-height:1.1;margin:20px 0 18px;}
@@ -2549,6 +2601,8 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="ndm-item" onclick="showPage('ecosystem-vision');closeAllNavDrops()">🌐 Ecosystem Vision</div>
           <div class="ndm-item" onclick="showPage('biztoken');closeAllNavDrops()">🏢 Business Tokens</div>
           <div class="ndm-item" onclick="showPage('enterprise');closeAllNavDrops()" style="color:var(--glow);">💼 Enterprise Plans</div>
+          <div class="ndm-item" onclick="showPage('playbook');closeAllNavDrops()" style="color:var(--gold);">📖 The Playbook — Wealth Tips</div>
+          <div class="ndm-item" onclick="showPage('lend');closeAllNavDrops()" style="color:var(--gold);">💰 Night Lend — Borrow Tax-Free</div>
           <div class="ndm-item" onclick="showPage('chests');closeAllNavDrops()" style="color:#00e676;">🏴‍☠️ Community Chests</div>
           <div class="ndm-item" onclick="showPage('nightid');closeAllNavDrops()" style="color:#a78bfa;">🪪 Night ID — ZK Identity</div>
           <div class="ndm-sep"></div>
@@ -2806,6 +2860,18 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div class="eps-name">Night Save</div>
         <div class="eps-desc">Stake NIGHT, generate DUST for near-zero fees, earn real yield from platform revenue. Your money works for you.</div>
         <div class="eps-cta">Start staking →</div>
+      </div>
+      <div class="eps-card" onclick="showPage('playbook')">
+        <div class="eps-icon">📖</div>
+        <div class="eps-name">The Playbook</div>
+        <div class="eps-desc">12 wealth strategies the rich use. Borrow tax-free, stake while you hold, cut fees, own your data. Plain language. All legal. Now for everyone.</div>
+        <div class="eps-cta">Read the playbook →</div>
+      </div>
+      <div class="eps-card" onclick="showPage('lend')">
+        <div class="eps-icon">💰</div>
+        <div class="eps-name">Night Lend</div>
+        <div class="eps-desc">Borrow stablecoins against your crypto. No selling. No CGT. Keep your position. Pay near-zero interest. The tax-smart move.</div>
+        <div class="eps-cta">Borrow tax-free →</div>
       </div>
       <div class="eps-card" onclick="showPage('chests')">
         <div class="eps-icon">🏴‍☠️</div>
@@ -8207,6 +8273,8 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showPage('ecosystem-vision');closeMobNav()" style="color:var(--cyan);">🌐 Ecosystem Vision</button>
   <button class="mob-nav-item" onclick="showPage('biztoken');closeMobNav()" style="color:var(--gold);">🏢 Business Tokens</button>
   <button class="mob-nav-item" onclick="showPage('enterprise');closeMobNav()" style="color:var(--glow);">💼 Enterprise Plans</button>
+  <button class="mob-nav-item" onclick="showPage('playbook');closeMobNav()" style="color:var(--gold);">📖 The Playbook</button>
+  <button class="mob-nav-item" onclick="showPage('lend');closeMobNav()" style="color:var(--gold);">💰 Night Lend</button>
   <button class="mob-nav-item" onclick="showPage('chests');closeMobNav()" style="color:#00e676;">🏴‍☠️ Community Chests</button>
   <button class="mob-nav-item" onclick="showPage('nightid');closeMobNav()" style="color:#a78bfa;">🪪 Night ID — ZK Identity</button>
   <button class="mob-nav-item" onclick="showPage('privacy');closeMobNav()">⊘ ZK Privacy</button>
@@ -8540,6 +8608,285 @@ document.addEventListener('click',function(e){
   <span class="ts-pulse"></span>
   Take the tour
 </button>
+
+<!-- ══════════════════════════════════════════════════════════
+     NIGHT LEND — Borrow against your crypto. No tax event.
+══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-lend">
+  <div class="page-inner">
+
+    <div class="lend-hero">
+      <div class="tag" style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--gold);font-size:11px;font-weight:700;font-family:var(--mono);letter-spacing:.08em;border-radius:20px;padding:5px 16px;display:inline-block;margin-bottom:16px;">💰 NIGHT LEND · BORROW WITHOUT SELLING</div>
+      <h1>Your crypto.<br>Your collateral.<br><em>Zero tax event.</em></h1>
+      <p>Selling crypto triggers capital gains tax. Borrowing against it doesn't. Put up your SNEK, ADA, NIGHT, or BTC as collateral — borrow stablecoins — keep your position — pay zero CGT. The strategy the wealthy have always used. Now for everyone.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px;">
+        <button class="btn btn-primary btn-lg" onclick="document.getElementById('lend-borrow-input').focus();document.getElementById('lend-borrow-input').scrollIntoView({behavior:'smooth'})">Borrow against my crypto</button>
+        <button class="btn btn-outline-ink btn-lg" onclick="document.getElementById('lend-earn-input').focus();document.getElementById('lend-earn-input').scrollIntoView({behavior:'smooth'})">Earn by lending</button>
+      </div>
+    </div>
+
+    <!-- THE TAX INSIGHT -->
+    <div class="lend-tax-box">
+      <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="font-size:40px;flex-shrink:0;">⚖️</div>
+        <div>
+          <div style="font-size:13px;font-weight:900;margin-bottom:10px;">The strategy your accountant should have told you</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:rgba(255,59,59,.06);border:1px solid rgba(255,59,59,.15);border-radius:10px;padding:14px;">
+              <div style="font-size:11px;font-weight:800;color:var(--red);font-family:var(--mono);margin-bottom:8px;">SELLING YOUR CRYPTO</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.7;">CGT event triggered immediately. Up to 45% tax in Australia. You lose your position. If price goes up after you sell — you miss out. Forever.</div>
+            </div>
+            <div style="background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.15);border-radius:10px;padding:14px;">
+              <div style="font-size:11px;font-weight:800;color:#00e676;font-family:var(--mono);margin-bottom:8px;">BORROWING AGAINST IT</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.7;">No sale. No CGT. No tax event. You keep your position. You get liquidity. If price goes up — you still benefit. Repay the loan whenever you want.</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:12px;">⚠️ Not financial advice. Consult your accountant. The ATO has confirmed crypto-backed loans are generally not CGT events when structured correctly.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="eyebrow">How Night Lend works</div>
+    <div class="lend-how">
+      <div class="lend-how-step">
+        <div class="lend-how-num">1</div>
+        <div class="lend-how-title">Deposit collateral</div>
+        <div class="lend-how-desc">Put up your SNEK, ADA, NIGHT, or BTC. It stays in a ZK-secured vault. You retain ownership — it's collateral, not a sale.</div>
+      </div>
+      <div class="lend-how-step">
+        <div class="lend-how-num">2</div>
+        <div class="lend-how-title">Borrow stablecoins</div>
+        <div class="lend-how-desc">Borrow up to 60% of your collateral value in sUSD or USDC. Spend it on Night Markets, pay bills, invest — anything.</div>
+      </div>
+      <div class="lend-how-step">
+        <div class="lend-how-num">3</div>
+        <div class="lend-how-title">Pay small interest</div>
+        <div class="lend-how-desc">4–8% APR depending on collateral and term. Far less than the 20–45% CGT you'd have paid. No fixed repayment schedule.</div>
+      </div>
+      <div class="lend-how-step">
+        <div class="lend-how-num">4</div>
+        <div class="lend-how-title">Repay, get back</div>
+        <div class="lend-how-desc">Repay the stablecoins anytime. Your collateral is returned in full. Your position intact. No CGT triggered at any point.</div>
+      </div>
+    </div>
+
+    <!-- BORROW + EARN SIDE BY SIDE -->
+    <div class="lend-sides">
+
+      <!-- BORROW SIDE -->
+      <div class="lend-side borrow">
+        <div class="lend-side-icon">🏦</div>
+        <div class="lend-side-title">Borrow</div>
+        <div class="lend-side-sub">PUT UP CRYPTO · GET STABLECOINS · KEEP POSITION</div>
+        <p>Got SNEK, ADA, NIGHT, or BTC sitting idle? Put it to work as collateral. Get stablecoins to spend in Night Markets. No selling. No CGT. Full position retained.</p>
+        <div class="lend-calc">
+          <div class="lend-calc-label">HOW MUCH COLLATERAL? (USD VALUE)</div>
+          <input id="lend-borrow-input" class="lend-calc-input" type="number" placeholder="10000" value="10000" oninput="lendCalcBorrow(this.value)"/>
+          <div class="lend-calc-result">
+            <div class="lend-calc-row"><span>Max you can borrow (60% LTV)</span><span id="lend-borrow-max">$6,000</span></div>
+            <div class="lend-calc-row"><span>Conservative borrow (50% LTV)</span><span id="lend-borrow-safe">$5,000</span></div>
+            <div class="lend-calc-row"><span>Annual interest (6% APR)</span><span id="lend-borrow-interest">$300/yr</span></div>
+            <div class="lend-calc-row"><span>CGT you'd have paid if you sold (30%)</span><span style="color:var(--red)" id="lend-cgt-saved">$3,000 saved</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">Accepted collateral:</div>
+          <div class="lend-collateral">
+            <div class="lend-col-tag">🐍 SNEK</div>
+            <div class="lend-col-tag">🌙 ADA</div>
+            <div class="lend-col-tag">◈ NIGHT</div>
+            <div class="lend-col-tag">₿ BTC</div>
+            <div class="lend-col-tag">◎ DUST</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="lendBorrow()">Borrow now</button>
+        <div id="lend-borrow-confirm" style="display:none;font-size:11px;color:var(--gold);font-family:var(--mono);margin-top:10px;text-align:center;">💰 Request submitted. We'll confirm your vault and loan within 24 hours.</div>
+      </div>
+
+      <!-- EARN SIDE -->
+      <div class="lend-side earn">
+        <div class="lend-side-icon">📈</div>
+        <div class="lend-side-title">Earn by lending</div>
+        <div class="lend-side-sub">DEPOSIT STABLECOINS · EARN 6–9% APR · FULLY COLLATERALISED</div>
+        <p>Have stablecoins sitting in a savings account earning 1–2%? Lend them through Night Lend. Every loan is over-collateralised by crypto. You earn 6–9% APR. Your funds are protected.</p>
+        <div class="lend-calc">
+          <div class="lend-calc-label">HOW MUCH WOULD YOU LEND? (USD)</div>
+          <input id="lend-earn-input" class="lend-calc-input" type="number" placeholder="5000" value="5000" oninput="lendCalcEarn(this.value)" style="border-color:rgba(0,230,118,.3);"/>
+          <div class="lend-calc-result">
+            <div class="lend-apy-row"><span>At 6% APR (conservative)</span><span id="lend-earn-low">$300/yr</span></div>
+            <div class="lend-apy-row"><span>At 8% APR (standard)</span><span id="lend-earn-mid">$400/yr</span></div>
+            <div class="lend-apy-row"><span>At 9% APR (high demand)</span><span id="lend-earn-high">$450/yr</span></div>
+            <div class="lend-apy-row"><span>vs bank savings account (2%)</span><span style="color:var(--red)" id="lend-earn-bank">only $100/yr</span></div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:12px;background:var(--raised);border-radius:8px;padding:10px;line-height:1.7;">Every loan is overcollateralised at 150%+. If collateral value drops, the system auto-liquidates before your funds are at risk.</div>
+        <button class="btn btn-primary" style="width:100%;margin-top:16px;background:#00e676;color:#000;border-color:#00e676;" onclick="lendEarn()">Start earning</button>
+        <div id="lend-earn-confirm" style="display:none;font-size:11px;color:#00e676;font-family:var(--mono);margin-top:10px;text-align:center;">📈 Lending pool application submitted. Onboarding within 48 hours.</div>
+      </div>
+    </div>
+
+    <!-- LINK TO PLAYBOOK -->
+    <div style="background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:28px;text-align:center;margin:0 0 40px;">
+      <div style="font-size:28px;margin-bottom:12px;">📖</div>
+      <div style="font-size:16px;font-weight:900;margin-bottom:8px;">Borrowing is just one play</div>
+      <div style="font-size:13px;color:var(--muted);max-width:500px;margin:0 auto 18px;line-height:1.7;">The wealthy use dozens of strategies to keep more of what they earn. We've put them all in one place — explained simply, no jargon.</div>
+      <button class="btn btn-outline-ink" onclick="showPage('playbook')">See the full wealth playbook →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     THE PLAYBOOK — Wealth tips for the meek
+══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-playbook">
+  <div class="page-inner">
+
+    <div class="pb-hero">
+      <div class="tag" style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--gold);font-size:11px;font-weight:700;font-family:var(--mono);letter-spacing:.08em;border-radius:20px;padding:5px 16px;display:inline-block;margin-bottom:16px;">📖 THE MEEK MARKETS PLAYBOOK</div>
+      <h1>The strategies<br>the wealthy use.<br><em>Now for everyone.</em></h1>
+      <p>For generations these financial moves were only available to people with expensive accountants, private bankers, and inside knowledge. The system was designed that way on purpose. Here they are — plain language, no jargon, all legal.</p>
+    </div>
+
+    <div class="pb-grid">
+
+      <!-- TIP 1: Borrow don't sell -->
+      <div class="pb-tip" onclick="showPage('lend')">
+        <div class="pb-tip-icon">🏦</div>
+        <div class="pb-tip-tag">TAX STRATEGY · AUSTRALIA + GLOBAL</div>
+        <div class="pb-tip-title">Borrow against your crypto. Pay zero tax.</div>
+        <div class="pb-tip-desc">Selling crypto triggers capital gains tax — up to 45% in Australia. Borrowing against it doesn't. Put up your crypto as collateral, borrow stablecoins, keep your position. The tax event never happens.</div>
+        <div class="pb-tip-how">SNEK worth $10,000 → borrow $6,000 → spend freely → repay later → zero CGT triggered → position intact if price rises.</div>
+        <div class="pb-tip-cta">Night Lend →</div>
+      </div>
+
+      <!-- TIP 2: Hold 12 months -->
+      <div class="pb-tip" onclick="showPage('stake')">
+        <div class="pb-tip-icon">⏰</div>
+        <div class="pb-tip-tag">TAX STRATEGY · AUSTRALIA</div>
+        <div class="pb-tip-title">Hold 12 months. Halve your tax bill.</div>
+        <div class="pb-tip-desc">In Australia, assets held for more than 12 months get a 50% CGT discount. Hold your SNEK, ADA, or NIGHT for just one year and the government's cut is halved automatically. While you wait — stake and earn.</div>
+        <div class="pb-tip-how">Buy NIGHT in April 2026 → stake for 12 months → earn yield the whole time → sell in April 2027 → 50% CGT discount applies automatically.</div>
+        <div class="pb-tip-cta">Stake while you hold →</div>
+      </div>
+
+      <!-- TIP 3: Stake and earn overnight -->
+      <div class="pb-tip" onclick="showPage('stake')">
+        <div class="pb-tip-icon">😴</div>
+        <div class="pb-tip-tag">PASSIVE INCOME</div>
+        <div class="pb-tip-title">Your money should work while you sleep.</div>
+        <div class="pb-tip-desc">A savings account pays 2–3% if you're lucky. Staking NIGHT generates DUST (near-zero fees forever) plus real yield from platform revenue. Your crypto earns every hour, automatically, with nothing to do after the first stake.</div>
+        <div class="pb-tip-how">Stake 100,000 NIGHT → generate DUST (pay near-zero fees) → earn yield from Night Markets revenue → compound by staking earnings → balance grows automatically.</div>
+        <div class="pb-tip-cta">Start staking →</div>
+      </div>
+
+      <!-- TIP 4: Community chest staking -->
+      <div class="pb-tip" onclick="showPage('chests')">
+        <div class="pb-tip-icon">🐍</div>
+        <div class="pb-tip-tag">PASSIVE INCOME · COMMUNITY</div>
+        <div class="pb-tip-title">Stake your SNEK. Earn from your whole community.</div>
+        <div class="pb-tip-desc">Every time anyone in the SNEK community buys, sells, or trades in the SNEK shop — a cut goes to the SNEK chest. Stake your SNEK and earn your share of everything your community does. Set and forget.</div>
+        <div class="pb-tip-how">Stake 1,000,000 SNEK → SNEK community does $500k GMV/month → chest fills → your proportional share distributes weekly → SNEK stays SNEK.</div>
+        <div class="pb-tip-cta">Stake your SNEK →</div>
+      </div>
+
+      <!-- TIP 5: BNPL as a cash flow weapon -->
+      <div class="pb-tip" onclick="showPage('shop')">
+        <div class="pb-tip-icon">💳</div>
+        <div class="pb-tip-tag">CASH FLOW</div>
+        <div class="pb-tip-title">Never pay full price upfront again.</div>
+        <div class="pb-tip-desc">Why pay $300 today when you could pay $75 now and keep $225 earning yield for 6 more weeks? Night Markets BNPL has zero interest, zero credit check. Split every purchase into 4. The $225 you kept working earns more than the nothing you'd have earned otherwise.</div>
+        <div class="pb-tip-how">$300 purchase → pay $75 today → $225 stays staked earning yield → pay $75 in 2 weeks → $150 still earning → and so on. Free money from nothing.</div>
+        <div class="pb-tip-cta">Shop with BNPL →</div>
+      </div>
+
+      <!-- TIP 6: Cut the fee men -->
+      <div class="pb-tip" onclick="showPage('enterprise')">
+        <div class="pb-tip-icon">✂️</div>
+        <div class="pb-tip-tag">BUSINESS · REDUCE COSTS</div>
+        <div class="pb-tip-title">Stop donating 2.9% of every sale to Stripe.</div>
+        <div class="pb-tip-desc">Stripe takes 2.9% + 30c on every transaction. PayPal takes 2.6%. SWIFT charges $15–30 per wire plus FX margin. A business doing $500k/year donates $14,500 to Stripe alone. Stake NIGHT once. Generate DUST. Pay near-zero fees. Forever.</div>
+        <div class="pb-tip-how">$500k annual revenue → currently paying ~$14,500/yr to Stripe → one-time NIGHT stake → near-zero fees forever → $14,500/yr back in your pocket every year from that point on.</div>
+        <div class="pb-tip-cta">Calculate your savings →</div>
+      </div>
+
+      <!-- TIP 7: Tokenize your income -->
+      <div class="pb-tip" onclick="showPage('biztoken')">
+        <div class="pb-tip-icon">◈</div>
+        <div class="pb-tip-tag">BUSINESS · RAISE CAPITAL</div>
+        <div class="pb-tip-title">Turn your loyal customers into investors.</div>
+        <div class="pb-tip-desc">Instead of going to a bank for capital, tokenize a share of your business revenue. Your most loyal customers buy in. Every sale automatically sends them their dividend. They're now invested in your success — they'll buy more, tell others, and never leave.</div>
+        <div class="pb-tip-how">Launch a Business Token → raise $50k from 200 loyal customers → 5% of each sale auto-distributes → investors become your best marketers → zero bank debt.</div>
+        <div class="pb-tip-cta">Launch a Business Token →</div>
+      </div>
+
+      <!-- TIP 8: Own your data -->
+      <div class="pb-tip" onclick="showPage('nightid')">
+        <div class="pb-tip-icon">◑</div>
+        <div class="pb-tip-tag">DATA INCOME · PRIVACY</div>
+        <div class="pb-tip-title">Your data is worth money. Start getting paid for it.</div>
+        <div class="pb-tip-desc">Google, Facebook, Equifax, and banks have been monetising your financial data for decades. You got nothing. Night Data flips this — companies pay to query your ZK-anonymised profile. You approve each query. You earn NIGHT. Your raw data never moves.</div>
+        <div class="pb-tip-how">Build Night Score through usage → lender pays 50 NIGHT to query "creditworthy?" → you approve → they get ZK proof → you get paid → your name and data: never disclosed.</div>
+        <div class="pb-tip-cta">Own your data →</div>
+      </div>
+
+      <!-- TIP 9: Earn by lending your stablecoins -->
+      <div class="pb-tip" onclick="showPage('lend')">
+        <div class="pb-tip-icon">📈</div>
+        <div class="pb-tip-tag">PASSIVE INCOME · LENDING</div>
+        <div class="pb-tip-title">Your stablecoins are earning 2%. They could earn 8%.</div>
+        <div class="pb-tip-desc">Banks take your deposits at 2% and lend them out at 7–15%. You do the lending directly through Night Lend and keep the spread. 6–9% APR. Every loan is overcollateralised by crypto. Your funds are protected. Your returns are 3–4x a savings account.</div>
+        <div class="pb-tip-how">Deposit $10,000 sUSD → lend to overcollateralised borrowers → earn 8% APR → $800/year vs $200 in a bank savings account → 4x with no extra risk.</div>
+        <div class="pb-tip-cta">Start lending →</div>
+      </div>
+
+      <!-- TIP 10: SMSF play (AU) -->
+      <div class="pb-tip" onclick="showPage('stake')">
+        <div class="pb-tip-icon">🏛️</div>
+        <div class="pb-tip-tag">TAX STRATEGY · AUSTRALIA ONLY</div>
+        <div class="pb-tip-title">Hold your crypto in super. Pay 15% tax instead of 45%.</div>
+        <div class="pb-tip-desc">A Self-Managed Super Fund (SMSF) is taxed at 15% — not your personal rate of up to 45%. The ATO allows crypto in SMSFs. Stack NIGHT in your SMSF, stake it through Night Save, earn yield at 15% tax. It's completely legal and massively underused.</div>
+        <div class="pb-tip-how">Personal crypto gains: up to 45% tax. Same gains inside SMSF: 15% tax. On $100,000 gain = $30,000 difference. Every year. Talk to an SMSF accountant.</div>
+        <div class="pb-tip-cta">Stake through Night Save →</div>
+      </div>
+
+      <!-- TIP 11: Remittance saving -->
+      <div class="pb-tip" onclick="showPage('privacy')">
+        <div class="pb-tip-icon">🌏</div>
+        <div class="pb-tip-tag">REDUCE COSTS · REMITTANCE</div>
+        <div class="pb-tip-title">Stop paying 6.49% to send money home.</div>
+        <div class="pb-tip-desc">The World Bank says the global average remittance fee is 6.49%. Banks charge even more — up to 14.55%. On $20,000 sent home per year that's $1,298 in fees — gone. Night Markets transfers route via Midnight and MoneyGram's network for near-zero cost.</div>
+        <div class="pb-tip-how">Send $20,000/year home → current fee at 6.49% = $1,298 gone → Night Markets fee = near-zero → $1,298 stays with your family. Every year. Forever.</div>
+        <div class="pb-tip-cta">Send for near-zero →</div>
+      </div>
+
+      <!-- TIP 12: Stack small, compound big -->
+      <div class="pb-tip" onclick="showPage('shop')">
+        <div class="pb-tip-icon">🌱</div>
+        <div class="pb-tip-tag">WEALTH BUILDING · LONG TERM</div>
+        <div class="pb-tip-title">Small amounts compounding beat large amounts sitting still.</div>
+        <div class="pb-tip-desc">Every Night Markets purchase earns NIGHT cashback. Every NIGHT you earn gets staked. Every staked NIGHT generates DUST and yield. Every yield compounds. You don't need to start with a lot — you need to start. The meek who compound early inherit the most.</div>
+        <div class="pb-tip-how">Earn 10 NIGHT cashback this week → stake it → next week it earns yield → compound that too → in 3 years that $5 of cashback is worth significantly more with zero extra effort.</div>
+        <div class="pb-tip-cta">Start earning cashback →</div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM CTA -->
+    <div style="background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(0,230,118,.04));border:1px solid rgba(251,191,36,.2);border-radius:20px;padding:40px;text-align:center;margin:0 0 60px;">
+      <div style="font-size:36px;margin-bottom:16px;">🌍</div>
+      <h2 style="font-size:26px;margin-bottom:12px;">The meek shall inherit the earth.<br>Starting with their finances.</h2>
+      <p style="font-size:14px;color:var(--muted);max-width:560px;margin:0 auto 24px;line-height:1.75;">Every strategy above has been used by wealthy people for decades. The only thing that changed is who has access. That's what Meek Markets fixes.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-lg" onclick="showPage('shop')">Start on Night Markets</button>
+        <button class="btn btn-outline-ink btn-lg" onclick="showPage('lend')">Borrow without selling</button>
+        <button class="btn btn-outline-ink btn-lg" onclick="showPage('chests')">Stake your community token</button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════
      COMMUNITY CHESTS
@@ -12978,6 +13325,41 @@ function btcRunShieldProof() {
       setTimeout(function(){ btcGoPanel(4); }, 400);
     }
   }, 900);
+}
+
+// ── Night Lend ───────────────────────────────────────────────
+function lendCalcBorrow(val){
+  var v = parseFloat(val) || 0;
+  var max = (v * 0.6).toLocaleString('en',{style:'currency',currency:'USD',maximumFractionDigits:0});
+  var safe = (v * 0.5).toLocaleString('en',{style:'currency',currency:'USD',maximumFractionDigits:0});
+  var interest = ((v * 0.5) * 0.06).toLocaleString('en',{style:'currency',currency:'USD',maximumFractionDigits:0});
+  var cgt = (v * 0.30).toLocaleString('en',{style:'currency',currency:'USD',maximumFractionDigits:0});
+  var el = function(id){ return document.getElementById(id); };
+  if(el('lend-borrow-max')) el('lend-borrow-max').textContent = max;
+  if(el('lend-borrow-safe')) el('lend-borrow-safe').textContent = safe;
+  if(el('lend-borrow-interest')) el('lend-borrow-interest').textContent = interest + '/yr';
+  if(el('lend-cgt-saved')) el('lend-cgt-saved').textContent = cgt + ' saved';
+}
+function lendCalcEarn(val){
+  var v = parseFloat(val) || 0;
+  var el = function(id){ return document.getElementById(id); };
+  var fmt = function(n){ return n.toLocaleString('en',{style:'currency',currency:'USD',maximumFractionDigits:0})+'/yr'; };
+  if(el('lend-earn-low'))  el('lend-earn-low').textContent  = fmt(v*0.06);
+  if(el('lend-earn-mid'))  el('lend-earn-mid').textContent  = fmt(v*0.08);
+  if(el('lend-earn-high')) el('lend-earn-high').textContent = fmt(v*0.09);
+  if(el('lend-earn-bank')) el('lend-earn-bank').textContent = 'only ' + fmt(v*0.02);
+}
+function lendBorrow(){
+  var c = document.getElementById('lend-borrow-confirm');
+  var b = document.querySelector('#page-lend .lend-side.borrow .btn-primary');
+  if(b) b.style.display = 'none';
+  if(c) c.style.display = 'block';
+}
+function lendEarn(){
+  var c = document.getElementById('lend-earn-confirm');
+  var b = document.querySelector('#page-lend .lend-side.earn .btn-primary');
+  if(b) b.style.display = 'none';
+  if(c) c.style.display = 'block';
 }
 
 // ── Community Chests ─────────────────────────────────────────
