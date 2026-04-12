@@ -2111,6 +2111,56 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .nid-why-icon{font-size:24px;margin-bottom:12px;}
 .nid-why-title{font-size:14px;font-weight:800;margin-bottom:8px;}
 .nid-why-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+/* ── Community Chests ───────────────────────────────────── */
+#page-chests .page-inner{max-width:1100px;margin:0 auto;padding:60px 24px;}
+.chest-hero{text-align:center;max-width:760px;margin:0 auto 60px;}
+.chest-hero h1{font-size:clamp(32px,5vw,64px);line-height:1.1;margin:20px 0 18px;}
+.chest-hero h1 em{font-style:italic;color:#00e676;}
+.chest-hero p{font-size:16px;color:var(--muted);line-height:1.8;max-width:600px;margin:0 auto;}
+.chest-how{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:0 0 60px;}
+.chest-how-step{background:var(--card);border:1px solid var(--rim2);border-radius:14px;padding:22px;text-align:center;}
+.chest-how-num{width:40px;height:40px;border-radius:50%;background:#00e676;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#000;margin:0 auto 14px;}
+.chest-how-title{font-size:13px;font-weight:800;margin-bottom:7px;}
+.chest-how-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+/* Featured SNEK chest */
+.chest-featured{background:linear-gradient(135deg,rgba(0,230,118,.07),rgba(0,0,254,.04));border:2px solid rgba(0,230,118,.3);border-radius:22px;padding:36px;margin:0 0 40px;}
+.chest-featured-header{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
+.chest-token-icon{font-size:40px;line-height:1;}
+.chest-token-name{font-size:28px;font-weight:900;}
+.chest-token-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+.chest-live-badge{background:rgba(0,230,118,.15);border:1px solid rgba(0,230,118,.4);color:#00e676;font-size:10px;font-weight:700;font-family:var(--mono);border-radius:20px;padding:5px 12px;letter-spacing:.06em;}
+.chest-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0;background:var(--raised);border-radius:14px;overflow:hidden;margin-bottom:24px;}
+.chest-stat{padding:18px 16px;border-right:1px solid var(--rim2);}
+.chest-stat:last-child{border-right:none;}
+.chest-stat-val{font-size:22px;font-weight:900;font-family:var(--mono);color:#00e676;}
+.chest-stat-label{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
+.chest-body{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:640px){.chest-body{grid-template-columns:1fr;}}
+.chest-panel{background:var(--raised);border:1px solid var(--rim2);border-radius:14px;padding:20px;}
+.chest-panel-title{font-size:11px;font-weight:800;font-family:var(--mono);letter-spacing:.08em;color:var(--muted);margin-bottom:14px;}
+.chest-flow-item{display:flex;align-items:center;gap:10px;font-size:12px;padding:8px 0;border-bottom:1px solid var(--rim);}
+.chest-flow-item:last-child{border:none;}
+.chest-flow-src{flex:1;color:var(--muted);}
+.chest-flow-pct{font-family:var(--mono);font-weight:700;color:#00e676;}
+.chest-calc-input{width:100%;background:var(--card);border:1px solid var(--rim2);border-radius:8px;padding:10px 12px;font-size:18px;color:var(--text);font-family:var(--mono);outline:none;text-align:center;font-weight:700;box-sizing:border-box;margin-bottom:10px;}
+.chest-calc-input:focus{border-color:#00e676;}
+.chest-calc-result{background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.2);border-radius:10px;padding:14px;text-align:center;}
+.chest-calc-yield{font-size:26px;font-weight:900;font-family:var(--mono);color:#00e676;}
+.chest-calc-period{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+/* Chest grid */
+.chest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin:24px 0 60px;}
+.chest-card{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:22px;text-align:center;transition:border-color .2s,transform .15s;}
+.chest-card.live{border-color:rgba(0,230,118,.3);cursor:pointer;}
+.chest-card.live:hover{border-color:#00e676;transform:translateY(-2px);}
+.chest-card.soon{opacity:.55;}
+.chest-card-icon{font-size:32px;margin-bottom:10px;}
+.chest-card-name{font-size:15px;font-weight:900;margin-bottom:4px;}
+.chest-card-status{font-size:10px;font-family:var(--mono);}
+.chest-card-status.live{color:#00e676;}
+.chest-card-status.soon{color:var(--muted);}
+.chest-card-vol{font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono);}
+.chest-apply{background:linear-gradient(135deg,rgba(0,0,254,.08),rgba(0,230,118,.04));border:1px solid rgba(0,0,254,.2);border-radius:16px;padding:28px;text-align:center;}
+
 .nid-partner-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:8px;}
 .nid-partner-card{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:22px;transition:border-color .2s;}
 .nid-partner-card:hover{border-color:var(--glow);}
@@ -2499,6 +2549,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="ndm-item" onclick="showPage('ecosystem-vision');closeAllNavDrops()">🌐 Ecosystem Vision</div>
           <div class="ndm-item" onclick="showPage('biztoken');closeAllNavDrops()">🏢 Business Tokens</div>
           <div class="ndm-item" onclick="showPage('enterprise');closeAllNavDrops()" style="color:var(--glow);">💼 Enterprise Plans</div>
+          <div class="ndm-item" onclick="showPage('chests');closeAllNavDrops()" style="color:#00e676;">🏴‍☠️ Community Chests</div>
           <div class="ndm-item" onclick="showPage('nightid');closeAllNavDrops()" style="color:#a78bfa;">🪪 Night ID — ZK Identity</div>
           <div class="ndm-sep"></div>
           <div class="ndm-item" onclick="showPage('privacy');closeAllNavDrops()">⊘ ZK Privacy</div>
@@ -2755,6 +2806,12 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div class="eps-name">Night Save</div>
         <div class="eps-desc">Stake NIGHT, generate DUST for near-zero fees, earn real yield from platform revenue. Your money works for you.</div>
         <div class="eps-cta">Start staking →</div>
+      </div>
+      <div class="eps-card" onclick="showPage('chests')">
+        <div class="eps-icon">🏴‍☠️</div>
+        <div class="eps-name">Community Chests</div>
+        <div class="eps-desc">Stake your OG token. Earn from your community's activity only. SNEK earnings go to SNEK holders. DOGE to DOGE. Nobody else touches your chest.</div>
+        <div class="eps-cta">Stake SNEK →</div>
       </div>
       <div class="eps-card" onclick="showPage('nightid')">
         <div class="eps-icon">🪪</div>
@@ -8150,6 +8207,7 @@ document.addEventListener('click',function(e){
   <button class="mob-nav-item" onclick="showPage('ecosystem-vision');closeMobNav()" style="color:var(--cyan);">🌐 Ecosystem Vision</button>
   <button class="mob-nav-item" onclick="showPage('biztoken');closeMobNav()" style="color:var(--gold);">🏢 Business Tokens</button>
   <button class="mob-nav-item" onclick="showPage('enterprise');closeMobNav()" style="color:var(--glow);">💼 Enterprise Plans</button>
+  <button class="mob-nav-item" onclick="showPage('chests');closeMobNav()" style="color:#00e676;">🏴‍☠️ Community Chests</button>
   <button class="mob-nav-item" onclick="showPage('nightid');closeMobNav()" style="color:#a78bfa;">🪪 Night ID — ZK Identity</button>
   <button class="mob-nav-item" onclick="showPage('privacy');closeMobNav()">⊘ ZK Privacy</button>
   <button class="mob-nav-item" onclick="showPage('midnight');closeMobNav()">🌑 Midnight</button>
@@ -8482,6 +8540,203 @@ document.addEventListener('click',function(e){
   <span class="ts-pulse"></span>
   Take the tour
 </button>
+
+<!-- ══════════════════════════════════════════════════════════
+     COMMUNITY CHESTS
+══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-chests">
+  <div class="page-inner">
+
+    <!-- HERO -->
+    <div class="chest-hero">
+      <div class="tag" style="background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);color:#00e676;font-size:11px;font-weight:700;font-family:var(--mono);letter-spacing:.08em;border-radius:20px;padding:5px 16px;display:inline-block;margin-bottom:16px;">🏴‍☠️ COMMUNITY CHESTS · EVERY COMMUNITY EARNS ITS OWN</div>
+      <h1>Your community.<br>Your chest.<br><em>Your earnings.</em></h1>
+      <p>Every community shop on Night Markets funds its own chest. SNEK activity goes to the SNEK chest. DOGE activity goes to the DOGE chest. Stake your OG token. Earn from what your community does. Nobody else touches your chest.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px;">
+        <button class="btn btn-primary btn-lg" onclick="document.getElementById('snek-stake-input').focus();document.getElementById('snek-stake-input').scrollIntoView({behavior:'smooth'})">Stake your SNEK</button>
+        <button class="btn btn-outline-ink btn-lg" onclick="document.getElementById('chest-apply-section').scrollIntoView({behavior:'smooth'})">Launch your community</button>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="eyebrow">How community chests work</div>
+    <div class="chest-how">
+      <div class="chest-how-step">
+        <div class="chest-how-num">1</div>
+        <div class="chest-how-title">Your community opens a shop</div>
+        <div class="chest-how-desc">Any token community launches their branded section on Night Markets. Sellers list products. Buyers pay using any method. The shop is yours.</div>
+      </div>
+      <div class="chest-how-step">
+        <div class="chest-how-num">2</div>
+        <div class="chest-how-title">Activity fills the chest</div>
+        <div class="chest-how-desc">Every transaction, listing fee, BNPL spread, and Business Token launch in your shop generates revenue. 100% of that goes into your community chest. Not shared. Not diluted.</div>
+      </div>
+      <div class="chest-how-step">
+        <div class="chest-how-num">3</div>
+        <div class="chest-how-title">Stake your token. Earn forever.</div>
+        <div class="chest-how-desc">Stake your OG token — SNEK stays SNEK, DOGE stays DOGE. The chest distributes proportionally to stakers every week. No swapping. No learning new tokens. Just earnings.</div>
+      </div>
+      <div class="chest-how-step">
+        <div class="chest-how-num">4</div>
+        <div class="chest-how-title">Community grows the chest</div>
+        <div class="chest-how-desc">The more your community shops and sells, the bigger your chest. Your community markets Night Markets for you — their earnings depend on it. Perfect alignment.</div>
+      </div>
+    </div>
+
+    <!-- SNEK FEATURED CHEST -->
+    <div class="eyebrow">Featured chest — SNEK · First community live</div>
+    <div class="chest-featured">
+      <div class="chest-featured-header">
+        <div class="chest-token-icon">🐍</div>
+        <div>
+          <div class="chest-token-name">SNEK Chest</div>
+          <div class="chest-token-sub">Cardano's most traded community token · $SNEK · Deflationary</div>
+        </div>
+        <div class="chest-live-badge">● LIVE · FIRST CHEST</div>
+      </div>
+
+      <!-- Live stats -->
+      <div class="chest-stats">
+        <div class="chest-stat">
+          <div class="chest-stat-val" id="snek-staked">84,201,440</div>
+          <div class="chest-stat-label">SNEK staked</div>
+        </div>
+        <div class="chest-stat">
+          <div class="chest-stat-val" id="snek-stakers">1,284</div>
+          <div class="chest-stat-label">Stakers</div>
+        </div>
+        <div class="chest-stat">
+          <div class="chest-stat-val" id="snek-chest-bal">48,291</div>
+          <div class="chest-stat-label">NIGHT in chest</div>
+        </div>
+        <div class="chest-stat">
+          <div class="chest-stat-val" id="snek-weekly">3,840</div>
+          <div class="chest-stat-label">NIGHT paid last 7d</div>
+        </div>
+        <div class="chest-stat">
+          <div class="chest-stat-val" id="snek-gmv">$128,440</div>
+          <div class="chest-stat-label">SNEK shop GMV</div>
+        </div>
+      </div>
+
+      <div class="chest-body">
+        <!-- Revenue flows -->
+        <div class="chest-panel">
+          <div class="chest-panel-title">WHAT FILLS THE SNEK CHEST</div>
+          <div class="chest-flow-item">
+            <div class="chest-flow-src">SNEK shop transaction fees</div>
+            <div class="chest-flow-pct">2.5% → chest</div>
+          </div>
+          <div class="chest-flow-item">
+            <div class="chest-flow-src">BNPL spread (SNEK buyers)</div>
+            <div class="chest-flow-pct">1% → chest</div>
+          </div>
+          <div class="chest-flow-item">
+            <div class="chest-flow-src">Seller listing fees</div>
+            <div class="chest-flow-pct">100% → chest</div>
+          </div>
+          <div class="chest-flow-item">
+            <div class="chest-flow-src">Business Token launches (SNEK)</div>
+            <div class="chest-flow-pct">50% → chest</div>
+          </div>
+          <div class="chest-flow-item">
+            <div class="chest-flow-src">Night Data queries (SNEK holders)</div>
+            <div class="chest-flow-pct">30% → chest</div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:12px;line-height:1.6;">Revenue from SNEK activity only. No other community's activity contributes. No dilution.</div>
+        </div>
+
+        <!-- Earnings calculator -->
+        <div class="chest-panel">
+          <div class="chest-panel-title">CALCULATE YOUR SNEK EARNINGS</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">How much SNEK do you hold?</div>
+          <input id="snek-stake-input" class="chest-calc-input" type="number" placeholder="1,000,000" oninput="snekCalc(this.value)" value="1000000"/>
+          <div class="chest-calc-result">
+            <div class="chest-calc-yield" id="snek-calc-yield">~3.84 NIGHT</div>
+            <div class="chest-calc-period">estimated weekly earnings</div>
+            <div style="font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:6px;">Based on current chest activity · grows as SNEK community grows</div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="snekStake()">Stake SNEK → Start earning</button>
+          <div id="snek-stake-confirm" style="display:none;font-size:11px;color:#00e676;font-family:var(--mono);margin-top:10px;text-align:center;">🐍 SNEK staked. Your chest earnings start this week.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL CHESTS GRID -->
+    <div class="eyebrow">All community chests</div>
+    <div class="chest-grid">
+      <div class="chest-card live" onclick="document.getElementById('snek-stake-input').scrollIntoView({behavior:'smooth'})">
+        <div class="chest-card-icon">🐍</div>
+        <div class="chest-card-name">SNEK Chest</div>
+        <div class="chest-card-status live">● LIVE</div>
+        <div class="chest-card-vol">$128k GMV · 1,284 stakers</div>
+      </div>
+      <div class="chest-card soon">
+        <div class="chest-card-icon">🐶</div>
+        <div class="chest-card-name">DOGE Chest</div>
+        <div class="chest-card-status soon">Coming soon</div>
+        <div class="chest-card-vol">Waitlist open</div>
+      </div>
+      <div class="chest-card soon">
+        <div class="chest-card-icon">🐎</div>
+        <div class="chest-card-name">HOSKY Chest</div>
+        <div class="chest-card-status soon">Coming soon</div>
+        <div class="chest-card-vol">Waitlist open</div>
+      </div>
+      <div class="chest-card soon">
+        <div class="chest-card-icon">🌙</div>
+        <div class="chest-card-name">NIGHT Chest</div>
+        <div class="chest-card-status soon">Coming soon</div>
+        <div class="chest-card-vol">Native Night Markets</div>
+      </div>
+      <div class="chest-card soon" style="border-style:dashed;cursor:pointer;" onclick="document.getElementById('chest-apply-section').scrollIntoView({behavior:'smooth'})">
+        <div class="chest-card-icon">➕</div>
+        <div class="chest-card-name">Your Community</div>
+        <div class="chest-card-status soon">Apply to launch</div>
+        <div class="chest-card-vol">Any token welcome</div>
+      </div>
+    </div>
+
+    <!-- WHY YOUR COMMUNITY SHOULD LAUNCH -->
+    <div class="eyebrow">Why every token community should have a chest</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0 60px;">
+      <div class="nid-why-item">
+        <div class="nid-why-icon">🎯</div>
+        <div class="nid-why-title">Perfect alignment</div>
+        <div class="nid-why-desc">Your holders are incentivised to shop and sell in your section. Every dollar they spend grows their own chest. They market Night Markets for you.</div>
+      </div>
+      <div class="nid-why-item">
+        <div class="nid-why-icon">🔒</div>
+        <div class="nid-why-title">Your chest. Only yours.</div>
+        <div class="nid-why-desc">SNEK earnings never mix with DOGE earnings. Your community's activity funds your community's returns. Completely ring-fenced.</div>
+      </div>
+      <div class="nid-why-item">
+        <div class="nid-why-icon">⚡</div>
+        <div class="nid-why-title">Zero friction for holders</div>
+        <div class="nid-why-desc">Holders stake their OG token. No swaps. No new wallets. No learning curve. SNEK stays SNEK. They just start earning.</div>
+      </div>
+      <div class="nid-why-item">
+        <div class="nid-why-icon">📈</div>
+        <div class="nid-why-title">Real utility = real value</div>
+        <div class="nid-why-desc">Your token now has utility beyond speculation. Holding SNEK means earning from SNEK community commerce. That changes the token's value proposition permanently.</div>
+      </div>
+    </div>
+
+    <!-- APPLY CTA -->
+    <div class="chest-apply" id="chest-apply-section">
+      <div style="font-size:36px;margin-bottom:16px;">🏴‍☠️</div>
+      <h2 style="font-size:26px;margin-bottom:12px;">Launch your community chest</h2>
+      <p style="font-size:14px;color:var(--muted);max-width:520px;margin:0 auto 24px;line-height:1.75;">Any token community can apply. Tell us your token, your community size, and what your holders want to buy and sell. We set up the shop and the chest. You bring the community.</p>
+      <div style="display:flex;gap:10px;max-width:460px;margin:0 auto;flex-wrap:wrap;justify-content:center;">
+        <input id="chest-token-input" type="text" placeholder="Your token name (e.g. HOSKY)" style="flex:1;min-width:160px;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='var(--rim2)'"/>
+        <input id="chest-contact-input" type="email" placeholder="your@email.com" style="flex:1;min-width:160px;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='var(--rim2)'"/>
+        <button class="btn btn-primary" onclick="chestApply()">Apply</button>
+      </div>
+      <div id="chest-apply-confirm" style="display:none;font-size:12px;color:#00e676;font-family:var(--mono);margin-top:14px;text-align:center;">✓ Application received. We'll reach out within 48 hours to get your chest live.</div>
+    </div>
+
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════
      NIGHT ID — ZK Financial Identity
@@ -12724,6 +12979,61 @@ function btcRunShieldProof() {
     }
   }, 900);
 }
+
+// ── Community Chests ─────────────────────────────────────────
+var SNEK_TOTAL_STAKED = 84201440;
+var SNEK_CHEST_BAL    = 48291;
+var SNEK_WEEKLY       = 3840;
+
+function snekCalc(val){
+  var amt = parseFloat(String(val).replace(/,/g,'')) || 0;
+  if(amt <= 0){ document.getElementById('snek-calc-yield').textContent = '—'; return; }
+  var share = amt / SNEK_TOTAL_STAKED;
+  var weekly = (share * SNEK_WEEKLY).toFixed(2);
+  document.getElementById('snek-calc-yield').textContent = '~' + weekly + ' NIGHT';
+}
+
+function snekStake(){
+  var inp = document.getElementById('snek-stake-input');
+  var confirm = document.getElementById('snek-stake-confirm');
+  var btn = inp ? inp.parentElement.querySelector('.btn-primary') : null;
+  if(inp && confirm){
+    if(btn) btn.style.display = 'none';
+    confirm.style.display = 'block';
+    // Bump stats
+    SNEK_TOTAL_STAKED += parseFloat(inp.value) || 0;
+    var stakers = document.getElementById('snek-stakers');
+    if(stakers) stakers.textContent = (parseInt(stakers.textContent.replace(/,/g,'')) + 1).toLocaleString();
+  }
+}
+
+function chestApply(){
+  var token   = document.getElementById('chest-token-input');
+  var contact = document.getElementById('chest-contact-input');
+  var confirm = document.getElementById('chest-apply-confirm');
+  if(!token || !contact) return;
+  if(token.value.trim() && contact.value.includes('@')){
+    var row = token.parentElement;
+    if(row) row.style.display = 'none';
+    if(confirm) confirm.style.display = 'block';
+  } else {
+    if(!token.value.trim()) token.style.borderColor = 'var(--red)';
+    if(!contact.value.includes('@')) contact.style.borderColor = 'var(--red)';
+    setTimeout(function(){
+      token.style.borderColor = 'var(--rim2)';
+      contact.style.borderColor = 'var(--rim2)';
+    }, 2000);
+  }
+}
+
+// Animate SNEK chest stats (slow tick to feel live)
+(function(){
+  setInterval(function(){
+    SNEK_CHEST_BAL += Math.floor(Math.random() * 3);
+    var el = document.getElementById('snek-chest-bal');
+    if(el) el.textContent = SNEK_CHEST_BAL.toLocaleString();
+  }, 4000);
+})();
 
 // ── Night ID ─────────────────────────────────────────────────
 function nightIdJoin(){
