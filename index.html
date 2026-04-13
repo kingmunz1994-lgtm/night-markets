@@ -13842,12 +13842,13 @@ function renderNftGrid(nfts, gridId) {
   grid.innerHTML = nfts.map(function(nft) {
     var selected = nftPfpState.selected && nftPfpState.selected.id === nft.id ? 'selected' : '';
     var rarityPill = nft.rarity !== 'base'
-      ? '<div class="nft-rarity-pill '+nft.rarity+'">'+rarityLabel[nft.rarity]+'</div>'
+      ? '<div class="nft-rarity-pill ' + nft.rarity + '">' + rarityLabel[nft.rarity] + '</div>'
       : '';
-    return '<div class="nft-item '+selected+'" onclick="selectNft(''+nft.id+'',''+nft.community+'')">'
+    var onclickVal = 'selectNft(&quot;' + nft.id + '&quot;,&quot;' + nft.community + '&quot;)';
+    return '<div class="nft-item ' + selected + '" onclick="' + onclickVal + '">'
       + rarityPill
-      + '<div class="nft-item-img" style="background:'+nft.bg+';">'+nft.emoji+'</div>'
-      + '<div class="nft-item-name">'+nft.name+'</div>'
+      + '<div class="nft-item-img" style="background:' + nft.bg + ';">' + nft.emoji + '</div>'
+      + '<div class="nft-item-name">' + nft.name + '</div>'
       + '</div>';
   }).join('');
 }
