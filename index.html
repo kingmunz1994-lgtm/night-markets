@@ -2223,6 +2223,56 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .nid-partner-desc{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px;}
 .nid-partner-why{font-size:11px;color:var(--muted);font-family:var(--mono);background:var(--raised);border-radius:8px;padding:8px 10px;line-height:1.6;}
 .nid-partner-why strong{color:var(--text);}
+/* ── NFT Profile Picture ─────────────────────────────────── */
+.pfp-ring{width:44px;height:44px;border-radius:12px;border:2px solid var(--rim2);overflow:hidden;flex-shrink:0;cursor:pointer;transition:border-color .2s;position:relative;}
+.pfp-ring:hover{border-color:var(--glow);}
+.pfp-ring img{width:100%;height:100%;object-fit:cover;}
+.pfp-ring .pfp-default{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;background:linear-gradient(135deg,rgba(0,0,254,.15),rgba(0,255,136,.1));}
+.pfp-ring.verified{border-color:var(--green);}
+.pfp-ring.verified::after{content:'⊘';position:absolute;bottom:-4px;right:-4px;font-size:9px;background:var(--green);color:#000;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.pfp-ring.community-snek{border-color:#00e676;box-shadow:0 0 8px rgba(0,230,118,.3);}
+.pfp-ring.community-hosky{border-color:#ff6b35;box-shadow:0 0 8px rgba(255,107,53,.3);}
+.pfp-ring.community-spacebudz{border-color:#a78bfa;box-shadow:0 0 8px rgba(167,139,250,.3);}
+.community-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:var(--mono);font-weight:700;padding:3px 8px;border-radius:50px;border:1px solid;}
+.community-badge.snek{background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.3);color:#00e676;}
+.community-badge.hosky{background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.3);color:#ff6b35;}
+.community-badge.spacebudz{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3);color:#a78bfa;}
+.community-badge.clay{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:#fbbf24;}
+/* NFT picker modal */
+.nft-picker-overlay{position:fixed;inset:0;background:rgba(6,4,14,.85);z-index:2000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.nft-picker-modal{background:var(--card);border:1px solid var(--rim2);border-radius:24px;padding:32px;width:min(560px,95vw);max-height:80vh;overflow-y:auto;position:relative;}
+.nft-picker-title{font-size:20px;font-weight:900;margin-bottom:6px;}
+.nft-picker-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.nft-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.nft-item{border-radius:12px;overflow:hidden;border:2px solid var(--rim);cursor:pointer;transition:border-color .2s,transform .15s;position:relative;}
+.nft-item:hover{border-color:var(--glow);transform:scale(1.04);}
+.nft-item.selected{border-color:var(--green);}
+.nft-item.selected::after{content:'✓';position:absolute;top:4px;right:4px;background:var(--green);color:#000;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.nft-item-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--raised);display:flex;align-items:center;justify-content:center;font-size:28px;}
+.nft-item-name{font-size:9px;font-family:var(--mono);padding:4px 6px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nft-rarity-pill{position:absolute;top:4px;left:4px;font-size:8px;font-family:var(--mono);font-weight:700;padding:2px 5px;border-radius:4px;}
+.nft-rarity-pill.legendary{background:#f59e0b;color:#000;}
+.nft-rarity-pill.rare{background:#a78bfa;color:#000;}
+.nft-rarity-pill.uncommon{background:var(--green);color:#000;}
+/* ZK proof overlay inside nft modal */
+.nft-zk-proof{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.2);border-radius:14px;padding:16px;margin-top:16px;}
+.nft-zk-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--green);margin-bottom:8px;}
+.nft-zk-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--mono);padding:4px 0;}
+.nft-zk-dot{width:6px;height:6px;border-radius:50%;background:var(--rim2);flex-shrink:0;transition:background .4s;}
+.nft-zk-dot.done{background:var(--green);}
+.nft-zk-dot.active{background:var(--gold);animation:pulse 1s infinite;}
+/* Rarity multiplier badge on chest page */
+.chest-rarity-banner{background:linear-gradient(135deg,rgba(0,230,118,.06),rgba(251,191,36,.04));border:1px solid rgba(0,230,118,.2);border-radius:16px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;}
+.chest-rarity-icon{font-size:28px;flex-shrink:0;}
+.chest-rarity-title{font-size:14px;font-weight:900;margin-bottom:4px;}
+.chest-rarity-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.chest-rarity-tiers{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.chest-rarity-tier{font-size:10px;font-family:var(--mono);font-weight:700;padding:4px 10px;border-radius:50px;border:1px solid;}
+.chest-rarity-tier.base{background:var(--raised);border-color:var(--rim2);color:var(--muted);}
+.chest-rarity-tier.uncommon{background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.3);color:var(--green);}
+.chest-rarity-tier.rare{background:rgba(167,139,250,.06);border-color:rgba(167,139,250,.3);color:#a78bfa;}
+.chest-rarity-tier.legendary{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.3);color:#f59e0b;}
+
 .nid-cta-block{text-align:center;background:linear-gradient(135deg,rgba(0,0,254,.08),rgba(6,182,212,.04));border:1px solid rgba(0,0,254,.2);border-radius:22px;padding:48px 32px;margin:0 0 60px;}
 .nid-cta-orb{font-size:40px;margin-bottom:16px;}
 .nid-cta-block h2{font-size:28px;margin-bottom:12px;}
@@ -2680,9 +2730,16 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <!-- Connected wallet panel -->
         <div id="wallet-panel" style="display:none;position:absolute;top:calc(100% + 10px);right:0;background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:18px;min-width:280px;z-index:500;box-shadow:0 20px 60px rgba(0,0,0,.6);">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--rim);">
+            <div class="pfp-ring" id="wp-pfp-ring" onclick="openNftPicker()" title="Set NFT profile picture">
+              <div class="pfp-default" id="wp-pfp-default">🌑</div>
+              <img id="wp-pfp-img" src="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;" alt="pfp"/>
+            </div>
             <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--ink),var(--plasma));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🌑</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:12px;font-weight:700;" id="wp-name">Lace</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="font-size:12px;font-weight:700;" id="wp-name">Lace</div>
+                <span id="wp-community-badge" style="display:none;"></span>
+              </div>
               <div style="font-size:10px;color:var(--muted);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="wp-addr">—</div>
             </div>
             <div style="font-size:9px;font-family:var(--mono);color:var(--green);background:rgba(0,214,143,.1);border:1px solid rgba(0,214,143,.2);border-radius:4px;padding:2px 6px;" id="wp-net">Preprod</div>
@@ -2703,6 +2760,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
             </div>
           </div>
           <div style="display:flex;gap:8px;">
+            <button onclick="openNftPicker()" style="flex:1;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.25);border-radius:8px;padding:7px;font-size:10px;font-family:var(--mono);color:var(--green);cursor:pointer;">🖼 Set NFT pfp</button>
             <button onclick="refreshWalletBalances()" style="flex:1;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:8px;font-size:11px;font-weight:700;color:var(--glow);cursor:pointer;font-family:var(--sans);" id="wp-refresh-btn">↻ Refresh</button>
             <button onclick="disconnectWallet()" style="flex:1;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px;font-size:11px;font-weight:700;color:#ef4444;cursor:pointer;font-family:var(--sans);">Disconnect</button>
           </div>
@@ -8998,6 +9056,22 @@ document.addEventListener('click',function(e){
       </div>
     </div>
 
+    <!-- NFT RARITY MULTIPLIER -->
+    <div class="chest-rarity-banner">
+      <div class="chest-rarity-icon">🖼️</div>
+      <div style="flex:1;">
+        <div class="chest-rarity-title">NFT holders earn more — ZK proven, wallet private</div>
+        <div class="chest-rarity-desc">Hold a community NFT? Set it as your Night Markets profile picture. Night ID generates a ZK proof of your NFT rarity — wallet address never revealed. Rarer NFT = higher chest yield multiplier.</div>
+        <div class="chest-rarity-tiers">
+          <div class="chest-rarity-tier base">No NFT pfp · 1x yield</div>
+          <div class="chest-rarity-tier uncommon">Uncommon · 1.25x yield</div>
+          <div class="chest-rarity-tier rare">Rare · 1.5x yield</div>
+          <div class="chest-rarity-tier legendary">Legendary · 2x yield</div>
+        </div>
+      </div>
+      <button class="btn btn-outline-ink btn-sm" onclick="openNftPicker()" style="white-space:nowrap;flex-shrink:0;">Set your pfp →</button>
+    </div>
+
     <!-- SNEK FEATURED CHEST -->
     <div class="eyebrow">Featured chest — SNEK · First community live</div>
     <div class="chest-featured">
@@ -9648,6 +9722,44 @@ document.addEventListener('click',function(e){
       </div>
     </div>
 
+  </div>
+</div>
+
+
+<!-- ══ NFT PFP PICKER MODAL ══ -->
+<div class="nft-picker-overlay" id="nft-picker-overlay" style="display:none;" onclick="if(event.target===this)closeNftPicker()">
+  <div class="nft-picker-modal">
+    <button onclick="closeNftPicker()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+    <div class="nft-picker-title">🖼 Set your NFT profile picture</div>
+    <div class="nft-picker-sub">Choose an NFT from your wallet. Night ID generates a ZK ownership proof — your wallet address is never linked to your public profile. Rarer NFTs unlock higher Community Chest yield multipliers.</div>
+
+    <!-- ZK Proof status -->
+    <div class="nft-zk-proof" id="nft-zk-proof-box" style="display:none;">
+      <div class="nft-zk-title">⊘ Generating ZK ownership proof…</div>
+      <div class="nft-zk-row"><div class="nft-zk-dot" id="nft-zk-1"></div><span>Scanning wallet NFT registry</span></div>
+      <div class="nft-zk-row"><div class="nft-zk-dot" id="nft-zk-2"></div><span>Verifying on-chain ownership</span></div>
+      <div class="nft-zk-row"><div class="nft-zk-dot" id="nft-zk-3"></div><span>Computing rarity rank (private)</span></div>
+      <div class="nft-zk-row"><div class="nft-zk-dot" id="nft-zk-4"></div><span>Generating ZK credential — wallet address hidden</span></div>
+      <div class="nft-zk-row"><div class="nft-zk-dot" id="nft-zk-5"></div><span>Storing proof in Night ID vault</span></div>
+      <div id="nft-zk-done" style="display:none;margin-top:10px;font-size:11px;color:var(--green);font-family:var(--mono);font-weight:700;">✓ ZK proof generated. Profile picture set. Wallet address: never disclosed.</div>
+    </div>
+
+    <!-- NFT grid — demo collection -->
+    <div id="nft-grid-wrap">
+      <div class="eyebrow" style="margin:16px 0 10px;">Your CNFTs — SNEK collection</div>
+      <div class="nft-grid" id="nft-grid">
+        <!-- JS-rendered -->
+      </div>
+      <div class="eyebrow" style="margin:16px 0 10px;">Your CNFTs — SpaceBudz collection</div>
+      <div class="nft-grid" id="nft-grid-2">
+        <!-- JS-rendered -->
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="btn btn-primary" id="nft-set-btn" onclick="confirmNftPfp()" style="flex:1;" disabled>Set as profile picture</button>
+      <button class="btn btn-outline-ink" onclick="clearNftPfp()" style="flex:1;">Remove pfp</button>
+    </div>
   </div>
 </div>
 
@@ -13694,6 +13806,164 @@ function adaWaitlist(){
 }
 
 
+
+
+
+// ── NFT Profile Picture System ────────────────────────────
+var nftPfpState = {
+  selected: null,
+  confirmed: null,
+  community: null,
+  rarity: null
+};
+
+// Demo CNFT collections
+var demoNfts = {
+  snek: [
+    {id:'snek-001',name:'SNEK #4291',emoji:'🐍',rarity:'legendary',community:'snek',bg:'#001a0a'},
+    {id:'snek-002',name:'SNEK #7103',emoji:'🐍',rarity:'rare',community:'snek',bg:'#0a0010'},
+    {id:'snek-003',name:'SNEK #1847',emoji:'🐍',rarity:'uncommon',community:'snek',bg:'#0a1000'},
+    {id:'snek-004',name:'SNEK #9922',emoji:'🐍',rarity:'base',community:'snek',bg:'#0d0d0d'},
+  ],
+  spacebudz: [
+    {id:'sb-001',name:'SpaceBud #3301',emoji:'🚀',rarity:'rare',community:'spacebudz',bg:'#0a0020'},
+    {id:'sb-002',name:'SpaceBud #8840',emoji:'👾',rarity:'uncommon',community:'spacebudz',bg:'#000a20'},
+    {id:'sb-003',name:'SpaceBud #102',emoji:'🌌',rarity:'legendary',community:'spacebudz',bg:'#100020'},
+    {id:'sb-004',name:'SpaceBud #5500',emoji:'🛸',rarity:'base',community:'spacebudz',bg:'#0a0a0a'},
+  ]
+};
+
+var rarityMultiplier = {legendary:'2×',rare:'1.5×',uncommon:'1.25×',base:'1×'};
+var rarityLabel = {legendary:'LEGENDARY',rare:'RARE',uncommon:'UNCOMMON',base:'BASE'};
+
+function renderNftGrid(nfts, gridId) {
+  var grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.innerHTML = nfts.map(function(nft) {
+    var selected = nftPfpState.selected && nftPfpState.selected.id === nft.id ? 'selected' : '';
+    var rarityPill = nft.rarity !== 'base'
+      ? '<div class="nft-rarity-pill '+nft.rarity+'">'+rarityLabel[nft.rarity]+'</div>'
+      : '';
+    return '<div class="nft-item '+selected+'" onclick="selectNft(''+nft.id+'',''+nft.community+'')">'
+      + rarityPill
+      + '<div class="nft-item-img" style="background:'+nft.bg+';">'+nft.emoji+'</div>'
+      + '<div class="nft-item-name">'+nft.name+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+function openNftPicker() {
+  document.getElementById('nft-picker-overlay').style.display = 'flex';
+  document.getElementById('nft-zk-proof-box').style.display = 'none';
+  document.getElementById('nft-grid-wrap').style.display = 'block';
+  document.getElementById('nft-set-btn').disabled = true;
+  renderNftGrid(demoNfts.snek, 'nft-grid');
+  renderNftGrid(demoNfts.spacebudz, 'nft-grid-2');
+}
+
+function closeNftPicker() {
+  document.getElementById('nft-picker-overlay').style.display = 'none';
+  nftPfpState.selected = null;
+  resetNftZkDots();
+}
+
+function selectNft(nftId, community) {
+  // Find nft object
+  var all = demoNfts.snek.concat(demoNfts.spacebudz);
+  nftPfpState.selected = all.find(function(n){ return n.id === nftId; });
+  nftPfpState.community = community;
+  renderNftGrid(demoNfts.snek, 'nft-grid');
+  renderNftGrid(demoNfts.spacebudz, 'nft-grid-2');
+  document.getElementById('nft-set-btn').disabled = false;
+}
+
+function resetNftZkDots() {
+  for (var i = 1; i <= 5; i++) {
+    var dot = document.getElementById('nft-zk-'+i);
+    if (dot) { dot.className = 'nft-zk-dot'; }
+  }
+  var done = document.getElementById('nft-zk-done');
+  if (done) done.style.display = 'none';
+  var title = document.querySelector('#nft-zk-proof-box .nft-zk-title');
+  if (title) title.textContent = '⊘ Generating ZK ownership proof…';
+}
+
+function confirmNftPfp() {
+  if (!nftPfpState.selected) return;
+  // Hide grid, show ZK animation
+  document.getElementById('nft-grid-wrap').style.display = 'none';
+  document.getElementById('nft-zk-proof-box').style.display = 'block';
+  document.getElementById('nft-set-btn').disabled = true;
+  resetNftZkDots();
+  var steps = [200, 700, 1300, 2000, 2700];
+  steps.forEach(function(delay, idx) {
+    setTimeout(function() {
+      var dot = document.getElementById('nft-zk-'+(idx+1));
+      if (dot) {
+        dot.className = 'nft-zk-dot active';
+        if (idx > 0) {
+          var prev = document.getElementById('nft-zk-'+idx);
+          if (prev) prev.className = 'nft-zk-dot done';
+        }
+      }
+    }, delay);
+  });
+  setTimeout(function() {
+    // All done
+    for (var i = 1; i <= 5; i++) {
+      var d = document.getElementById('nft-zk-'+i);
+      if (d) d.className = 'nft-zk-dot done';
+    }
+    var title = document.querySelector('#nft-zk-proof-box .nft-zk-title');
+    if (title) title.textContent = '✓ ZK ownership proof verified';
+    document.getElementById('nft-zk-done').style.display = 'block';
+    // Apply pfp
+    nftPfpState.confirmed = nftPfpState.selected;
+    nftPfpState.rarity = nftPfpState.selected.rarity;
+    applyNftPfp(nftPfpState.confirmed);
+    // Close modal after delay
+    setTimeout(closeNftPicker, 1800);
+  }, 3200);
+}
+
+function applyNftPfp(nft) {
+  // Set pfp ring in wallet panel
+  var ring = document.getElementById('wp-pfp-ring');
+  var def = document.getElementById('wp-pfp-default');
+  if (ring) {
+    ring.className = 'pfp-ring verified community-'+nft.community;
+    def.textContent = nft.emoji;
+  }
+  // Set community badge
+  var badge = document.getElementById('wp-community-badge');
+  if (badge) {
+    badge.style.display = 'inline-flex';
+    badge.className = 'community-badge '+nft.community;
+    var labels = {snek:'🐍 SNEK',spacebudz:'🚀 SpaceBudz',hosky:'🐕 HOSKY',clay:'🏺 Clay'};
+    badge.textContent = labels[nft.community] || nft.community.toUpperCase();
+  }
+  // Show multiplier toast
+  var mult = rarityMultiplier[nft.rarity] || '1×';
+  showNftToast(nft.name+' set as your pfp · ZK proven · Chest yield: '+mult, nft.rarity === 'legendary' ? '#f59e0b' : 'var(--green)');
+}
+
+function clearNftPfp() {
+  nftPfpState = {selected:null,confirmed:null,community:null,rarity:null};
+  var ring = document.getElementById('wp-pfp-ring');
+  var def = document.getElementById('wp-pfp-default');
+  if (ring) { ring.className = 'pfp-ring'; def.textContent = '🌑'; }
+  var badge = document.getElementById('wp-community-badge');
+  if (badge) badge.style.display = 'none';
+  closeNftPicker();
+}
+
+function showNftToast(msg, color) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid '+(color||'var(--green)')+';border-radius:12px;padding:12px 18px;font-size:12px;font-family:var(--mono);color:var(--text);z-index:3000;max-width:320px;line-height:1.5;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:fadeUp .3s ease;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(function(){ t.remove(); },400); }, 3500);
+}
 
 </script>
 
