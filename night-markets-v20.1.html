@@ -1592,6 +1592,63 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 /* Launch form */
 .nf-launch-card{background:var(--surface);border:1px solid var(--rim2);border-radius:18px;padding:32px;margin-bottom:32px;}
 
+/* Night Fun — Battle Arena */
+.nf-battle-arena{background:linear-gradient(135deg,rgba(5,150,105,.04),rgba(220,38,38,.04));border:1px solid var(--rim2);border-radius:20px;padding:32px;margin-bottom:32px;position:relative;overflow:hidden;}
+.nf-battle-arena::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,rgba(0,214,143,.5),transparent,rgba(244,63,94,.5));}
+.nf-bar-wrap{background:var(--raised);border-radius:8px;overflow:hidden;height:12px;margin-bottom:8px;position:relative;}
+.nf-bar-peace{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,#059669,var(--green));transition:width 1s var(--ease-out);}
+.nf-bar-war{position:absolute;right:0;top:0;height:100%;background:linear-gradient(270deg,#dc2626,var(--red));transition:width 1s var(--ease-out);}
+.nf-bar-labels{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--muted);}
+
+/* Night Fun — Token grid */
+.nf-token-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.nf-token-card{background:var(--surface);border:1px solid var(--rim);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;}
+.nf-token-card:hover{border-color:var(--ink);transform:translateY(-2px);}
+.nf-token-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.nf-token-avatar{width:40px;height:40px;border-radius:10px;background:var(--raised);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.nf-token-name{font-size:14px;font-weight:700;margin-bottom:2px;}
+.nf-token-symbol{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.nf-token-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.nf-token-stat{background:var(--raised);border-radius:8px;padding:8px 10px;}
+.nf-token-stat-val{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--glow);}
+.nf-token-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.nf-token-badge{font-size:9px;font-weight:700;font-family:var(--mono);padding:2px 6px;border-radius:3px;margin-left:auto;flex-shrink:0;}
+.nf-token-badge.live{background:rgba(0,214,143,.1);color:var(--green);}
+.nf-token-badge.hot{background:rgba(249,115,22,.1);color:var(--orange);}
+.nf-token-badge.soon{background:rgba(245,197,24,.08);color:var(--gold);}
+
+/* Night Fun — Launch wizard */
+.nf-wizard-steps{display:flex;gap:0;margin-bottom:28px;position:relative;}
+.nf-wizard-steps::after{content:'';position:absolute;top:12px;left:calc(16.66%);right:calc(16.66%);height:1px;background:var(--rim2);z-index:0;}
+.nf-wizard-step{flex:1;text-align:center;position:relative;z-index:1;}
+.nf-wizard-step-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--rim2);background:var(--depth);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--mono);margin:0 auto 6px;transition:all .25s;}
+.nf-wizard-step.active .nf-wizard-step-dot{border-color:var(--ink);background:var(--ink);color:#fff;}
+.nf-wizard-step.done .nf-wizard-step-dot{border-color:var(--green);background:var(--green);color:#fff;}
+.nf-wizard-step-label{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.nf-wizard-step.active .nf-wizard-step-label{color:var(--glow);}
+.nf-wizard-panel{display:none;}
+.nf-wizard-panel.active{display:block;}
+.nf-merch-templates{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.nf-merch-tmpl{background:var(--raised);border:2px solid var(--rim);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s;}
+.nf-merch-tmpl:hover,.nf-merch-tmpl.sel{border-color:var(--ink);}
+.nf-merch-tmpl.sel{background:var(--halo2);}
+.nf-merch-tmpl-icon{font-size:24px;margin-bottom:6px;}
+.nf-merch-tmpl-name{font-size:11px;font-weight:700;}
+
+/* Night Fun — Revenue feed */
+.nf-feed{background:var(--surface);border:1px solid var(--rim2);border-radius:14px;overflow:hidden;margin-bottom:32px;}
+.nf-feed-header{padding:16px 20px;border-bottom:1px solid var(--rim);display:flex;align-items:center;justify-content:space-between;}
+.nf-feed-title{font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.nf-feed-live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s infinite;}
+.nf-feed-items{max-height:220px;overflow:hidden;}
+.nf-feed-item{padding:12px 20px;border-bottom:1px solid var(--rim);display:flex;align-items:center;gap:12px;font-size:12px;animation:slide-down .4s var(--ease-out);}
+.nf-feed-icon{font-size:16px;flex-shrink:0;}
+.nf-feed-text{flex:1;color:var(--text2);}
+.nf-feed-amount{font-family:var(--mono);font-size:11px;color:var(--green);font-weight:700;flex-shrink:0;}
+.nf-feed-time{font-family:var(--mono);font-size:10px;color:var(--faint);flex-shrink:0;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.3;}}
+@keyframes slide-down{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+
 /* Night Save page */
 #page-nightsave .page-inner{max-width:900px;margin:0 auto;padding:40px 24px;}
 .ns-banks-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--rim);border-radius:16px;overflow:hidden;margin-bottom:32px;}
@@ -2762,50 +2819,205 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 <!-- ══════════════ NIGHT FUN — v19 ══════════════ -->
 <div class="page" id="page-nightfun">
   <div class="page-inner">
+
+    <!-- Hero -->
     <div class="nf-hero">
       <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(6,182,212,.08);color:var(--cyan);border-color:rgba(6,182,212,.2);">🌙 Night Fun — Token + Merch Launchpad</span></div>
       <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:12px;">Launch your token.<br><em>Kill the dump.</em></h1>
-      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">Launch your Midnight token AND merch store simultaneously. In 5 minutes. Holders earn income from every merch sale. Nobody dumps a token that pays them.</p>
+      <p style="font-size:15px;color:var(--text2);max-width:580px;margin:0 auto;line-height:1.8;font-weight:300;">Launch your Midnight token AND merch store simultaneously. In 5 minutes. Holders earn income from every merch sale. Nobody dumps a token that pays them.</p>
     </div>
 
-    <!-- Peace vs War -->
-    <div style="margin-bottom:32px;">
-      <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:20px;">First launches on Night Fun</div>
-      <div class="nf-pvw">
-        <div class="nf-card peace" onclick="joinNFSide('peace')">
-          <div class="nf-card-inner">
-            <div class="nf-icon">☮️</div>
-            <div class="nf-name">Peace</div>
-            <div class="nf-desc">Financial freedom. Privacy as a human right. We are the banks. Built for the 1 billion excluded from global finance.</div>
-            <button class="nf-btn">Join Peace →</button>
-          </div>
+    <!-- Battle Arena -->
+    <div class="nf-battle-arena">
+      <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:24px;">⚔️ Season 1 — The Battle · First launches on Night Fun</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;margin-bottom:28px;">
+
+        <!-- Peace -->
+        <div style="text-align:center;">
+          <div style="font-size:40px;margin-bottom:10px;">☮️</div>
+          <div style="font-family:var(--serif);font-size:26px;font-style:italic;color:var(--green);margin-bottom:10px;">Peace</div>
+          <div style="font-family:var(--mono);font-size:36px;font-weight:700;color:var(--green);" id="nf-peace-count">0</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">holders waiting</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.65;margin-bottom:14px;">Financial freedom. Privacy as a human right. Built for the 1 billion excluded from global finance.</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:14px;" id="nf-peace-rev">$0.00 merch revenue</div>
+          <button style="background:linear-gradient(135deg,#059669,var(--green));color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);width:100%;" onclick="joinNFSide('peace')">Join Peace →</button>
         </div>
-        <div class="nf-vs">VS</div>
-        <div class="nf-card war" onclick="joinNFSide('war')">
-          <div class="nf-card-inner">
-            <div class="nf-icon">⚔️</div>
-            <div class="nf-name">War</div>
-            <div class="nf-desc">Burn the old system. Destroy the banks. The void aesthetic. Privacy as a weapon. The movement that breaks things.</div>
-            <button class="nf-btn">Join War →</button>
-          </div>
+
+        <!-- VS divider -->
+        <div style="text-align:center;padding:0 8px;">
+          <div style="font-family:var(--serif);font-size:32px;font-style:italic;color:var(--muted);">VS</div>
         </div>
+
+        <!-- War -->
+        <div style="text-align:center;">
+          <div style="font-size:40px;margin-bottom:10px;">⚔️</div>
+          <div style="font-family:var(--serif);font-size:26px;font-style:italic;color:var(--red);margin-bottom:10px;">War</div>
+          <div style="font-family:var(--mono);font-size:36px;font-weight:700;color:var(--red);" id="nf-war-count">0</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">holders waiting</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:300;line-height:1.65;margin-bottom:14px;">Burn the old system. Destroy the banks. Privacy as a weapon. The movement that breaks things.</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:14px;" id="nf-war-rev">$0.00 merch revenue</div>
+          <button style="background:linear-gradient(135deg,#dc2626,var(--red));color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);width:100%;" onclick="joinNFSide('war')">Join War →</button>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="nf-bar-wrap">
+        <div class="nf-bar-peace" id="nf-bar-peace" style="width:50%;"></div>
+        <div class="nf-bar-war" id="nf-bar-war" style="width:50%;"></div>
+      </div>
+      <div class="nf-bar-labels" style="margin-bottom:12px;">
+        <span id="nf-peace-pct" style="color:var(--green);">50% Peace</span>
+        <span style="color:var(--faint);font-size:9px;">COMMUNITY SIZE · MERCH SALES</span>
+        <span id="nf-war-pct" style="color:var(--red);">50% War</span>
       </div>
       <p style="text-align:center;font-size:11px;color:var(--muted);font-family:var(--mono);">Two tokens. One platform. Whichever community sells more merch wins. Real data. May the best community win. 🌙</p>
     </div>
 
-    <!-- Launch your own -->
-    <div class="nf-launch-card">
-      <div style="font-size:14px;font-weight:700;margin-bottom:6px;">🚀 Launch your own token + store</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;font-weight:300;">5 minutes. Zero fees. Your Midnight token and merch store live simultaneously.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-        <div class="field"><label class="label">Project name</label><input class="input" id="nf-name" placeholder="e.g. Hosky Token" type="text"/></div>
-        <div class="field"><label class="label">Token symbol</label><input class="input" id="nf-symbol" placeholder="e.g. HOSKY" type="text"/></div>
-        <div class="field"><label class="label">Total supply</label><input class="input" id="nf-supply" placeholder="e.g. 1,000,000,000" type="text"/></div>
-        <div class="field"><label class="label">Your NIGHT wallet</label><input class="input" id="nf-wallet" placeholder="mn_addr_..." type="text"/></div>
+    <!-- Featured Launches -->
+    <div style="margin-bottom:32px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;">🚀 Featured on Night Fun</div>
+        <span style="font-size:10px;font-family:var(--mono);color:var(--faint);">Sorted by community revenue</span>
       </div>
-      <div class="field" style="margin-bottom:16px;"><label class="label">Project description</label><textarea class="input" id="nf-desc" placeholder="Tell the community what you're building..." style="min-height:80px;resize:vertical;"></textarea></div>
-      <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="launchNightFun()">🌙 Launch token + merch store →</button>
-      <div style="font-size:10px;color:var(--faint);font-family:var(--mono);text-align:center;margin-top:8px;">⊘ ZK private · Midnight mainnet · Holders earn from day one</div>
+      <div class="nf-token-grid">
+        <div class="nf-token-card" onclick="toast('☮️ Peace Token — join the movement at launch','info')">
+          <div class="nf-token-top">
+            <div class="nf-token-avatar">☮️</div>
+            <div style="flex:1;">
+              <div class="nf-token-name">Peace Token</div>
+              <div class="nf-token-symbol">PEACE · Midnight</div>
+            </div>
+            <span class="nf-token-badge hot">🔥 Hot</span>
+          </div>
+          <div class="nf-token-stats">
+            <div class="nf-token-stat"><div class="nf-token-stat-val" id="ntc-peace-holders">—</div><div class="nf-token-stat-label">Holders</div></div>
+            <div class="nf-token-stat"><div class="nf-token-stat-val" style="color:var(--green);" id="ntc-peace-rev">$0</div><div class="nf-token-stat-label">Merch earned</div></div>
+          </div>
+        </div>
+        <div class="nf-token-card" onclick="toast('⚔️ War Token — join the battle at launch','info')">
+          <div class="nf-token-top">
+            <div class="nf-token-avatar">⚔️</div>
+            <div style="flex:1;">
+              <div class="nf-token-name">War Token</div>
+              <div class="nf-token-symbol">WAR · Midnight</div>
+            </div>
+            <span class="nf-token-badge hot">🔥 Hot</span>
+          </div>
+          <div class="nf-token-stats">
+            <div class="nf-token-stat"><div class="nf-token-stat-val" id="ntc-war-holders">—</div><div class="nf-token-stat-label">Holders</div></div>
+            <div class="nf-token-stat"><div class="nf-token-stat-val" style="color:var(--green);" id="ntc-war-rev">$0</div><div class="nf-token-stat-label">Merch earned</div></div>
+          </div>
+        </div>
+        <div class="nf-token-card" onclick="toast('🏙️ Midnight City AI factions — 12 agents, 12 token communities','info')">
+          <div class="nf-token-top">
+            <div class="nf-token-avatar">🏙️</div>
+            <div style="flex:1;">
+              <div class="nf-token-name">Midnight City</div>
+              <div class="nf-token-symbol">AI Factions · Q2 2025</div>
+            </div>
+            <span class="nf-token-badge soon">Soon</span>
+          </div>
+          <div class="nf-token-stats">
+            <div class="nf-token-stat"><div class="nf-token-stat-val">12 factions</div><div class="nf-token-stat-label">AI agents</div></div>
+            <div class="nf-token-stat"><div class="nf-token-stat-val" style="color:var(--cyan);">Launching</div><div class="nf-token-stat-label">Night Fun</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;"><button class="btn btn-ghost btn-sm" onclick="toast('Full token explorer goes live at Night Fun launch','info')">See all launches →</button></div>
+    </div>
+
+    <!-- Live Revenue Feed -->
+    <div class="nf-feed">
+      <div class="nf-feed-header">
+        <div class="nf-feed-title"><div class="nf-feed-live"></div>Live merch → holder payouts</div>
+        <span style="font-size:10px;font-family:var(--mono);color:var(--faint);">Demo · Real data at launch</span>
+      </div>
+      <div class="nf-feed-items" id="nf-feed-list">
+        <div class="nf-feed-item"><div class="nf-feed-icon">👕</div><div class="nf-feed-text">Someone bought a <strong>Peace Token Hoodie</strong> · Berlin</div><div class="nf-feed-amount">+$8.40 NIGHT</div><div class="nf-feed-time">just now</div></div>
+        <div class="nf-feed-item"><div class="nf-feed-icon">🧢</div><div class="nf-feed-text">Someone bought a <strong>War Token Cap</strong> · Manila</div><div class="nf-feed-amount">+$5.60 NIGHT</div><div class="nf-feed-time">2m ago</div></div>
+        <div class="nf-feed-item"><div class="nf-feed-icon">👔</div><div class="nf-feed-text">Someone bought a <strong>Peace Token Tee</strong> · Lagos</div><div class="nf-feed-amount">+$4.40 NIGHT</div><div class="nf-feed-time">5m ago</div></div>
+        <div class="nf-feed-item"><div class="nf-feed-icon">🏷️</div><div class="nf-feed-text">Someone bought a <strong>War Token Sticker Pack</strong> · Buenos Aires</div><div class="nf-feed-amount">+$1.80 NIGHT</div><div class="nf-feed-time">9m ago</div></div>
+      </div>
+    </div>
+
+    <!-- Launch wizard -->
+    <div class="nf-launch-card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px;">🚀 Launch your own token + store</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:24px;font-weight:300;">5 minutes. Zero fees. Your Midnight token and merch store live simultaneously.</div>
+
+      <!-- Step indicators -->
+      <div class="nf-wizard-steps">
+        <div class="nf-wizard-step active" id="nf-step-1">
+          <div class="nf-wizard-step-dot">1</div>
+          <div class="nf-wizard-step-label">Token</div>
+        </div>
+        <div class="nf-wizard-step" id="nf-step-2">
+          <div class="nf-wizard-step-dot">2</div>
+          <div class="nf-wizard-step-label">Store</div>
+        </div>
+        <div class="nf-wizard-step" id="nf-step-3">
+          <div class="nf-wizard-step-dot">3</div>
+          <div class="nf-wizard-step-label">Launch</div>
+        </div>
+      </div>
+
+      <!-- Panel 1: Token details -->
+      <div class="nf-wizard-panel active" id="nf-panel-1">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div class="field"><label class="label">Project name</label><input class="input" id="nf-name" placeholder="e.g. Hosky Token" type="text"/></div>
+          <div class="field"><label class="label">Token symbol</label><input class="input" id="nf-symbol" placeholder="e.g. HOSKY" type="text"/></div>
+          <div class="field"><label class="label">Total supply</label><input class="input" id="nf-supply" placeholder="e.g. 1,000,000,000" type="text"/></div>
+          <div class="field"><label class="label">Your NIGHT wallet</label><input class="input" id="nf-wallet" placeholder="mn_addr_..." type="text"/></div>
+        </div>
+        <div class="field" style="margin-bottom:20px;"><label class="label">Project description</label><textarea class="input" id="nf-desc" placeholder="Tell the community what you're building..." style="min-height:80px;resize:vertical;"></textarea></div>
+        <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="nfNextStep(2)">Next: Set up your merch store →</button>
+      </div>
+
+      <!-- Panel 2: Store config -->
+      <div class="nf-wizard-panel" id="nf-panel-2">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Choose your merch template</div>
+        <div class="nf-merch-templates">
+          <div class="nf-merch-tmpl sel" id="nf-tmpl-1" onclick="nfSelectTmpl(1)"><div class="nf-merch-tmpl-icon">👕</div><div class="nf-merch-tmpl-name">Logo chest</div></div>
+          <div class="nf-merch-tmpl" id="nf-tmpl-2" onclick="nfSelectTmpl(2)"><div class="nf-merch-tmpl-icon">🌑</div><div class="nf-merch-tmpl-name">Large back</div></div>
+          <div class="nf-merch-tmpl" id="nf-tmpl-3" onclick="nfSelectTmpl(3)"><div class="nf-merch-tmpl-icon">⊘</div><div class="nf-merch-tmpl-name">Minimal</div></div>
+          <div class="nf-merch-tmpl" id="nf-tmpl-4" onclick="nfSelectTmpl(4)"><div class="nf-merch-tmpl-icon">🔄</div><div class="nf-merch-tmpl-name">All-over</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+          <div class="field">
+            <label class="label">Your price markup</label>
+            <input class="input" id="nf-markup" placeholder="e.g. 20%" type="text" value="20%"/>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono);">Hoodie: base $42 → your price $50.40</div>
+          </div>
+          <div class="field">
+            <label class="label">Holder revenue share</label>
+            <input class="input" id="nf-revshare" placeholder="e.g. 80%" type="text" value="80%"/>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono);">80% of profit flows to token holders</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-ghost" style="flex:1;padding:14px;" onclick="nfNextStep(1)">← Back</button>
+          <button class="btn btn-primary" style="flex:2;padding:14px;" onclick="nfNextStep(3)">Next: Review & launch →</button>
+        </div>
+      </div>
+
+      <!-- Panel 3: Review & deploy -->
+      <div class="nf-wizard-panel" id="nf-panel-3">
+        <div style="background:var(--raised);border-radius:12px;padding:20px;margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:14px;">Review your launch</div>
+          <div style="display:grid;gap:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid var(--rim);padding-bottom:8px;"><span style="color:var(--muted);">Token</span><span id="rv-token" style="font-family:var(--mono);color:var(--glow);">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid var(--rim);padding-bottom:8px;"><span style="color:var(--muted);">Supply</span><span id="rv-supply" style="font-family:var(--mono);">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid var(--rim);padding-bottom:8px;"><span style="color:var(--muted);">Merch template</span><span id="rv-tmpl" style="font-family:var(--mono);">Logo chest</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid var(--rim);padding-bottom:8px;"><span style="color:var(--muted);">Holder revenue share</span><span id="rv-rev" style="font-family:var(--mono);color:var(--green);">80%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--muted);">Network</span><span style="font-family:var(--mono);color:var(--glow);">Midnight mainnet · ZK private</span></div>
+          </div>
+        </div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--faint);text-align:center;margin-bottom:16px;">⊘ ZK private · Midnight mainnet · Holders earn from day one</div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-ghost" style="flex:1;padding:14px;" onclick="nfNextStep(2)">← Back</button>
+          <button class="btn btn-primary" style="flex:2;padding:14px;" onclick="launchNightFun()">🌙 Deploy token + merch store →</button>
+        </div>
+      </div>
     </div>
 
     <!-- How it works -->
@@ -7858,12 +8070,69 @@ function closeFeatMenu(){ closeAllNavDrops(); }
 
 // Night Fun
 var nfSides = JSON.parse(localStorage.getItem('nf_sides') || '{"peace":0,"war":0}');
+
+function nfUpdateBattleBar() {
+  var total = nfSides.peace + nfSides.war;
+  var peacePct = total === 0 ? 50 : Math.round(nfSides.peace / total * 100);
+  var warPct = 100 - peacePct;
+  var bp = document.getElementById('nf-bar-peace'); if(bp) bp.style.width = peacePct + '%';
+  var bw = document.getElementById('nf-bar-war');  if(bw) bw.style.width = warPct + '%';
+  var cp = document.getElementById('nf-peace-count'); if(cp) cp.textContent = nfSides.peace.toLocaleString();
+  var cw = document.getElementById('nf-war-count');   if(cw) cw.textContent = nfSides.war.toLocaleString();
+  var pp = document.getElementById('nf-peace-pct'); if(pp) pp.textContent = peacePct + '% Peace';
+  var wp = document.getElementById('nf-war-pct');   if(wp) wp.textContent = warPct + '% War';
+  var hp = document.getElementById('ntc-peace-holders'); if(hp) hp.textContent = nfSides.peace > 0 ? nfSides.peace.toLocaleString() : '—';
+  var hw = document.getElementById('ntc-war-holders');   if(hw) hw.textContent = nfSides.war > 0 ? nfSides.war.toLocaleString() : '—';
+}
+nfUpdateBattleBar();
+
 function joinNFSide(side) {
   nfSides[side]++;
   localStorage.setItem('nf_sides', JSON.stringify(nfSides));
+  nfUpdateBattleBar();
   if(side === 'peace') toast('☮️ Peace side locked in — see you at Night Fun launch', 'success');
   else toast('⚔️ War side locked in — see you at Night Fun launch', 'success');
 }
+
+// Night Fun — Launch wizard
+var nfStep = 1;
+var nfSelectedTmpl = 1;
+var nfTmplNames = {1:'Logo chest', 2:'Large back', 3:'Minimal', 4:'All-over'};
+
+function nfNextStep(n) {
+  if(n === 2) {
+    var name = document.getElementById('nf-name');
+    var symbol = document.getElementById('nf-symbol');
+    if(!name || !name.value.trim() || !symbol || !symbol.value.trim()) {
+      toast('Please enter your project name and token symbol', 'error'); return;
+    }
+  }
+  if(n === 3) {
+    var name = document.getElementById('nf-name');
+    var symbol = document.getElementById('nf-symbol');
+    var supply = document.getElementById('nf-supply');
+    var revshare = document.getElementById('nf-revshare');
+    var rt = document.getElementById('rv-token');   if(rt) rt.textContent = (name?name.value:'') + ' (' + (symbol?symbol.value:'') + ')';
+    var rs = document.getElementById('rv-supply');  if(rs) rs.textContent = supply && supply.value ? supply.value : '—';
+    var rm = document.getElementById('rv-tmpl');    if(rm) rm.textContent = nfTmplNames[nfSelectedTmpl] || 'Logo chest';
+    var rr = document.getElementById('rv-rev');     if(rr) rr.textContent = revshare && revshare.value ? revshare.value : '80%';
+  }
+  var cur = document.getElementById('nf-panel-' + nfStep); if(cur) cur.classList.remove('active');
+  var sd  = document.getElementById('nf-step-' + nfStep);
+  if(sd) { sd.classList.remove('active'); if(n > nfStep) sd.classList.add('done'); else sd.classList.remove('done'); }
+  nfStep = n;
+  var next = document.getElementById('nf-panel-' + nfStep); if(next) next.classList.add('active');
+  var nd   = document.getElementById('nf-step-' + nfStep);  if(nd)  { nd.classList.remove('done'); nd.classList.add('active'); }
+}
+
+function nfSelectTmpl(n) {
+  nfSelectedTmpl = n;
+  for(var i = 1; i <= 4; i++) {
+    var el = document.getElementById('nf-tmpl-' + i);
+    if(el) el.classList.toggle('sel', i === n);
+  }
+}
+
 function launchNightFun() {
   var name = document.getElementById('nf-name');
   var symbol = document.getElementById('nf-symbol');
@@ -7873,6 +8142,42 @@ function launchNightFun() {
   if(!walletState || !walletState.connected) { openWalletModal(); return; }
   toast('🌙 Night Fun launching '+name.value+' ('+symbol.value+') — deploying Midnight contract + merch store...', 'success');
 }
+
+// Night Fun — Live revenue feed (demo simulation)
+var _nfPeaceRev = 0, _nfWarRev = 0, _nfFeedIdx = 0;
+var _nfFeedEvents = [
+  {icon:'👕', text:'Someone bought a <strong>Peace Token Hoodie</strong> · Lagos',       amt:'+$8.40 NIGHT', side:'peace', val:8.40},
+  {icon:'🧢', text:'Someone bought a <strong>War Token Cap</strong> · Manila',            amt:'+$5.60 NIGHT', side:'war',   val:5.60},
+  {icon:'🏷️', text:'Someone bought a <strong>Peace Token Sticker Pack</strong> · Nairobi',amt:'+$1.80 NIGHT', side:'peace', val:1.80},
+  {icon:'👔', text:'Someone bought a <strong>War Token Tee</strong> · São Paulo',         amt:'+$4.40 NIGHT', side:'war',   val:4.40},
+  {icon:'👕', text:'Someone bought a <strong>Peace Token Hoodie</strong> · Jakarta',      amt:'+$8.40 NIGHT', side:'peace', val:8.40},
+  {icon:'🧢', text:'Someone bought a <strong>War Token Cap</strong> · Berlin',            amt:'+$5.60 NIGHT', side:'war',   val:5.60},
+  {icon:'👔', text:'Someone bought a <strong>Peace Token Tee</strong> · Accra',           amt:'+$4.40 NIGHT', side:'peace', val:4.40},
+  {icon:'🏷️', text:'Someone bought a <strong>War Token Sticker Pack</strong> · Karachi',  amt:'+$1.80 NIGHT', side:'war',   val:1.80},
+];
+function _nfTickFeed() {
+  var feed = document.getElementById('nf-feed-list');
+  if(!feed) return;
+  var ev = _nfFeedEvents[_nfFeedIdx % _nfFeedEvents.length];
+  _nfFeedIdx++;
+  if(ev.side === 'peace') {
+    _nfPeaceRev += ev.val;
+    var ep = document.getElementById('nf-peace-rev'); if(ep) ep.textContent = '$' + _nfPeaceRev.toFixed(2) + ' merch revenue';
+    var ep2 = document.getElementById('ntc-peace-rev'); if(ep2) ep2.textContent = '$' + _nfPeaceRev.toFixed(2);
+  } else {
+    _nfWarRev += ev.val;
+    var ew = document.getElementById('nf-war-rev'); if(ew) ew.textContent = '$' + _nfWarRev.toFixed(2) + ' merch revenue';
+    var ew2 = document.getElementById('ntc-war-rev'); if(ew2) ew2.textContent = '$' + _nfWarRev.toFixed(2);
+  }
+  var item = document.createElement('div');
+  item.className = 'nf-feed-item';
+  item.innerHTML = '<div class="nf-feed-icon">'+ev.icon+'</div><div class="nf-feed-text">'+ev.text+'</div><div class="nf-feed-amount">'+ev.amt+'</div><div class="nf-feed-time">just now</div>';
+  feed.insertBefore(item, feed.firstChild);
+  var items = feed.querySelectorAll('.nf-feed-item');
+  items.forEach(function(it, i){ var t = it.querySelector('.nf-feed-time'); if(t && i > 0) t.textContent = i + 'm ago'; });
+  while(feed.children.length > 6) feed.removeChild(feed.lastChild);
+}
+setInterval(_nfTickFeed, 7000);
 
 // Night Save
 function openNightSave() {
