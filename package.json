@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "compile": "compact compile contracts/NightMarketsEscrow.compact contracts/managed/night-markets-escrow",
+    "compile:nightfun": "compact compile contracts/NightFunToken.compact contracts/managed/night-fun-token",
+    "night-fun": "node --env-file=.env --import tsx scripts/night-fun.ts",
     "deploy": "node --env-file=.env --import tsx scripts/deploy.ts",
     "transact": "node --env-file=.env --import tsx scripts/transact.ts",
     "full-flow": "node --env-file=.env --import tsx scripts/full-flow.ts",
