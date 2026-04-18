@@ -220,6 +220,28 @@ async function makeProviders(ctx: Awaited<ReturnType<typeof buildWallet>>, cfg: 
   };
 }
 
+// ─── DUST Sponsorship (future — Mōhalu phase mid-2026) ────────────────────────
+// When available, wire a Night Markets sponsor service here so users don't need
+// DUST upfront. Pattern (wallet-api balanceFinalizedTransaction):
+//
+//   User side:
+//     const unbalanced = await contract.callTx.transfer(...);   // no DUST
+//     const serialized = serializeTransaction(unbalanced);
+//     await fetch('/api/sponsor', { method: 'POST', body: serialized }); // sponsor adds DUST + submits
+//
+//   Sponsor service (Express.js, holds NIGHT → generates DUST):
+//     app.post('/api/sponsor', async (req, res) => {
+//       const userTx  = deserializeTransaction(req.body);
+//       const sponsored = await sponsorWallet.balanceFinalizedTransaction(userTx, { dustSecretKey });
+//       const txId = await sponsorWallet.submitTransaction(sponsored);
+//       res.json({ txId });
+//     });
+//
+// Sundae Labs Capacity Exchange (scheduled mid-2026) will allow Night Markets
+// to purchase spare DUST generation capacity from NIGHT holders, removing the
+// need to hold NIGHT ourselves.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─── String ↔ Bytes<32> helpers ──────────────────────────────────────────────
 
 function strToBytes32(s: string): Uint8Array {

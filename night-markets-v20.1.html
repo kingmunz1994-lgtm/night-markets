@@ -8159,7 +8159,7 @@ function launchNightFun() {
   var creatorBps = 9500 - revBps;
   var tmplName = nfTmplNames[nfSelectedTmpl] || 'Logo chest';
 
-  var cmd = 'WALLET_SEED=<your-hex-seed> \\\n  MIDNIGHT_NETWORK=preprod \\\n  npx tsx scripts/night-fun-deploy.ts \\\n  --name "' + name + '" \\\n  --symbol "' + symbol + '" \\\n  --supply ' + supply + ' \\\n  --holderRevBps ' + revBps + ' \\\n  --tiers 0,0,0,0';
+  var cmd = 'WALLET_SEED=<your-hex-seed> \\\n  MIDNIGHT_NETWORK=preprod \\\n  npx tsx scripts/night-fun.ts \\\n  --name "' + name + '" \\\n  --symbol "' + symbol + '" \\\n  --supply ' + supply + ' \\\n  --holderRevBps ' + revBps + ' \\\n  --tiers 0,0,0,0';
 
   var cfg = JSON.stringify({
     name: name, symbol: symbol, supply: supply,
