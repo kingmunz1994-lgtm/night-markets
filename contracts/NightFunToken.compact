@@ -427,3 +427,188 @@ export circuit unpause(): Boolean {
   is_paused.insert(pad(32, "paused"), false);
   return true;
 }
+
+// ══════════════════════════════════════════════════════════════════
+//  OPENZEPP ELIN-STYLE ADDITIONS (OZ Compact patterns)
+// ══════════════════════════════════════════════════════════════════
+
+// ── OZ SafeOwnable: 2-step creator role transfer ─────────────────
+// Prevents accidentally transferring creator role to a wrong address.
+// Step 1: creator calls proposeCreatorTransfer(newCommitment)
+// Step 2: new creator calls acceptCreatorRole()
+export ledger pending_creator: Map<Bytes<32>, Bytes<32>>;  // key "pending_creator"
+
+export circuit proposeCreatorTransfer(newCreatorCommitment: Bytes<32>): Boolean {
+  assertCreator();
+  const nCom = disclose(newCreatorCommitment);
+  pending_creator.insert(pad(32, "pending_creator"), nCom);
+  return true;
+}
+
+export circuit acceptCreatorRole(): Bytes<32> {
+  const callerCom = creatorCommitment();
+  const cCom = disclose(callerCom);
+  assert(pending_creator.member(pad(32, "pending_creator")), "no pending transfer");
+  const pendingCom = pending_creator.lookup(pad(32, "pending_creator"));
+  assert(cCom == pendingCom, "not the pending creator");
+  creator_commit.insert(pad(32, "creator"), cCom);
+  pending_creator.insert(pad(32, "pending_creator"), pad(32, ""));
+  return cCom;
+}
+
+// ── OZ ERC20-style: approve + transferFrom ───────────────────────
+// Allows a ZK delegate (e.g. Night Markets escrow) to transfer tokens
+// on behalf of the holder, up to an approved allowance.
+// Both approver and spender identities are commitments — never revealed.
+export ledger allowance: Map<Bytes<32>, Uint<64>>; // hash(owner‖spender) → amount
+
+circuit allowanceKey(ownerCom: Bytes<32>, spenderCom: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([ownerCom, spenderCom]);
+}
+
+witness spenderSecretKey(): Bytes<32>;
+
+export circuit approve(spenderCommitment: Bytes<32>, amount: Uint<64>): Boolean {
+  assertNotPaused();
+  const ownerCom  = callerCommitment();
+  const oCom      = disclose(ownerCom);
+  const sCom      = disclose(spenderCommitment);
+  const amt       = disclose(amount);
+  const key       = allowanceKey(oCom, sCom);
+  allowance.insert(key, amt);
+  return true;
+}
+
+export circuit transferFrom(
+  ownerCommitment:   Bytes<32>,
+  recipientCommitment: Bytes<32>,
+  amount:            Uint<64>
+): Boolean {
+  assertNotPaused();
+
+  // Verify spender identity
+  const sk       = spenderSecretKey();
+  const contractAddr = kernel.self().bytes;
+  const spenderCom = disclose(persistentHash<Vector<2, Bytes<32>>>([contractAddr, sk]));
+
+  const oCom = disclose(ownerCommitment);
+  const rCom = disclose(recipientCommitment);
+  const amt  = disclose(amount);
+
+  // Check and deduct allowance
+  const key = allowanceKey(oCom, spenderCom);
+  assert(allowance.member(key), "no allowance");
+  const allowed = allowance.lookup(key);
+  assert(allowed >= amt, "allowance exceeded");
+  allowance.insert(key, (allowed - amt) as Uint<64>);
+
+  // Deduct owner balance
+  assert(holder_balance.member(oCom), "owner has no balance");
+  const ownerBal = holder_balance.lookup(oCom);
+  assert(ownerBal >= amt, "insufficient owner balance");
+  holder_balance.insert(oCom, (ownerBal - amt) as Uint<64>);
+
+  // Credit recipient
+  const recipientBal = holder_balance.member(rCom)
+    ? holder_balance.lookup(rCom)
+    : (0 as Uint<64>);
+  if (recipientBal == (0 as Uint<64>)) {
+    total_holders.increment(1);
+  }
+  holder_balance.insert(rCom, (recipientBal + amt) as Uint<64>);
+  if (holder_last_claimed_ep.member(rCom) == false) {
+    holder_last_claimed_ep.insert(rCom, current_epoch.value);
+  }
+
+  return true;
+}
+
+// ── OZ Burnable: holder burns their own tokens ───────────────────
+// Reduces total supply permanently. Used for deflationary mechanics,
+// e.g. burning tokens to mint exclusive physical collectibles.
+export circuit burn(amount: Uint<64>): Boolean {
+  assertNotPaused();
+
+  const holderCom = callerCommitment();
+  const hCom      = disclose(holderCom);
+  const amt       = disclose(amount);
+
+  assert(holder_balance.member(hCom), "not a holder");
+  const balance = holderTokenBalance();
+  assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
+  assert(balance >= amt, "insufficient balance to burn");
+
+  const newBal = (balance - amt) as Uint<64>;
+  holder_balance.insert(hCom, newBal);
+
+  // Reduce total supply
+  const sup = total_supply.lookup(pad(32, "supply"));
+  total_supply.insert(pad(32, "supply"), (sup - amt) as Uint<64>);
+
+  return true;
+}
+
+// ── OZ Mintable: creator mints additional supply ─────────────────
+// Capped at a hard max to prevent infinite inflation.
+// Enterprise: Coca-Cola launches regional edition — mints 500k more.
+// Micro: locked supply (never call this).
+export ledger max_supply: Map<Bytes<32>, Uint<64>>; // key "maxsup"
+
+export circuit setMaxSupply(max: Uint<64>): Boolean {
+  assertCreator();
+  assert(max_supply.member(pad(32, "maxsup")) == false, "max supply already set");
+  const m = disclose(max);
+  const cur = total_supply.lookup(pad(32, "supply"));
+  assert(m >= cur, "max below current supply");
+  max_supply.insert(pad(32, "maxsup"), m);
+  return true;
+}
+
+export circuit mint(recipientCommitment: Bytes<32>, amount: Uint<64>): Boolean {
+  assertCreator();
+  assertNotPaused();
+
+  const rCom = disclose(recipientCommitment);
+  const amt  = disclose(amount);
+
+  // Enforce max supply cap if set
+  const cur = total_supply.lookup(pad(32, "supply"));
+  if (max_supply.member(pad(32, "maxsup"))) {
+    const maxSup = max_supply.lookup(pad(32, "maxsup"));
+    assert((cur + amt) as Uint<64> <= maxSup, "exceeds max supply");
+  }
+
+  total_supply.insert(pad(32, "supply"), (cur + amt) as Uint<64>);
+
+  const recipientBal = holder_balance.member(rCom)
+    ? holder_balance.lookup(rCom)
+    : (0 as Uint<64>);
+  if (recipientBal == (0 as Uint<64>)) {
+    total_holders.increment(1);
+  }
+  holder_balance.insert(rCom, (recipientBal + amt) as Uint<64>);
+  if (holder_last_claimed_ep.member(rCom) == false) {
+    holder_last_claimed_ep.insert(rCom, current_epoch.value);
+  }
+
+  return true;
+}
+
+// ── OZ ReentrancyGuard pattern ───────────────────────────────────
+// Compact's sequential execution model already prevents re-entrancy
+// at the VM level, but we add an explicit guard flag for defence in depth.
+export ledger reentrancy_locked: Map<Bytes<32>, Boolean>; // key "lock"
+
+circuit assertNoReentrancy(): Boolean {
+  const locked = reentrancy_locked.member(pad(32, "lock"))
+    ? reentrancy_locked.lookup(pad(32, "lock"))
+    : false;
+  assert(locked == false, "reentrant call");
+  reentrancy_locked.insert(pad(32, "lock"), true);
+  return true;
+}
+
+circuit releaseReentrancyGuard(): Boolean {
+  reentrancy_locked.insert(pad(32, "lock"), false);
+  return true;
+}

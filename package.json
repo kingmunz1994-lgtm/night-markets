@@ -18,19 +18,20 @@
   "dependencies": {
     "@midnight-ntwrk/compact-js": "2.4.0",
     "@midnight-ntwrk/compact-runtime": "0.14.0",
+    "@midnight-ntwrk/dapp-connector-proof-provider": "4.0.4",
     "@midnight-ntwrk/ledger": "^4.0.0",
     "@midnight-ntwrk/ledger-v7": "7.0.2",
-    "@midnight-ntwrk/midnight-js-contracts": "3.0.0",
-    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "3.0.0",
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "3.0.0",
-    "@midnight-ntwrk/midnight-js-level-private-state-provider": "3.0.0",
-    "@midnight-ntwrk/midnight-js-network-id": "3.0.0",
-    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "3.0.0",
-    "@midnight-ntwrk/midnight-js-types": "3.0.0",
-    "@midnight-ntwrk/wallet-sdk-address-format": "3.0.0",
+    "@midnight-ntwrk/midnight-js-contracts": "4.0.4",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.0.4",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.0.4",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.0.4",
+    "@midnight-ntwrk/midnight-js-network-id": "4.0.4",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.0.4",
+    "@midnight-ntwrk/midnight-js-types": "4.0.4",
+    "@midnight-ntwrk/wallet-sdk-address-format": "4.0.4",
     "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
-    "@midnight-ntwrk/wallet-sdk-hd": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-hd": "4.0.4",
     "@midnight-ntwrk/wallet-sdk-shielded": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "1.0.0",
     "ws": "^8.19.0"
@@ -49,5 +50,10 @@
     "@midnight-ntwrk/compact-js": "2.4.0",
     "@midnight-ntwrk/ledger-v7": "7.0.2",
     "smoldot": "npm:@aspect-build/empty@0.0.0"
+  },
+  "notes": {
+    "midnight-js-v4": "v4.0.4 — no breaking changes from v4.0.2; ImpureCircuitId→ProvableCircuitId (v4.0.1), reverted in v4.0.2. dapp-connector-proof-provider new in v4.0.3.",
+    "nocturne": "Nocturne wallet uses same window.midnight connector standard as Lace; connectNocturne() in UI handles it with graceful fallback.",
+    "dust-sponsorship": "requestDustSponsorship() skeleton wired in UI; /api/sponsor endpoint needed for mainnet. Mōhalu phase mid-2026."
   }
 }

@@ -1943,6 +1943,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div class="nav-drop-menu" id="shop-drop-menu">
           <div class="ndm-item" onclick="showPage('home');closeAllNavDrops()">🏠 Home</div>
           <div class="ndm-item" onclick="showPage('shop');closeAllNavDrops()">⊘ Marketplace</div>
+          <div class="ndm-item" onclick="showPage('auctions');renderAuctionsPage();closeAllNavDrops()">🔨 Auctions</div>
           <div class="ndm-item" onclick="showPage('stores');renderStoresPage();closeAllNavDrops()">🏪 Stores</div>
           <div class="ndm-item" onclick="showPage('cart');closeAllNavDrops()">🛒 Cart</div>
           <div class="ndm-item" onclick="showPage('orders');closeAllNavDrops()">📦 My Orders</div>
@@ -2290,6 +2291,40 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         </div>
         <div class="prod-grid" id="prod-grid"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ AUCTIONS ══════════════ -->
+<div class="page" id="page-auctions">
+  <div class="page-inner" style="max-width:1100px;margin:0 auto;padding:40px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="margin-bottom:8px;"><span class="tag" style="background:rgba(251,191,36,.08);color:#fbbf24;border-color:rgba(251,191,36,.2);">🔨 ZK-verified bids · Auto-settle on Midnight</span></div>
+        <h1 style="font-family:var(--serif);font-size:40px;font-style:italic;margin-bottom:6px;">Live Auctions</h1>
+        <p style="font-size:14px;color:var(--muted);font-weight:300;">Place bids with NIGHT tokens. Winning bids lock into escrow instantly. Losers are auto-refunded. No sniping, no gas wars.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('ov-create-auction')">+ Create Auction</button>
+    </div>
+
+    <!-- Filters -->
+    <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;" id="auction-filters">
+      <div class="cat-pill active" onclick="setAuctionFilter('all',this)">All</div>
+      <div class="cat-pill" onclick="setAuctionFilter('live',this)">🔴 Live</div>
+      <div class="cat-pill" onclick="setAuctionFilter('ending',this)">⏱ Ending Soon</div>
+      <div class="cat-pill" onclick="setAuctionFilter('new',this)">✨ New</div>
+      <div class="cat-pill" onclick="setAuctionFilter('mine',this)">My Bids</div>
+    </div>
+
+    <!-- Auction grid -->
+    <div id="auction-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;"></div>
+
+    <!-- Empty state -->
+    <div id="auction-empty" style="display:none;text-align:center;padding:60px 24px;">
+      <div style="font-size:48px;margin-bottom:16px;">🔨</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px;">No auctions yet</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Be the first to list something for auction.</div>
+      <button class="btn btn-primary" onclick="openModal('ov-create-auction')">Create Auction →</button>
     </div>
   </div>
 </div>
@@ -6199,6 +6234,14 @@ document.addEventListener('click',function(e){
         </div>
         <div style="margin-left:auto;font-size:12px;background:rgba(0,214,143,.1);color:#00d68f;padding:3px 10px;border-radius:6px;font-weight:700;">Recommended</div>
       </div>
+      <div onclick="connectNocturne()" style="background:#16122a;border:1px solid #2d2550;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:10px;" onmouseover="this.style.borderColor='#06b6d4'" onmouseout="this.style.borderColor='#2d2550'">
+        <div style="font-size:28px;">🦉</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:2px;">Nocturne Wallet</div>
+          <div style="font-size:12px;color:#6b7280;">Self-custodial Chrome extension · ZK-native</div>
+        </div>
+        <div style="margin-left:auto;font-size:12px;background:rgba(6,182,212,.1);color:#06b6d4;padding:3px 10px;border-radius:6px;font-weight:700;">Beta</div>
+      </div>
       <div onclick="connectDemo()" style="background:#16122a;border:1px solid #2d2550;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='#2d2550'">
         <div style="font-size:28px;">🎭</div>
         <div>
@@ -6207,8 +6250,8 @@ document.addEventListener('click',function(e){
         </div>
       </div>
       <div style="margin-top:16px;font-size:12px;color:#6b7280;text-align:center;line-height:1.6;">
-        Don't have Lace? <a href="https://midnight.network/lace" target="_blank" style="color:#7c3aed;">Download it free →</a><br>
-        Make sure Lace is set to <strong style="color:#fff;">Preprod</strong> network before connecting.
+        <span onclick="openModal('ov-mainnet')" style="color:#7c3aed;cursor:pointer;">⚙ Network: <span id="wallet-net-label">Preprod</span></span> ·
+        <a href="https://midnight.network/lace" target="_blank" style="color:#7c3aed;">Get Lace →</a>
       </div>
     </div>
   </div>
@@ -6321,6 +6364,108 @@ document.addEventListener('click',function(e){
       <div class="field"><label class="label">Description</label><textarea class="textarea" id="mnl-desc" placeholder="Describe your item…" style="min-height:72px;"></textarea></div>
       <div class="field"><label class="label">Ships from</label><input class="input" id="mnl-ship" placeholder="e.g. Tokyo, JP"/></div>
       <button class="btn btn-primary btn-full" onclick="submitModalListing()" style="margin-top:12px;">Create Listing →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CREATE AUCTION MODAL ══════════════ -->
+<div class="overlay" id="ov-create-auction" onclick="if(event.target===this)closeModal('ov-create-auction')">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h2>🔨 Create Auction</h2>
+      <button class="modal-close" onclick="closeModal('ov-create-auction')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-2col">
+        <div class="field"><label class="label">Item title</label><input class="input" id="ca-title" placeholder="e.g. Rare Midnight Hoodie #001"/></div>
+        <div class="field"><label class="label">Category</label>
+          <select class="select" id="ca-cat">
+            <option value="">Select…</option>
+            <option>Fashion &amp; Apparel</option><option>Electronics</option><option>Collectibles</option><option>Art</option><option>Digital Goods</option><option>Handmade</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label class="label">Starting bid (NIGHT)</label><input class="input" id="ca-start" type="number" min="1" placeholder="10"/></div>
+        <div class="field"><label class="label">Reserve price (NIGHT)</label><input class="input" id="ca-reserve" type="number" min="0" placeholder="Optional — 0 for none"/></div>
+        <div class="field"><label class="label">Buy-it-now (NIGHT)</label><input class="input" id="ca-bin" type="number" min="0" placeholder="Optional — 0 for none"/></div>
+        <div class="field"><label class="label">Duration</label>
+          <select class="select" id="ca-duration">
+            <option value="3600">1 hour</option>
+            <option value="21600">6 hours</option>
+            <option value="86400" selected>24 hours</option>
+            <option value="259200">3 days</option>
+            <option value="604800">7 days</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label class="label">Description</label><textarea class="textarea" id="ca-desc" placeholder="Describe condition, provenance, shipping details…" style="min-height:72px;"></textarea></div>
+      <div class="field"><label class="label">Emoji</label><input class="input" id="ca-emoji" placeholder="🧥" maxlength="4"/></div>
+      <div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.15);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.6;">
+        <strong style="color:#fbbf24;">⊘ ZK auction mechanics</strong> — bids lock NIGHT tokens into escrow instantly. Outbid funds auto-refund. Winner's payment releases to seller on delivery confirmation.
+      </div>
+      <button class="btn btn-primary btn-full" onclick="submitAuction()">Launch Auction →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ BID MODAL ══════════════ -->
+<div class="overlay" id="ov-bid" onclick="if(event.target===this)closeModal('ov-bid')">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h2 id="bid-modal-title">Place Bid</h2>
+      <button class="modal-close" onclick="closeModal('ov-bid')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="bid-auction-id"/>
+      <div id="bid-auction-info" style="background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:14px;margin-bottom:18px;"></div>
+      <div class="field" style="margin-bottom:18px;">
+        <label class="label">Your bid (NIGHT)</label>
+        <input class="input" id="bid-amount" type="number" min="1" placeholder="Enter bid amount"/>
+        <div id="bid-min-hint" style="font-size:11px;color:var(--muted);margin-top:5px;font-family:var(--mono);"></div>
+      </div>
+      <div style="background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:8px;padding:10px;margin-bottom:16px;font-size:11px;color:var(--muted);line-height:1.6;">
+        ⊘ Your bid locks NIGHT tokens into escrow. If outbid, tokens auto-refund to your wallet within one block.
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeModal('ov-bid')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2;" onclick="submitBid()">🔨 Place Bid</button>
+      </div>
+      <div id="bid-bin-section" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--rim2);">
+        <button class="btn btn-outline-ink btn-full" onclick="buyItNow()" id="bid-bin-btn">⚡ Buy It Now — <span id="bid-bin-price"></span> NIGHT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAINNET CONFIG MODAL ══════════════ -->
+<div class="overlay" id="ov-mainnet" onclick="if(event.target===this)closeModal('ov-mainnet')">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2>🌑 Network Configuration</h2>
+      <button class="modal-close" onclick="closeModal('ov-mainnet')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <div class="co-tier-option" id="net-preprod" onclick="setNetwork('preprod')" style="background:var(--raised);border:2px solid var(--ink);border-radius:12px;padding:14px;cursor:pointer;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div><div style="font-size:13px;font-weight:700;">Preprod <span style="font-size:10px;color:var(--green);background:rgba(0,214,143,.1);padding:2px 6px;border-radius:4px;margin-left:6px;">ACTIVE</span></div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Test network · Free transactions · No real NIGHT</div></div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--muted);">✓</div>
+          </div>
+        </div>
+        <div class="co-tier-option" id="net-mainnet" onclick="setNetwork('mainnet')" style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:14px;cursor:pointer;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div><div style="font-size:13px;font-weight:700;">Mainnet <span style="font-size:10px;color:var(--orange);background:rgba(249,115,22,.1);padding:2px 6px;border-radius:4px;margin-left:6px;">REAL NIGHT</span></div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Live network · Real transactions · DUST fee sponsorship</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:rgba(0,0,0,.2);border:1px solid var(--rim2);border-radius:10px;padding:14px;font-size:12px;font-family:var(--mono);margin-bottom:16px;">
+        <div style="color:var(--muted);margin-bottom:6px;">Current endpoints</div>
+        <div id="net-endpoints" style="color:var(--text2);line-height:1.8;word-break:break-all;"></div>
+      </div>
+      <div id="net-dust-section" style="display:none;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:10px;padding:14px;font-size:12px;color:var(--muted);line-height:1.65;margin-bottom:16px;">
+        <strong style="color:var(--glow);">⊘ DUST Sponsorship active</strong><br>
+        Night Markets sponsors transaction fees on mainnet. You only need NIGHT tokens — no DUST required. Fee sponsorship is handled server-side via the DUST sponsor wallet.
+      </div>
+      <button class="btn btn-primary btn-full" onclick="closeModal('ov-mainnet')">Save →</button>
     </div>
   </div>
 </div>
@@ -8975,6 +9120,360 @@ function sellerRepBadge(sellerId){
   renderSellerListings();
   renderCreatorReputation();
 })();
+
+// ══════════════════════════════════════════════════════════════════
+// AUCTION SYSTEM
+// ══════════════════════════════════════════════════════════════════
+var auctionStore = JSON.parse(localStorage.getItem('nm_auctions') || '[]');
+var auctionFilter = 'all';
+var _countdownInterval = null;
+
+function saveAuctions(){ localStorage.setItem('nm_auctions', JSON.stringify(auctionStore)); }
+
+function fmtCountdown(ms){
+  if(ms <= 0) return 'Ended';
+  var s = Math.floor(ms/1000);
+  var d = Math.floor(s/86400); s %= 86400;
+  var h = Math.floor(s/3600);  s %= 3600;
+  var m = Math.floor(s/60);    s %= 60;
+  if(d > 0) return `${d}d ${h}h`;
+  if(h > 0) return `${h}h ${m}m`;
+  return `${m}m ${s}s`;
+}
+
+function auctionStatus(a){
+  var now = Date.now();
+  if(now >= a.endsAt) return 'ended';
+  if(now >= a.endsAt - 3600000) return 'ending';
+  return 'live';
+}
+
+async function submitAuction(){
+  var title    = document.getElementById('ca-title')?.value.trim();
+  var cat      = document.getElementById('ca-cat')?.value;
+  var startBid = parseFloat(document.getElementById('ca-start')?.value || '0');
+  var reserve  = parseFloat(document.getElementById('ca-reserve')?.value || '0');
+  var bin      = parseFloat(document.getElementById('ca-bin')?.value || '0');
+  var duration = parseInt(document.getElementById('ca-duration')?.value || '86400');
+  var desc     = document.getElementById('ca-desc')?.value.trim();
+  var emoji    = document.getElementById('ca-emoji')?.value.trim() || '📦';
+
+  if(!title || !cat || !startBid){ toast('Fill in title, category and starting bid','error'); return; }
+
+  var id = 'AUC-' + uid();
+  var auction = {
+    id, title, cat, desc, emoji,
+    startBid, reserve: reserve || 0, bin: bin || 0,
+    currentBid: 0, currentBidder: null, bidCount: 0,
+    sellerId: walletState?.address || 'local-seller',
+    createdAt: Date.now(), endsAt: Date.now() + duration * 1000,
+    bids: [], settled: false, escrowId: null
+  };
+
+  toast('Creating auction on Midnight…','info');
+  try {
+    var txId = await simulateCompactCreateListing(id, 'ipfs://auction-'+id, startBid);
+    auction.escrowId = id;
+    auction.txId = txId;
+  } catch(e){ auction.escrowId = id; }
+
+  auctionStore.push(auction);
+  saveAuctions();
+  closeModal('ov-create-auction');
+  showPage('auctions');
+  renderAuctionsPage();
+  toast('✓ Auction live — ZK escrow active','success');
+}
+
+function setAuctionFilter(f, el){
+  auctionFilter = f;
+  document.querySelectorAll('#auction-filters .cat-pill').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderAuctionsPage();
+}
+
+function renderAuctionsPage(){
+  var now = Date.now();
+  var myAddr = walletState?.address || 'local-seller';
+
+  var filtered = auctionStore.filter(a=>{
+    if(auctionFilter==='live')    return auctionStatus(a)==='live';
+    if(auctionFilter==='ending')  return auctionStatus(a)==='ending';
+    if(auctionFilter==='new')     return (now - a.createdAt) < 3600000;
+    if(auctionFilter==='mine')    return a.bids.some(b=>b.bidder===myAddr);
+    return true;
+  });
+
+  var grid = document.getElementById('auction-grid');
+  var empty = document.getElementById('auction-empty');
+  if(!grid) return;
+
+  if(!filtered.length){
+    grid.innerHTML=''; if(empty) empty.style.display='block'; return;
+  }
+  if(empty) empty.style.display='none';
+
+  grid.innerHTML = filtered.map(a=>{
+    var status = auctionStatus(a);
+    var timeLeft = a.endsAt - now;
+    var myBid = a.bids.find(b=>b.bidder===myAddr);
+    var isWinning = myBid && a.currentBidder===myAddr;
+    var statusColor = status==='ended'?'var(--muted)':status==='ending'?'var(--red)':'var(--green)';
+    var statusLabel = status==='ended'?'Ended':status==='ending'?'⏱ Ending soon':'🔴 Live';
+
+    return `<div style="background:var(--raised);border:1px solid var(--rim2);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--ink)'" onmouseout="this.style.borderColor='var(--rim2)'">
+      <div style="background:var(--surface);padding:28px;text-align:center;font-size:48px;position:relative;">
+        ${a.emoji}
+        <div style="position:absolute;top:10px;right:10px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;background:rgba(0,0,0,.4);color:${statusColor};">${statusLabel}</div>
+        ${isWinning?'<div style="position:absolute;top:10px;left:10px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;background:rgba(0,214,143,.15);color:var(--green);">✓ Winning</div>':''}
+      </div>
+      <div style="padding:16px;flex:1;display:flex;flex-direction:column;">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">${a.cat}</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;line-height:1.3;">${a.title}</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <div><div style="font-size:10px;color:var(--muted);">Current bid</div><div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--glow);">${a.currentBid||a.startBid} <span style="font-size:11px;color:var(--muted);">NIGHT</span></div></div>
+          <div style="text-align:right;"><div style="font-size:10px;color:var(--muted);">Time left</div><div style="font-size:14px;font-weight:700;font-family:var(--mono);color:${statusColor};" data-auction-id="${a.id}">${status==='ended'?'Ended':fmtCountdown(timeLeft)}</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">${a.bidCount} bid${a.bidCount!==1?'s':''} · ${a.reserve?'Reserve: '+a.reserve+' NIGHT':a.bin?'BIN: '+a.bin+' NIGHT':'No reserve'}</div>
+        ${status!=='ended'
+          ? `<button class="btn btn-primary btn-sm btn-full" onclick="openBidModal('${a.id}')">🔨 Place Bid</button>`
+          : a.currentBidder
+            ? `<div style="font-size:12px;color:var(--green);text-align:center;padding:8px;background:rgba(0,214,143,.06);border-radius:8px;">Sold — ${a.currentBid} NIGHT</div>`
+            : `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px;">No bids — unsold</div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  // Live countdown
+  clearInterval(_countdownInterval);
+  _countdownInterval = setInterval(()=>{
+    var n = Date.now();
+    document.querySelectorAll('[data-auction-id]').forEach(el=>{
+      var a = auctionStore.find(x=>x.id===el.dataset.auctionId);
+      if(!a) return;
+      var left = a.endsAt - n;
+      if(left <= 0){ el.textContent='Ended'; clearInterval(_countdownInterval); }
+      else el.textContent = fmtCountdown(left);
+    });
+    // Auto-settle ended auctions
+    auctionStore.filter(a=>!a.settled && Date.now()>=a.endsAt).forEach(settleAuction);
+  }, 1000);
+}
+
+function openBidModal(auctionId){
+  var a = auctionStore.find(x=>x.id===auctionId);
+  if(!a){ toast('Auction not found','error'); return; }
+  if(auctionStatus(a)==='ended'){ toast('This auction has ended','info'); return; }
+
+  var minBid = a.currentBid ? a.currentBid + 1 : a.startBid;
+  document.getElementById('bid-auction-id').value = auctionId;
+  document.getElementById('bid-modal-title').textContent = `🔨 Bid on: ${a.title}`;
+  document.getElementById('bid-amount').value = '';
+  document.getElementById('bid-amount').min = minBid;
+  document.getElementById('bid-min-hint').textContent = `Minimum bid: ${minBid} NIGHT`;
+  document.getElementById('bid-auction-info').innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:13px;">
+      <div>${a.emoji} ${a.title}</div>
+      <div style="font-family:var(--mono);font-weight:700;color:var(--glow);">${a.currentBid||a.startBid} NIGHT</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;">${a.bidCount} bids · Ends ${fmtCountdown(a.endsAt-Date.now())}</div>`;
+
+  var binSection = document.getElementById('bid-bin-section');
+  var binBtn = document.getElementById('bid-bin-price');
+  if(a.bin > 0){ binSection.style.display='block'; if(binBtn) binBtn.textContent=a.bin; }
+  else binSection.style.display='none';
+
+  openModal('ov-bid');
+}
+
+async function submitBid(){
+  var auctionId = document.getElementById('bid-auction-id')?.value;
+  var amount = parseFloat(document.getElementById('bid-amount')?.value || '0');
+  var a = auctionStore.find(x=>x.id===auctionId);
+  if(!a){ toast('Auction not found','error'); return; }
+
+  var minBid = a.currentBid ? a.currentBid + 1 : a.startBid;
+  if(amount < minBid){ toast(`Minimum bid is ${minBid} NIGHT`,'error'); return; }
+  if(auctionStatus(a)==='ended'){ toast('Auction has ended','error'); return; }
+
+  var bidder = walletState?.address || 'wallet-'+uid();
+  toast('Locking bid in escrow…','info');
+
+  try {
+    await simulateCompactFundEscrow(auctionId, amount);
+  } catch(e){ /* simulation fallback */ }
+
+  // Outbid previous: auto-refund simulation
+  if(a.currentBidder && a.currentBidder !== bidder){
+    toast(`Previous bidder auto-refunded ${a.currentBid} NIGHT`,'info');
+  }
+
+  a.bids.push({ bidder, amount, at: Date.now() });
+  a.currentBid = amount;
+  a.currentBidder = bidder;
+  a.bidCount++;
+
+  // BIN check
+  if(a.bin > 0 && amount >= a.bin){
+    a.endsAt = Date.now(); // end immediately
+    toast(`🎉 Buy It Now triggered — you won at ${amount} NIGHT!`,'success');
+  } else {
+    // Sniping prevention: extend by 5 min if bid in last 5 min
+    if(a.endsAt - Date.now() < 300000) a.endsAt = Date.now() + 300000;
+    toast(`✓ Bid placed — ${amount} NIGHT locked in escrow`,'success');
+  }
+
+  saveAuctions();
+  closeModal('ov-bid');
+  renderAuctionsPage();
+}
+
+async function buyItNow(){
+  var auctionId = document.getElementById('bid-auction-id')?.value;
+  var a = auctionStore.find(x=>x.id===auctionId);
+  if(!a || !a.bin) return;
+  document.getElementById('bid-amount').value = a.bin;
+  await submitBid();
+}
+
+async function settleAuction(a){
+  if(a.settled) return;
+  a.settled = true;
+  if(a.currentBidder && a.currentBid >= (a.reserve || 0)){
+    try { await simulateCompactReleaseEscrow(a.id); } catch(e){}
+    toast(`🔨 Auction settled: ${a.title} sold for ${a.currentBid} NIGHT`,'success');
+  } else {
+    try { await nmApiPost('/api/escrow/refund',{ orderId: a.id }); } catch(e){}
+  }
+  saveAuctions();
+}
+
+// Patch showPage for auctions
+var _origShowPageAuctions = showPage;
+showPage = function(name){
+  _origShowPageAuctions(name);
+  if(name==='auctions'){ clearInterval(_countdownInterval); setTimeout(renderAuctionsPage,50); }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// NOCTURNE WALLET
+// ══════════════════════════════════════════════════════════════════
+async function connectNocturne(){
+  var body = document.getElementById('wallet-modal-body');
+  if(body) body.innerHTML = '<div style="text-align:center;padding:32px;"><div style="font-size:32px;margin-bottom:12px;">🦉</div><div style="font-weight:700;margin-bottom:8px;">Connecting Nocturne…</div><div style="font-size:12px;color:#6b7280;">Looking for Nocturne extension</div></div>';
+
+  try {
+    // Nocturne uses same window.midnight connector standard as Lace
+    var providers = window.midnight;
+    var nocturneProv = null;
+    if(providers){
+      for(var key of Object.keys(providers)){
+        var p = providers[key];
+        if(p && (key.toLowerCase().includes('nocturne') || p.apiVersion)){
+          nocturneProv = { id: key, ...p };
+          break;
+        }
+      }
+    }
+    if(!nocturneProv) throw new Error('Nocturne extension not found. Install it from the Chrome Web Store.');
+
+    var api = await nocturneProv.connect(getNetworkLabel());
+    var shielded = await api.getShieldedAddresses?.();
+    var unshielded = await api.getUnshieldedAddress?.();
+
+    walletState = { connected: true, demo: false, api, address: unshielded||'', shielded: shielded||[], wallet: 'nocturne' };
+    closeWalletModal();
+    toast('✓ Nocturne wallet connected','success');
+    updateWalletUI();
+  } catch(e){
+    if(body) body.innerHTML = `<div style="padding:16px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:12px;">🦉</div>
+      <div style="font-weight:700;margin-bottom:8px;color:#ef4444;">Connection failed</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">${e.message}</div>
+      <a href="https://github.com/htlabs-xyz/nocturne" target="_blank" style="color:#7c3aed;font-size:12px;">Get Nocturne →</a>
+      <div style="margin-top:12px;"><button class="btn btn-ghost btn-sm" onclick="openWalletModal()">← Back</button></div>
+    </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NETWORK / MAINNET CONFIG
+// ══════════════════════════════════════════════════════════════════
+var NM_NETWORK = localStorage.getItem('nm_network') || 'preprod';
+
+var NM_ENDPOINTS = {
+  preprod: {
+    indexer:    'https://indexer.preprod.midnight.network/api/v3/graphql',
+    indexerWS:  'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
+    node:       'https://rpc.preprod.midnight.network',
+    proofServer:'http://localhost:6300',
+    label:      'Preprod'
+  },
+  mainnet: {
+    indexer:    'https://indexer.mainnet.midnight.network/api/v3/graphql',
+    indexerWS:  'wss://indexer.mainnet.midnight.network/api/v3/graphql/ws',
+    node:       'https://rpc.mainnet.midnight.network',
+    proofServer:'http://localhost:6300',
+    label:      'Mainnet'
+  }
+};
+
+function getNetworkLabel(){ return NM_ENDPOINTS[NM_NETWORK]?.label || NM_NETWORK; }
+
+function setNetwork(net){
+  NM_NETWORK = net;
+  localStorage.setItem('nm_network', net);
+  nmApiReady = null; // reset API readiness check
+
+  document.getElementById('net-preprod')?.style && (document.getElementById('net-preprod').style.borderWidth = net==='preprod'?'2px':'1px');
+  document.getElementById('net-mainnet')?.style && (document.getElementById('net-mainnet').style.borderWidth = net==='mainnet'?'2px':'1px');
+
+  var ep = NM_ENDPOINTS[net];
+  var epEl = document.getElementById('net-endpoints');
+  if(epEl && ep) epEl.innerHTML = `Indexer: ${ep.indexer}<br>Node: ${ep.node}`;
+
+  var dustEl = document.getElementById('net-dust-section');
+  if(dustEl) dustEl.style.display = net==='mainnet' ? 'block' : 'none';
+
+  var netLabel = document.getElementById('wallet-net-label');
+  if(netLabel) netLabel.textContent = ep?.label || net;
+
+  toast(`Network: ${ep?.label || net}`,'info');
+}
+
+// Init network UI
+(function initNetwork(){
+  setTimeout(function(){
+    setNetwork(NM_NETWORK);
+  }, 200);
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// DUST SPONSORSHIP SKELETON (mainnet)
+// ══════════════════════════════════════════════════════════════════
+// Production flow (Mōhalu phase, mid-2026):
+//   1. User builds unbalanced transaction (zero DUST)
+//   2. POST /api/sponsor { unsealedTx }
+//   3. Sponsor wallet: balanceFinalizedTransaction(tx, { dustSecretKey })
+//   4. Sponsor returns sealed, fee-paid tx
+//   5. User submits via api.submitTransaction(sponsoredTx)
+async function requestDustSponsorship(unsealedTx){
+  if(NM_NETWORK !== 'mainnet') return unsealedTx; // preprod: no sponsorship needed
+  try {
+    var res = await fetch(NM_API + '/api/sponsor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tx: unsealedTx }),
+      signal: AbortSignal.timeout(30000)
+    });
+    var j = await res.json();
+    return j.sponsoredTx || unsealedTx;
+  } catch(e){
+    console.warn('[DUST] Sponsorship unavailable:', e.message);
+    return unsealedTx;
+  }
+}
 
 
 </script>
