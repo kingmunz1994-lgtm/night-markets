@@ -3909,6 +3909,19 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
   </div>
 </div>
 
+<!-- Night Fun deploy ready modal -->
+<div class="overlay" id="ov-nf-deploy" onclick="if(event.target===this)closeModal('ov-nf-deploy')">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h2>Deploy your Night Fun token</h2>
+      <button class="modal-close" onclick="closeModal('ov-nf-deploy')">✕</button>
+    </div>
+    <div class="modal-body" id="nf-deploy-body">
+      <span id="nf-deploy-cmd-store" style="display:none;"></span>
+    </div>
+  </div>
+</div>
+
 <!-- NEW PROPOSAL MODAL -->
 <div class="overlay" id="ov-proposal" onclick="if(event.target===this)closeModal('ov-proposal')">
   <div class="modal" style="max-width:600px;">
@@ -8134,13 +8147,59 @@ function nfSelectTmpl(n) {
 }
 
 function launchNightFun() {
-  var name = document.getElementById('nf-name');
-  var symbol = document.getElementById('nf-symbol');
-  if(!name || !name.value.trim() || !symbol || !symbol.value.trim()) {
-    toast('Please enter your project name and token symbol', 'error'); return;
-  }
+  var name    = (document.getElementById('nf-name')     || {value:''}).value.trim();
+  var symbol  = (document.getElementById('nf-symbol')   || {value:''}).value.trim().toUpperCase();
+  var supplyRaw = (document.getElementById('nf-supply') || {value:'1000000'}).value.replace(/,/g,'').trim() || '1000000';
+  var revRaw  = (document.getElementById('nf-revshare') || {value:'80%'}).value.replace(/%/g,'').trim() || '80';
+  if(!name || !symbol) { toast('Please enter your project name and token symbol', 'error'); return; }
   if(!walletState || !walletState.connected) { openWalletModal(); return; }
-  toast('🌙 Night Fun launching '+name.value+' ('+symbol.value+') — deploying Midnight contract + merch store...', 'success');
+
+  var supply = parseInt(supplyRaw, 10) || 1000000;
+  var revBps = Math.min(9500, Math.max(0, Math.round(parseFloat(revRaw) * 100)));
+  var creatorBps = 9500 - revBps;
+  var tmplName = nfTmplNames[nfSelectedTmpl] || 'Logo chest';
+
+  var cmd = 'WALLET_SEED=<your-hex-seed> \\\n  MIDNIGHT_NETWORK=preprod \\\n  npx tsx scripts/night-fun-deploy.ts \\\n  --name "' + name + '" \\\n  --symbol "' + symbol + '" \\\n  --supply ' + supply + ' \\\n  --holderRevBps ' + revBps + ' \\\n  --tiers 0,0,0,0';
+
+  var cfg = JSON.stringify({
+    name: name, symbol: symbol, supply: supply,
+    holderRevBps: revBps, creatorBps: creatorBps, platformBps: 500,
+    tiers: [0,0,0,0], requireLicense: false,
+    merch: { template: nfSelectedTmpl, templateName: tmplName }
+  }, null, 2);
+
+  var body = document.getElementById('nf-deploy-body');
+  if(body) body.innerHTML = [
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">',
+    '<div style="background:var(--raised);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">TOKEN</div><div style="font-size:13px;font-weight:700;color:var(--glow);">'+symbol+'</div><div style="font-size:10px;color:var(--muted);">'+name+'</div></div>',
+    '<div style="background:var(--raised);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">SUPPLY</div><div style="font-size:13px;font-weight:700;">'+supply.toLocaleString()+'</div></div>',
+    '<div style="background:var(--raised);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">HOLDER REV</div><div style="font-size:13px;font-weight:700;color:var(--green);">'+(revBps/100)+'%</div><div style="font-size:10px;color:var(--muted);">Creator '+(creatorBps/100)+'% · Night Markets 5%</div></div>',
+    '</div>',
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);margin-bottom:8px;letter-spacing:.08em;">DEPLOY COMMAND</div>',
+    '<div style="background:var(--raised);border-radius:8px;padding:14px;font-family:var(--mono);font-size:11px;line-height:1.7;white-space:pre;overflow-x:auto;margin-bottom:16px;border:1px solid var(--rim);">'+cmd.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>',
+    '<div style="display:flex;gap:10px;margin-bottom:16px;">',
+    '<button class="btn btn-primary" style="flex:1;" onclick="nfCopyCmd()">Copy command</button>',
+    '<button class="btn btn-ghost" style="flex:1;" onclick="nfDownloadConfig(\''+encodeURIComponent(cfg)+'\',\''+symbol.toLowerCase()+'-night-fun.json\')">Download config</button>',
+    '</div>',
+    '<div style="font-size:10px;font-family:var(--mono);color:var(--faint);text-align:center;">⊘ ZK private · proof server required · run locally or on your server</div>'
+  ].join('');
+
+  document.getElementById('nf-deploy-cmd-store') && (document.getElementById('nf-deploy-cmd-store').dataset.cmd = cmd);
+  openModal('ov-nf-deploy');
+}
+
+function nfCopyCmd() {
+  var store = document.getElementById('nf-deploy-cmd-store');
+  var cmd = store ? store.dataset.cmd : '';
+  if(navigator.clipboard) navigator.clipboard.writeText(cmd).then(function(){ toast('Command copied!', 'success'); });
+}
+
+function nfDownloadConfig(encoded, filename) {
+  var a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encoded;
+  a.download = filename;
+  a.click();
+  toast('Config downloaded!', 'success');
 }
 
 // Night Fun — Live revenue feed (demo simulation)

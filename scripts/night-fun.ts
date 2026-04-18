@@ -505,38 +505,75 @@ export class NightFunSDK {
   }
 }
 
-// ─── CLI demo (npm run night-fun) ────────────────────────────────────────────
+// ─── CLI entry point (npm run night-fun) ─────────────────────────────────────
+// Supports two modes:
+//   1. Wizard-generated command (all params as flags):
+//      WALLET_SEED=<hex> npx tsx scripts/night-fun.ts \
+//        --name "MyToken" --symbol "MYT" --supply 1000000 --holderRevBps 8000 \
+//        --tiers 0,0,0,0 [--requireLicense]
+//
+//   2. Demo mode (no flags): deploys the HandcraftedCoasters example
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const seed = process.env.WALLET_SEED;
   if (!seed) { console.error('WALLET_SEED not set'); process.exit(1); }
 
+  // Parse CLI flags
+  const args = process.argv.slice(2);
+  const flag = (name: string) => {
+    const i = args.indexOf('--' + name);
+    return i !== -1 ? args[i + 1] : null;
+  };
+  const hasFlag = (name: string) => args.includes('--' + name);
+
   const sdk = await NightFunSDK.connect(seed);
 
-  // Demo: deploy a coaster token
-  const coasterToken = await sdk.deploy({
-    name:           'HandcraftedCoasters',
-    symbol:         'CSTR',
-    supply:         1000n,
-    holderRevBps:   8000,    // 80% to holders, 15% to creator, 5% Night Markets
-    tiers:          [0n, 0n, 0n, 0n], // no tiers — simple community
-    requireLicense: false,
-  });
+  if (flag('name') || flag('symbol')) {
+    // ── Wizard-generated deploy ──────────────────────────────────────────────
+    const name   = flag('name')   ?? 'MyToken';
+    const symbol = flag('symbol') ?? 'MYT';
+    const supply = BigInt(flag('supply') ?? '1000000');
+    const holderRevBps = parseInt(flag('holderRevBps') ?? '8000', 10);
+    const requireLicense = hasFlag('requireLicense');
 
-  // Simulate a Printful sale coming in (£28 hoodie → NIGHT equivalent)
-  await coasterToken.recordMerchSale({ orderId: 'printful-001', amountNight: 28_000_000n });
+    const tiersStr = flag('tiers') ?? '0,0,0,0';
+    const tierParts = tiersStr.split(',').map(t => BigInt(t.trim()));
+    const tiers: [bigint, bigint, bigint, bigint] = [
+      tierParts[0] ?? 0n, tierParts[1] ?? 0n,
+      tierParts[2] ?? 0n, tierParts[3] ?? 0n,
+    ];
 
-  // Close the epoch so holders can claim
-  const { closedEpoch } = await coasterToken.closeEpoch();
-  console.log(`  Epoch ${closedEpoch} closed — holders can now claim`);
+    const contract = await sdk.deploy({ name, symbol, supply, holderRevBps, tiers, requireLicense });
 
-  // Claim revenue (creator is also the initial holder with full supply)
-  const { earned } = await coasterToken.claimRevenue();
-  console.log(`  Creator earned: ${earned} NIGHT`);
+    console.log('\n─'.repeat(62));
+    console.log(`  CONTRACT_ADDRESS = ${contract.address}`);
+    console.log('─'.repeat(62));
+    console.log(`\n  Add to Night Markets UI:`);
+    console.log(`  const NF_CONTRACT = '${contract.address}';\n`);
 
-  const stats = await coasterToken.publicStats();
-  console.log(`\n  Stats:`, stats);
+    const stats = await contract.publicStats();
+    console.log(`  Stats:`, stats);
+    await sdk.disconnect();
+    console.log('\n✅  Token deployed!');
+  } else {
+    // ── Demo mode: handcrafted coaster token ─────────────────────────────────
+    const coasterToken = await sdk.deploy({
+      name:           'HandcraftedCoasters',
+      symbol:         'CSTR',
+      supply:         1000n,
+      holderRevBps:   8000,
+      tiers:          [0n, 0n, 0n, 0n],
+      requireLicense: false,
+    });
 
-  await sdk.disconnect();
-  console.log('\n✅  NightFunSDK demo complete');
+    await coasterToken.recordMerchSale({ orderId: 'printful-001', amountNight: 28_000_000n });
+    const { closedEpoch } = await coasterToken.closeEpoch();
+    console.log(`  Epoch ${closedEpoch} closed`);
+    const { earned } = await coasterToken.claimRevenue();
+    console.log(`  Creator earned: ${earned} NIGHT`);
+    const stats = await coasterToken.publicStats();
+    console.log(`\n  Stats:`, stats);
+    await sdk.disconnect();
+    console.log('\n✅  NightFunSDK demo complete');
+  }
 }
