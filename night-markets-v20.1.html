@@ -6992,54 +6992,99 @@ function getSessionSecret(){
   }
   return sessionStorage.getItem('nm_sk');
 }
+// ── Real contract bridge (api-server.ts on port 3001) ──────────
+var NM_API = 'http://127.0.0.1:3001';
+var nmApiReady = null;
 
-// Simulate createListing circuit — seller posts listing with private metadata
+async function nmCheckApi(){
+  if(nmApiReady !== null) return nmApiReady;
+  try {
+    var r = await fetch(NM_API + '/api/status', { signal: AbortSignal.timeout(2000) });
+    var j = await r.json();
+    nmApiReady = j.ready === true;
+  } catch(e) { nmApiReady = false; }
+  return nmApiReady;
+}
+
+async function nmApiPost(path, body){
+  var r = await fetch(NM_API + path, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body), signal: AbortSignal.timeout(120000)
+  });
+  var j = await r.json();
+  if(!r.ok) throw new Error(j.error || 'API error ' + r.status);
+  return j;
+}
+
 async function simulateCompactCreateListing(orderId, listingCid, amountNight){
+  if(await nmCheckApi()){
+    try {
+      var result = await nmApiPost('/api/escrow/create', {
+        orderId, amountNight: String(Math.round(amountNight * 1_000_000))
+      });
+      escrowStore[orderId] = { state:'OPEN', txId: result.txId, blockHeight: result.blockHeight,
+        listingRef: listingCid, amount: amountNight, real: true, createdAt: Date.now() };
+      console.log('[NM Escrow] createListing REAL', orderId, result);
+      return result.txId;
+    } catch(e) { console.warn('[NM Escrow] API failed, using simulation:', e.message); nmApiReady = false; }
+  }
+  // Simulation fallback
   var round  = (escrowStore[orderId] && escrowStore[orderId].round) || 0;
   var sk     = getSessionSecret();
   var commit = await deriveCommitment('seller', round, sk);
   escrowStore[orderId] = {
-    state:            'OPEN',
-    sellerCommitment: commit,
-    buyerCommitment:  null,
-    listingRef:       listingCid,   // Opaque<"string"> — IPFS CID
-    amount:           amountNight,
-    round:            round,
-    createdAt:        Date.now()
+    state:'OPEN', sellerCommitment: commit, buyerCommitment: null,
+    listingRef: listingCid, amount: amountNight, round, createdAt: Date.now()
   };
-  console.log('[NM Escrow] createListing', orderId, { commit, listingCid, amountNight });
+  console.log('[NM Escrow] createListing SIM', orderId, { commit, listingCid, amountNight });
   return commit;
 }
 
-// Simulate fundEscrow circuit — buyer funds, records commitment
 async function simulateCompactFundEscrow(orderId, amountNight){
+  if(await nmCheckApi()){
+    try {
+      var result = await nmApiPost('/api/escrow/fund', {
+        orderId, amountNight: String(Math.round(amountNight * 1_000_000))
+      });
+      var entry = escrowStore[orderId] || {};
+      entry.state = 'FUNDED'; entry.txId = result.txId; entry.real = true;
+      escrowStore[orderId] = entry;
+      console.log('[NM Escrow] fundEscrow REAL', orderId, result);
+      return result.txId;
+    } catch(e) { console.warn('[NM Escrow] API failed, using simulation:', e.message); nmApiReady = false; }
+  }
+  // Simulation fallback
   var entry = escrowStore[orderId];
   if(!entry) throw new Error('Listing not found: ' + orderId);
   if(entry.state !== 'OPEN') throw new Error('Escrow not open');
   var sk     = getSessionSecret();
   var commit = await deriveCommitment('buyer', entry.round, sk);
-  entry.buyerCommitment = commit;
-  entry.amount          = amountNight;
-  entry.state           = 'FUNDED';
-  console.log('[NM Escrow] fundEscrow', orderId, { commit, amountNight });
+  entry.buyerCommitment = commit; entry.amount = amountNight; entry.state = 'FUNDED';
+  console.log('[NM Escrow] fundEscrow SIM', orderId, { commit, amountNight });
   return commit;
 }
 
-// Simulate releaseEscrow circuit — buyer confirms receipt
-// Compact equivalent: round.increment(1) — Counter type, NOT arithmetic assignment
-// Note: no external escrow reference has been verified; pattern derives from bboard contract
 async function simulateCompactReleaseEscrow(orderId){
+  if(await nmCheckApi()){
+    try {
+      var result = await nmApiPost('/api/escrow/release', { orderId });
+      var entry = escrowStore[orderId] || {};
+      entry.state = 'RELEASED'; entry.txId = result.txId; entry.real = true;
+      escrowStore[orderId] = entry;
+      console.log('[NM Escrow] releaseEscrow REAL', orderId, result);
+      return true;
+    } catch(e) { console.warn('[NM Escrow] API failed, using simulation:', e.message); nmApiReady = false; }
+  }
+  // Simulation fallback — Compact: round.increment(1) Counter type
   var entry = escrowStore[orderId];
   if(!entry) throw new Error('Escrow not found: ' + orderId);
   if(entry.state !== 'FUNDED') throw new Error('Escrow not funded');
-  // Verify buyer commitment (ZK proof in real contract)
   var sk       = getSessionSecret();
   var expected = await deriveCommitment('buyer', entry.round, sk);
   if(expected !== entry.buyerCommitment) throw new Error('Commitment mismatch — not the buyer');
   entry.state = 'RELEASED';
-  // Mirrors Compact: round.increment(1) — Counter type uses .increment(), not += 
   entry.round = (entry.round + 1) & 0xFFFFFFFF;
-  console.log('[NM Escrow] releaseEscrow', orderId, { newRound: entry.round });
+  console.log('[NM Escrow] releaseEscrow SIM', orderId, { newRound: entry.round });
   return true;
 }
 
@@ -7125,65 +7170,6 @@ document.addEventListener('click', function(e){
 });
 
 
-// Generate an ephemeral session secret (stands in for localSecretKey() witness)
-function getSessionSecret(){
-  if(!sessionStorage.getItem('nm_sk')){
-    var arr = new Uint8Array(32);
-    crypto.getRandomValues(arr);
-    sessionStorage.setItem('nm_sk', bytesToHex(arr));
-  }
-  return sessionStorage.getItem('nm_sk');
-}
-
-// Simulate createListing circuit — seller posts listing with private metadata
-async function simulateCompactCreateListing(orderId, listingCid, amountNight){
-  var round  = (escrowStore[orderId] && escrowStore[orderId].round) || 0;
-  var sk     = getSessionSecret();
-  var commit = await deriveCommitment('seller', round, sk);
-  escrowStore[orderId] = {
-    state:            'OPEN',
-    sellerCommitment: commit,
-    buyerCommitment:  null,
-    listingRef:       listingCid,   // Opaque<"string"> — IPFS CID
-    amount:           amountNight,
-    round:            round,
-    createdAt:        Date.now()
-  };
-  console.log('[NM Escrow] createListing', orderId, { commit, listingCid, amountNight });
-  return commit;
-}
-
-// Simulate fundEscrow circuit — buyer funds, records commitment
-async function simulateCompactFundEscrow(orderId, amountNight){
-  var entry = escrowStore[orderId];
-  if(!entry) throw new Error('Listing not found: ' + orderId);
-  if(entry.state !== 'OPEN') throw new Error('Escrow not open');
-  var sk     = getSessionSecret();
-  var commit = await deriveCommitment('buyer', entry.round, sk);
-  entry.buyerCommitment = commit;
-  entry.amount          = amountNight;
-  entry.state           = 'FUNDED';
-  console.log('[NM Escrow] fundEscrow', orderId, { commit, amountNight });
-  return commit;
-}
-
-// Simulate releaseEscrow circuit — buyer confirms receipt
-// Compact equivalent: round.increment(1) — Counter type, NOT arithmetic assignment
-// Note: no external escrow reference has been verified; pattern derives from bboard contract
-async function simulateCompactReleaseEscrow(orderId){
-  var entry = escrowStore[orderId];
-  if(!entry) throw new Error('Escrow not found: ' + orderId);
-  if(entry.state !== 'FUNDED') throw new Error('Escrow not funded');
-  // Verify buyer commitment (ZK proof in real contract)
-  var sk       = getSessionSecret();
-  var expected = await deriveCommitment('buyer', entry.round, sk);
-  if(expected !== entry.buyerCommitment) throw new Error('Commitment mismatch — not the buyer');
-  entry.state = 'RELEASED';
-  // Mirrors Compact: round.increment(1) — Counter type uses .increment(), not += 
-  entry.round = (entry.round + 1) & 0xFFFFFFFF;
-  console.log('[NM Escrow] releaseEscrow', orderId, { newRound: entry.round });
-  return true;
-}
 
 // ══════════════════════════════════════════════════════════════
 // NIGHT TOKEN TRANSFER — midnight-js 3.0.0
