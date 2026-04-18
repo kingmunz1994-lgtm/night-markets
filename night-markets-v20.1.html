@@ -1732,6 +1732,17 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
   .ns-banks-grid,.nd-categories,.nw-how-grid,.nst-templates{grid-template-columns:1fr 1fr!important;}
   .ns-tier-grid,.nst-partners{grid-template-columns:1fr 1fr;}
 }
+
+/* ── Extended feature styles ───────────────────── */
+.btn-xs{padding:4px 10px;font-size:11px;border-radius:6px;}
+.star-opt{transition:opacity .15s,color .15s;user-select:none;}
+.tag-gold{background:rgba(251,191,36,.08);color:#fbbf24;border-color:rgba(251,191,36,.2);}
+#nftd-stats>div:hover{border-color:var(--ink);transition:border-color .2s;}
+.escrow-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:12px;font-family:var(--mono);font-weight:700;border:1px solid transparent;}
+.escrow-badge.OPEN{color:var(--orange);background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.2);}
+.escrow-badge.FUNDED{color:var(--blue);background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2);}
+.escrow-badge.RELEASED{color:var(--green);background:rgba(0,214,143,.08);border-color:rgba(0,214,143,.2);}
+.escrow-badge.DISPUTED{color:var(--red);background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);}
 </style>
 </head>
 <body>
@@ -2537,6 +2548,30 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div style="margin-top:12px;font-size:10px;color:var(--faint);font-family:var(--mono);">Voting closes March 31 · Powered by ZK governance · Your vote is anonymous</div>
       </div>
 
+      <!-- Active listings -->
+      <div style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-size:14px;font-weight:700;">Active listings <span id="cd-listing-count" style="font-size:11px;color:var(--muted);font-family:var(--mono);font-weight:400;"></span></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('ov-new-listing')">+ New listing</button>
+        </div>
+        <div id="cd-listings-table"></div>
+      </div>
+
+      <!-- Reputation -->
+      <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:14px;padding:20px;margin-bottom:28px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:14px;">⊘ Reputation — ZK verified</div>
+        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="font-size:36px;font-weight:800;font-family:var(--mono);" id="cd-rep-score">—</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">avg rating</div>
+          </div>
+          <div style="flex:1;min-width:180px;">
+            <div id="cd-rep-bars"></div>
+          </div>
+        </div>
+        <div id="cd-recent-reviews" style="margin-top:14px;"></div>
+      </div>
+
       <!-- Recent sales -->
       <div class="cd-sales-section">
         <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Recent sales</div>
@@ -3040,11 +3075,81 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
     </div>
 
     <!-- Midnight City connection -->
-    <div style="background:linear-gradient(135deg,rgba(6,182,212,.06),rgba(124,58,237,.03));border:1px solid rgba(6,182,212,.15);border-radius:16px;padding:24px;position:relative;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,rgba(6,182,212,.06),rgba(124,58,237,.03));border:1px solid rgba(6,182,212,.15);border-radius:16px;padding:24px;position:relative;overflow:hidden;margin-bottom:40px;">
       <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);"></div>
       <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">🏙️ Midnight City integration</div>
       <div style="font-size:14px;font-weight:700;margin-bottom:6px;">AI agent factions launch on Night Fun</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.65;font-weight:300;">Midnight City's autonomous AI agents have personalities, goals, and communities. Night Fun gives those communities tokens and merch from day one. Agent factions compete. Their communities hold tokens that pay them. Nobody dumps. The city has a real economy.</div>
+    </div>
+
+    <!-- ── Night Fun Token Dashboard ───────────────────────────── -->
+    <div id="nf-token-dash" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Your deployed token</div>
+          <div style="font-size:22px;font-weight:800;" id="nftd-name">—</div>
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);" id="nftd-symbol">—</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Contract</div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--ink);word-break:break-all;max-width:180px;" id="nftd-addr">—</div>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;" id="nftd-stats">
+        <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;font-family:var(--mono);" id="nftd-supply">—</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Total supply</div>
+        </div>
+        <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--cyan);" id="nftd-holders">—</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Holders</div>
+        </div>
+        <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--green);" id="nftd-epoch-rev">—</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Epoch revenue</div>
+        </div>
+        <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--glow);" id="nftd-rev-bps">—</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Holder rev %</div>
+        </div>
+      </div>
+
+      <!-- Epoch management -->
+      <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:14px;padding:20px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:14px;">Current epoch</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Epoch</div>
+            <div style="font-size:18px;font-weight:800;font-family:var(--mono);" id="nftd-epoch">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Merch sales this epoch</div>
+            <div style="font-size:18px;font-weight:800;font-family:var(--mono);" id="nftd-merch-sales">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Claimable (you)</div>
+            <div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--green);" id="nftd-claimable">—</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="nftdCloseEpoch()">Close epoch + distribute →</button>
+        </div>
+        <div style="margin-top:12px;font-size:10px;color:var(--faint);font-family:var(--mono);">Closing an epoch snapshots all holder balances and distributes revenue proportionally. Holders claim their share individually via ZK proof.</div>
+      </div>
+
+      <!-- Revenue feed -->
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Revenue feed</div>
+      <div id="nftd-rev-feed" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+      <button class="btn btn-ghost btn-sm" style="margin-top:20px;width:100%;" onclick="nftdRefresh()">⟳ Refresh from chain</button>
+    </div>
+
+    <!-- Placeholder when no token deployed -->
+    <div id="nf-token-nodash" style="text-align:center;padding:32px;background:var(--raised);border:1px solid var(--rim2);border-radius:16px;">
+      <div style="font-size:32px;margin-bottom:12px;">🌙</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px;">No token deployed yet</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.65;">Use the wizard above to deploy your Night Fun token on Midnight preprod. Once deployed, manage it here.</div>
+      <button class="btn btn-primary" onclick="document.getElementById('nf-panel-1').closest('.nf-wizard-card').scrollIntoView({behavior:'smooth'})">Launch token wizard →</button>
     </div>
   </div>
 </div>
@@ -3423,6 +3528,49 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <strong style="color:var(--glow)">⊘ Midnight ZK BNPL is included free</strong> for all sellers — no GMV minimums, no enterprise contracts. Your customers get Pay in 4 the moment your first listing goes live.
       </div>
       <button class="btn btn-primary btn-lg btn-full" onclick="submitSellApp()">Submit Application →</button>
+    </div>
+
+    <!-- ── Quick Listing Creator (for approved sellers / demo) ── -->
+    <div style="margin-top:48px;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <span class="tag tag-green" style="margin-bottom:12px;display:inline-block;">⊘ Instant Listing — ZK Escrow</span>
+        <h2 style="font-family:var(--serif);font-size:32px;font-style:italic;margin-bottom:8px;">Create a listing now</h2>
+        <p style="font-size:14px;color:var(--muted);font-weight:300;">Your listing is locked into the Midnight escrow contract the moment a buyer pays. Funds release automatically on delivery confirmation.</p>
+      </div>
+      <div class="sell-form-card">
+        <div class="sfc-title">New listing</div>
+        <div class="form-2col">
+          <div class="field"><label class="label">Product title</label><input class="input" id="nl-title" placeholder="e.g. Vintage Levi's 501 — 32W 30L"/></div>
+          <div class="field"><label class="label">Category</label>
+            <select class="select" id="nl-cat">
+              <option value="">Select…</option>
+              <option>Electronics</option><option>Fashion &amp; Apparel</option><option>Beauty &amp; Health</option><option>Home &amp; Garden</option><option>Sports &amp; Outdoors</option><option>Collectibles</option><option>Handmade &amp; Crafts</option><option>Digital Goods</option>
+            </select>
+          </div>
+          <div class="field"><label class="label">Price (NIGHT)</label><input class="input" id="nl-price" type="number" min="1" placeholder="e.g. 120"/></div>
+          <div class="field"><label class="label">Condition</label>
+            <select class="select" id="nl-cond">
+              <option>New</option><option>Like New</option><option>Good</option><option>Fair</option><option>Digital</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label class="label">Description</label><textarea class="textarea" id="nl-desc" placeholder="Describe your item — condition details, measurements, shipping info…" style="min-height:80px"></textarea></div>
+        <div class="form-2col">
+          <div class="field"><label class="label">Ships from</label><input class="input" id="nl-ship-from" placeholder="e.g. Sydney, AU"/></div>
+          <div class="field"><label class="label">Emoji / icon</label><input class="input" id="nl-emoji" placeholder="e.g. 👟" maxlength="4"/></div>
+        </div>
+        <div style="background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:10px;padding:14px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.65;">
+          <strong style="color:var(--glow)">⊘ ZK Escrow auto-activated</strong> — when a buyer pays, their NIGHT tokens are locked into the Midnight smart contract. Funds release to you after delivery confirmation or 14-day auto-release.
+        </div>
+        <button class="btn btn-primary btn-lg btn-full" onclick="submitListing()">Create Listing — Lock into Escrow →</button>
+        <div id="nl-result" style="margin-top:16px;display:none;"></div>
+      </div>
+
+      <!-- Active listings table -->
+      <div id="seller-listings-wrap" style="margin-top:32px;display:none;">
+        <div style="font-size:16px;font-weight:700;margin-bottom:16px;">Your active listings</div>
+        <div id="seller-listings-list"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -4407,6 +4555,26 @@ function uid(){return Math.random().toString(36).slice(2,9).toUpperCase();}
 function addDays(iso,n){const d=new Date(iso);d.setDate(d.getDate()+n);return d.toISOString();}
 function fmtDate(iso){return new Date(iso).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});}
 function fmtShort(iso){return new Date(iso).toLocaleDateString('en-AU',{day:'numeric',month:'short'});}
+
+// ── Extended stores ─────────────────────────────────────────────
+let listingStore = JSON.parse(localStorage.getItem('nm_listings') || '[]');
+let ratingStore  = JSON.parse(localStorage.getItem('nm_ratings')  || '{}');
+let deliveryStore= JSON.parse(localStorage.getItem('nm_delivery') || '{}');
+function saveListings(){ localStorage.setItem('nm_listings', JSON.stringify(listingStore)); }
+function saveRatings(){  localStorage.setItem('nm_ratings',  JSON.stringify(ratingStore));  }
+function saveDelivery(){ localStorage.setItem('nm_delivery', JSON.stringify(deliveryStore));}
+
+function getSellerRating(sellerId){
+  const reviews = ratingStore[sellerId] || [];
+  if(!reviews.length) return { avg: null, count: 0 };
+  const avg = reviews.reduce((s,r)=>s+r.stars,0)/reviews.length;
+  return { avg: Math.round(avg*10)/10, count: reviews.length };
+}
+function addRating(sellerId, buyerId, stars, comment, orderId, role){
+  if(!ratingStore[sellerId]) ratingStore[sellerId]=[];
+  ratingStore[sellerId].push({ stars, comment, buyerId, orderId, role, at: Date.now() });
+  saveRatings();
+}
 function stars(r){return'★'.repeat(Math.round(r))+'☆'.repeat(5-Math.round(r));}
 function getSvg(id){
   const url=PRODUCT_IMAGES[id];
@@ -5063,31 +5231,79 @@ function coConfirm(){
 // ── ORDERS ──
 function renderOrders(){
   const el=document.getElementById('orders-list');
-  if(!orders.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No orders yet</div><div class="empty-sub">Your orders will appear here once you complete a purchase.</div><button class="btn btn-primary btn-lg" onclick="showPage(&apos;shop&apos;)">Start Shopping →</button></div>`;return;}
-  const sColor={Processing:'var(--orange)','Out for Delivery':'var(--blue)',Delivered:'var(--green)'};
-  el.innerHTML=orders.slice().reverse().map(o=>`
-    <div class="order-card">
+  if(!orders.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No orders yet</div><div class="empty-sub">Your orders will appear here once you complete a purchase.</div><button class="btn btn-primary btn-lg" onclick="showPage('shop')">Start Shopping →</button></div>`;
+    return;
+  }
+  const sColor={Processing:'var(--orange)','Out for Delivery':'var(--blue)',Delivered:'var(--green)',Disputed:'var(--red)',Released:'var(--green)'};
+  const escrowColor={OPEN:'var(--orange)',FUNDED:'var(--blue)',RELEASED:'var(--green)',DISPUTED:'var(--red)',REFUNDED:'var(--muted)'};
+
+  el.innerHTML=orders.slice().reverse().map(o=>{
+    const esc = escrowStore[o.escrowId || o.id] || null;
+    const escState = esc ? esc.state : null;
+    const delivery = deliveryStore[o.id] || null;
+    const sellerRating = getSellerRating(o.seller || 'unknown');
+    const alreadyRated = (ratingStore[o.seller||'unknown']||[]).some(r=>r.orderId===o.id);
+
+    const escBadge = escState ? `<span class="tag" style="background:rgba(255,255,255,.04);color:${escrowColor[escState]||'var(--muted)'};border-color:transparent;font-family:var(--mono);font-size:10px;">⊘ ${escState}</span>` : '';
+
+    const trackingBadge = delivery?.trackingRef
+      ? `<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:6px;">📦 Tracking: <span style="color:var(--ink)">${delivery.trackingRef}</span> via ${delivery.carrier||'carrier'}</div>`
+      : '';
+
+    const ratingDisplay = sellerRating.count > 0
+      ? `<span style="font-size:11px;color:var(--muted);">★ ${sellerRating.avg} (${sellerRating.count})</span>` : '';
+
+    const actions = [];
+    if(o.method==='p4' && o.payments?.find(p=>p.status==='due'))
+      actions.push(`<button class="btn btn-primary btn-xs" onclick="payNow('${o.id}')">Pay Now — $${o.payments.find(p=>p.status==='due').amt.toFixed(2)}</button>`);
+    if(escState==='FUNDED' && o.status!=='Delivered')
+      actions.push(`<button class="btn btn-primary btn-xs" onclick="confirmDelivery('${o.id}')">✓ Confirm Delivery</button>`);
+    if(escState==='FUNDED' && !['Disputed','Delivered'].includes(o.status))
+      actions.push(`<button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="openDisputeModal('${o.id}')">⚖ Dispute</button>`);
+    if(escState==='RELEASED' && !alreadyRated)
+      actions.push(`<button class="btn btn-ghost btn-xs" style="color:var(--ink)" onclick="openRateModal('${o.id}','${o.seller||'unknown'}')">★ Rate Seller</button>`);
+    if(!delivery?.trackingRef && ['Processing','Out for Delivery'].includes(o.status))
+      actions.push(`<button class="btn btn-ghost btn-xs" onclick="openShipModal('${o.id}')">📦 Add Tracking</button>`);
+
+    return `<div class="order-card">
       <div class="order-top">
-        <div><div class="o-id">${o.id}</div><div class="o-date">${fmtDate(o.createdAt)}</div></div>
+        <div>
+          <div class="o-id">${o.id}</div>
+          <div class="o-date">${fmtDate(o.createdAt)} ${ratingDisplay}</div>
+        </div>
         <div class="o-tags">
           <span class="tag" style="background:rgba(255,255,255,.04);color:${sColor[o.status]||'var(--muted)'};border-color:transparent">● ${o.status}</span>
+          ${escBadge}
           ${o.method==='p4'?'<span class="tag tag-ink">⊘ Pay in 4</span>':'<span class="tag tag-gold">Paid in Full</span>'}
         </div>
       </div>
       <div class="order-items">${o.items.slice(0,3).map(i=>`<div class="oi"><div class="oi-img" style="background:${i.img||'#111'}">${getSvg(i.id)}</div><div><div class="oi-brand">${i.sellerCountry||''} ${i.brand}</div><div class="oi-title">${i.title.slice(0,40)}${i.title.length>40?'…':''}</div></div></div>`).join('')}</div>
+      ${trackingBadge}
       <div class="order-bottom">
         <div class="o-total">$${o.total.toLocaleString()}</div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-xs" onclick="cycleStatus('${o.id}')">Update Status</button>
-        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${actions.join('')}</div>
       </div>
-      ${o.payments?`<div class="pay-schedule"><div class="ps-title">⊘ ZK Payment Schedule</div>${o.payments.map(p=>`<div class="ps-row"><div class="ps-left"><div class="ps-dot ${p.status}"></div><span class="ps-status ${p.status}">${p.status==='paid'?'Paid':p.status==='due'?'Due Now':'Upcoming'}</span><span class="ps-date"> · ${fmtShort(p.date)}</span></div><span class="ps-amt">$${p.amt.toFixed(2)}</span></div>`).join('')}
-        ${o.payments.find(p=>p.status==='due')?`<button class="btn btn-primary btn-sm btn-full" style="margin-top:12px" onclick="payNow('${o.id}')">Pay Now — $${o.payments.find(p=>p.status==='due').amt.toFixed(2)}</button>`:''}
-      </div>`:''}
-    </div>`).join('');
+      ${o.payments?`<div class="pay-schedule"><div class="ps-title">⊘ ZK Payment Schedule</div>${o.payments.map(p=>`<div class="ps-row"><div class="ps-left"><div class="ps-dot ${p.status}"></div><span class="ps-status ${p.status}">${p.status==='paid'?'Paid':p.status==='due'?'Due Now':'Upcoming'}</span><span class="ps-date"> · ${fmtShort(p.date)}</span></div><span class="ps-amt">$${p.amt.toFixed(2)}</span></div>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
 }
 function cycleStatus(id){const o=orders.find(x=>x.id===id);if(!o)return;const f=['Processing','Out for Delivery','Delivered'];o.status=f[(f.indexOf(o.status)+1)%f.length];saveOrders();renderOrders();toast(`Order → ${o.status}`,'success');}
-function payNow(id){const o=orders.find(x=>x.id===id);if(!o)return;const due=o.payments.find(p=>p.status==='due');if(due)due.status='paid';const next=o.payments.find(p=>p.status==='upcoming');if(next)next.status='due';saveOrders();renderOrders();toast(`✓ $${due?.amt.toFixed(2)} processed via NIGHT token`,'success');}
+function payNow(id){const o=orders.find(x=>x.id===id);if(!o)return;const due=o.payments?.find(p=>p.status==='due');if(due)due.status='paid';const next=o.payments?.find(p=>p.status==='upcoming');if(next)next.status='due';saveOrders();renderOrders();toast(`✓ $${due?.amt.toFixed(2)} processed via NIGHT token`,'success');}
+
+async function confirmDelivery(orderId){
+  const o=orders.find(x=>x.id===orderId);if(!o)return;
+  const escId=o.escrowId||orderId;
+  toast('Releasing escrow…','info');
+  try {
+    await simulateCompactReleaseEscrow(escId);
+    o.status='Delivered'; saveOrders();
+    if(escrowStore[escId]) escrowStore[escId].state='RELEASED';
+    renderOrders();
+    toast('✓ Delivery confirmed — funds released to seller','success');
+    setTimeout(()=>openRateModal(orderId, o.seller||'unknown'), 1200);
+  } catch(e){ toast('Release failed: '+e.message,'error'); }
+}
 
 // ── SELL ──
 function submitSellApp(){
@@ -5994,6 +6210,117 @@ document.addEventListener('click',function(e){
         Don't have Lace? <a href="https://midnight.network/lace" target="_blank" style="color:#7c3aed;">Download it free →</a><br>
         Make sure Lace is set to <strong style="color:#fff;">Preprod</strong> network before connecting.
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ RATE SELLER MODAL ══════════════ -->
+<div class="overlay" id="ov-rate" onclick="if(event.target===this)closeModal('ov-rate')">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h2>Rate this transaction</h2>
+      <button class="modal-close" onclick="closeModal('ov-rate')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rate-order-id"/>
+      <input type="hidden" id="rate-seller-id"/>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.65;">Your rating is stored as a ZK commitment — the seller sees their score, not your wallet address.</p>
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">How was your experience?</div>
+        <div id="star-picker" style="display:flex;justify-content:center;gap:8px;font-size:32px;">
+          <span class="star-opt" data-v="1" onclick="pickStar(1)" style="cursor:pointer;opacity:.4;">★</span>
+          <span class="star-opt" data-v="2" onclick="pickStar(2)" style="cursor:pointer;opacity:.4;">★</span>
+          <span class="star-opt" data-v="3" onclick="pickStar(3)" style="cursor:pointer;opacity:.4;">★</span>
+          <span class="star-opt" data-v="4" onclick="pickStar(4)" style="cursor:pointer;opacity:.4;">★</span>
+          <span class="star-opt" data-v="5" onclick="pickStar(5)" style="cursor:pointer;opacity:.4;">★</span>
+        </div>
+        <div id="star-label" style="font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono);">Tap a star</div>
+      </div>
+      <div class="field"><label class="label">Comment (optional)</label><textarea class="textarea" id="rate-comment" placeholder="Fast shipping, great packaging…" style="min-height:72px;"></textarea></div>
+      <button class="btn btn-primary btn-full" onclick="submitRating()" style="margin-top:8px;">Submit Rating →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ DISPUTE MODAL ══════════════ -->
+<div class="overlay" id="ov-dispute" onclick="if(event.target===this)closeModal('ov-dispute')">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2>⚖ Raise a Dispute</h2>
+      <button class="modal-close" onclick="closeModal('ov-dispute')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dispute-order-id"/>
+      <div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.7;">
+        <strong style="color:var(--red)">⚠ This locks the escrow</strong> — funds are frozen until Night Markets arbitration resolves the case. Resolution typically takes 48–72 hours via ZK governance vote.
+      </div>
+      <div class="field" style="margin-bottom:16px;"><label class="label">Reason</label>
+        <select class="select" id="dispute-reason">
+          <option value="">Select reason…</option>
+          <option>Item not received</option>
+          <option>Item not as described</option>
+          <option>Item arrived damaged</option>
+          <option>Seller unresponsive</option>
+          <option>Wrong item sent</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:20px;"><label class="label">Evidence / details</label><textarea class="textarea" id="dispute-evidence" placeholder="Describe what happened. Include tracking numbers, photos, dates…" style="min-height:100px;"></textarea></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeModal('ov-dispute')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2;background:var(--red);border-color:var(--red);" onclick="submitDispute()">Submit Dispute →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SHIPPING MODAL ══════════════ -->
+<div class="overlay" id="ov-ship" onclick="if(event.target===this)closeModal('ov-ship')">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h2>📦 Add Tracking Info</h2>
+      <button class="modal-close" onclick="closeModal('ov-ship')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ship-order-id"/>
+      <div class="form-2col">
+        <div class="field"><label class="label">Carrier</label>
+          <select class="select" id="ship-carrier">
+            <option>Australia Post</option><option>DHL</option><option>FedEx</option><option>UPS</option><option>USPS</option><option>Royal Mail</option><option>Japan Post</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label class="label">Tracking number</label><input class="input" id="ship-tracking" placeholder="e.g. 7R1234567890"/></div>
+      </div>
+      <div class="field"><label class="label">Estimated delivery</label><input class="input" id="ship-eta" type="date"/></div>
+      <button class="btn btn-primary btn-full" onclick="submitShipping()" style="margin-top:8px;">Save Tracking →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ NEW LISTING MODAL ══════════════ -->
+<div class="overlay" id="ov-new-listing" onclick="if(event.target===this)closeModal('ov-new-listing')">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <h2>+ New Listing</h2>
+      <button class="modal-close" onclick="closeModal('ov-new-listing')">✕</button>
+    </div>
+    <div class="modal-body" id="ov-new-listing-body">
+      <div class="form-2col">
+        <div class="field"><label class="label">Title</label><input class="input" id="mnl-title" placeholder="e.g. Vintage Levi's 501"/></div>
+        <div class="field"><label class="label">Category</label>
+          <select class="select" id="mnl-cat">
+            <option value="">Select…</option>
+            <option>Electronics</option><option>Fashion &amp; Apparel</option><option>Beauty &amp; Health</option><option>Home &amp; Garden</option><option>Sports &amp; Outdoors</option><option>Collectibles</option><option>Handmade &amp; Crafts</option><option>Digital Goods</option>
+          </select>
+        </div>
+        <div class="field"><label class="label">Price (NIGHT)</label><input class="input" id="mnl-price" type="number" min="1" placeholder="120"/></div>
+        <div class="field"><label class="label">Condition</label>
+          <select class="select" id="mnl-cond"><option>New</option><option>Like New</option><option>Good</option><option>Fair</option><option>Digital</option></select>
+        </div>
+      </div>
+      <div class="field"><label class="label">Description</label><textarea class="textarea" id="mnl-desc" placeholder="Describe your item…" style="min-height:72px;"></textarea></div>
+      <div class="field"><label class="label">Ships from</label><input class="input" id="mnl-ship" placeholder="e.g. Tokyo, JP"/></div>
+      <button class="btn btn-primary btn-full" onclick="submitModalListing()" style="margin-top:12px;">Create Listing →</button>
     </div>
   </div>
 </div>
@@ -8282,8 +8609,372 @@ showPage = function(page) {
   }
 })();
 
+// ══════════════════════════════════════════════════════════════════
+// LISTING CREATION
+// ══════════════════════════════════════════════════════════════════
+async function submitListing(){
+  var title = (document.getElementById('nl-title')||{}).value?.trim();
+  var cat   = (document.getElementById('nl-cat')||{}).value;
+  var price = parseFloat((document.getElementById('nl-price')||{}).value||'0');
+  var cond  = (document.getElementById('nl-cond')||{}).value;
+  var desc  = (document.getElementById('nl-desc')||{}).value?.trim();
+  var from  = (document.getElementById('nl-ship-from')||{}).value?.trim();
+  var emoji = (document.getElementById('nl-emoji')||{}).value?.trim() || '📦';
+  if(!title || !cat || !price){ toast('Fill in title, category and price','error'); return; }
+  _createListing({ title, cat, price, cond, desc, from, emoji }, 'nl-result');
+}
 
+async function submitModalListing(){
+  var title = (document.getElementById('mnl-title')||{}).value?.trim();
+  var cat   = (document.getElementById('mnl-cat')||{}).value;
+  var price = parseFloat((document.getElementById('mnl-price')||{}).value||'0');
+  var cond  = (document.getElementById('mnl-cond')||{}).value;
+  var desc  = (document.getElementById('mnl-desc')||{}).value?.trim();
+  var from  = (document.getElementById('mnl-ship')||{}).value?.trim();
+  if(!title || !cat || !price){ toast('Fill in title, category and price','error'); return; }
+  await _createListing({ title, cat, price, cond, desc, from, emoji:'📦' }, null);
+  closeModal('ov-new-listing');
+}
 
+async function _createListing(data, resultElId){
+  var orderId = 'LST-' + uid();
+  var listing = {
+    id: orderId, title: data.title, cat: data.cat, price: data.price,
+    cond: data.cond, desc: data.desc, from: data.from, emoji: data.emoji,
+    sellerId: walletState?.address || 'local-seller',
+    state: 'OPEN', escrowState: null, txId: null,
+    createdAt: new Date().toISOString(), views: 0, inquiries: 0
+  };
+
+  toast('Creating listing on Midnight…','info');
+  try {
+    var txId = await simulateCompactCreateListing(orderId, 'ipfs://'+orderId, data.price);
+    listing.txId = txId; listing.escrowState = 'OPEN';
+  } catch(e){ listing.escrowState = 'SIM'; }
+
+  listingStore.push(listing);
+  saveListings();
+  toast('✓ Listing live — ZK escrow active','success');
+
+  if(resultElId){
+    var el = document.getElementById(resultElId);
+    if(el){
+      el.style.display='block';
+      el.innerHTML = `<div style="background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);border-radius:10px;padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">✓ Listing created</div>
+        <div style="font-size:12px;color:var(--muted);font-family:var(--mono);">ID: ${orderId}</div>
+        ${listing.txId ? `<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;">Tx: ${String(listing.txId).slice(0,32)}…</div>` : ''}
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="showPage('creator-dash')">View in dashboard →</button>
+      </div>`;
+    }
+  }
+  renderSellerListings();
+}
+
+function renderSellerListings(){
+  var myId = walletState?.address || 'local-seller';
+  var mine = listingStore.filter(l=>l.sellerId===myId||l.sellerId==='local-seller');
+  var wrap = document.getElementById('seller-listings-wrap');
+  var list = document.getElementById('seller-listings-list');
+  var cdList = document.getElementById('cd-listings-table');
+  var cdCount = document.getElementById('cd-listing-count');
+
+  if(cdCount) cdCount.textContent = mine.length ? `(${mine.length})` : '';
+
+  var html = mine.length ? mine.slice().reverse().map(l=>`
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:12px;align-items:center;padding:12px 16px;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;margin-bottom:8px;font-size:13px;">
+      <div>
+        <div style="font-weight:700;">${l.emoji} ${l.title}</div>
+        <div style="font-size:11px;color:var(--muted);">${l.cat} · ${l.cond}</div>
+      </div>
+      <div style="font-family:var(--mono);font-weight:700;">${l.price} NIGHT</div>
+      <div><span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.05);color:${l.escrowState==='FUNDED'?'var(--blue)':l.escrowState==='RELEASED'?'var(--green)':'var(--orange)'};">⊘ ${l.escrowState||'OPEN'}</span></div>
+      <div style="font-size:11px;color:var(--muted);">${fmtShort(l.createdAt)}</div>
+      <div style="display:flex;gap:6px;">
+        ${l.escrowState==='FUNDED'?`<button class="btn btn-ghost btn-xs" onclick="openShipModal('${l.id}')">📦 Ship</button>`:''}
+        <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="removeListing('${l.id}')">✕</button>
+      </div>
+    </div>`).join('') : '<div style="font-size:13px;color:var(--muted);padding:16px;text-align:center;">No listings yet. Create your first one above.</div>';
+
+  if(list) list.innerHTML = html;
+  if(cdList) cdList.innerHTML = html;
+  if(wrap) wrap.style.display = mine.length ? 'block' : 'none';
+}
+
+function removeListing(id){
+  listingStore = listingStore.filter(l=>l.id!==id);
+  saveListings(); renderSellerListings();
+  toast('Listing removed','info');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RATINGS
+// ══════════════════════════════════════════════════════════════════
+var _ratePendingStars = 0;
+
+function pickStar(n){
+  _ratePendingStars = n;
+  const labels = ['','Terrible','Poor','OK','Good','Excellent'];
+  document.querySelectorAll('.star-opt').forEach(s=>{
+    s.style.opacity = parseInt(s.dataset.v) <= n ? '1' : '0.25';
+    s.style.color   = parseInt(s.dataset.v) <= n ? 'var(--gold)' : '';
+  });
+  var lbl = document.getElementById('star-label');
+  if(lbl) lbl.textContent = labels[n] || '';
+}
+
+function openRateModal(orderId, sellerId){
+  _ratePendingStars = 0;
+  document.querySelectorAll('.star-opt').forEach(s=>{ s.style.opacity='0.4'; s.style.color=''; });
+  var lbl = document.getElementById('star-label'); if(lbl) lbl.textContent='Tap a star';
+  var cmt = document.getElementById('rate-comment'); if(cmt) cmt.value='';
+  var oid = document.getElementById('rate-order-id'); if(oid) oid.value=orderId;
+  var sid = document.getElementById('rate-seller-id'); if(sid) sid.value=sellerId;
+  openModal('ov-rate');
+}
+
+function submitRating(){
+  var orderId  = document.getElementById('rate-order-id')?.value;
+  var sellerId = document.getElementById('rate-seller-id')?.value;
+  var comment  = document.getElementById('rate-comment')?.value?.trim();
+  if(!_ratePendingStars){ toast('Please select a star rating','error'); return; }
+  addRating(sellerId, walletState?.address||'buyer', _ratePendingStars, comment, orderId, 'buyer');
+  closeModal('ov-rate');
+  toast('✓ Rating submitted — stored as ZK commitment','success');
+  renderCreatorReputation();
+  renderOrders();
+}
+
+function renderCreatorReputation(){
+  var myId = walletState?.address || 'local-seller';
+  var rating = getSellerRating(myId);
+  var scoreEl = document.getElementById('cd-rep-score');
+  if(scoreEl) scoreEl.textContent = rating.avg ? rating.avg.toFixed(1) : '—';
+
+  var reviews = ratingStore[myId] || [];
+  var barsEl = document.getElementById('cd-rep-bars');
+  if(barsEl){
+    var counts=[0,0,0,0,0];
+    reviews.forEach(r=>counts[r.stars-1]++);
+    barsEl.innerHTML = [5,4,3,2,1].map(n=>{
+      var c=counts[n-1], pct=reviews.length?Math.round(c/reviews.length*100):0;
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px;">
+        <span style="color:var(--gold);width:20px;">${n}★</span>
+        <div style="flex:1;height:6px;background:var(--rim2);border-radius:3px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:var(--gold);border-radius:3px;"></div>
+        </div>
+        <span style="color:var(--muted);width:24px;text-align:right;">${c}</span>
+      </div>`;
+    }).join('');
+  }
+
+  var recentEl = document.getElementById('cd-recent-reviews');
+  if(recentEl){
+    recentEl.innerHTML = reviews.slice(-3).reverse().map(r=>`
+      <div style="border-top:1px solid var(--rim2);padding-top:10px;margin-top:10px;font-size:12px;">
+        <div style="color:var(--gold);margin-bottom:2px;">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <div style="color:var(--muted);line-height:1.5;">${r.comment||'No comment'}</div>
+        <div style="font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:3px;">${new Date(r.at).toLocaleDateString()}</div>
+      </div>`).join('') || '<div style="font-size:12px;color:var(--muted);">No reviews yet</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DISPUTE
+// ══════════════════════════════════════════════════════════════════
+function openDisputeModal(orderId){
+  var el = document.getElementById('dispute-order-id'); if(el) el.value=orderId;
+  var re = document.getElementById('dispute-reason'); if(re) re.value='';
+  var ev = document.getElementById('dispute-evidence'); if(ev) ev.value='';
+  openModal('ov-dispute');
+}
+
+async function submitDispute(){
+  var orderId  = document.getElementById('dispute-order-id')?.value;
+  var reason   = document.getElementById('dispute-reason')?.value;
+  var evidence = document.getElementById('dispute-evidence')?.value?.trim();
+  if(!reason){ toast('Select a reason','error'); return; }
+  if(!evidence){ toast('Describe what happened','error'); return; }
+
+  var o = orders.find(x=>x.id===orderId);
+  var escId = o?.escrowId || orderId;
+  toast('Submitting dispute to Midnight…','info');
+  try {
+    await nmApiPost('/api/escrow/dispute', { orderId: escId, reason, evidence });
+    if(escrowStore[escId]) escrowStore[escId].state = 'DISPUTED';
+  } catch(e){ if(escrowStore[escId]) escrowStore[escId].state = 'DISPUTED'; }
+
+  if(o){ o.status='Disputed'; saveOrders(); }
+  closeModal('ov-dispute');
+  renderOrders();
+  toast('⚖ Dispute filed — governance arbitration within 48h','info');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CARRIER / SHIPPING
+// ══════════════════════════════════════════════════════════════════
+function openShipModal(orderId){
+  var el = document.getElementById('ship-order-id'); if(el) el.value=orderId;
+  var et = document.getElementById('ship-eta');
+  if(et){ var d=new Date(); d.setDate(d.getDate()+7); et.value=d.toISOString().split('T')[0]; }
+  openModal('ov-ship');
+}
+
+function submitShipping(){
+  var orderId  = document.getElementById('ship-order-id')?.value;
+  var carrier  = document.getElementById('ship-carrier')?.value;
+  var tracking = document.getElementById('ship-tracking')?.value?.trim();
+  var eta      = document.getElementById('ship-eta')?.value;
+  if(!tracking){ toast('Enter a tracking number','error'); return; }
+
+  deliveryStore[orderId] = { carrier, trackingRef: tracking, eta, shippedAt: Date.now() };
+  saveDelivery();
+
+  var o = orders.find(x=>x.id===orderId);
+  if(o && o.status==='Processing'){ o.status='Out for Delivery'; saveOrders(); }
+
+  var listing = listingStore.find(l=>l.id===orderId);
+  if(listing){ listing.state='Shipped'; saveListings(); renderSellerListings(); }
+
+  closeModal('ov-ship');
+  renderOrders();
+  toast(`📦 Tracking saved — ${carrier} ${tracking}`,'success');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NIGHT FUN TOKEN DASHBOARD
+// ══════════════════════════════════════════════════════════════════
+var nftdData = JSON.parse(localStorage.getItem('nm_nftd') || 'null');
+
+function nftdShow(data){
+  nftdData = data;
+  localStorage.setItem('nm_nftd', JSON.stringify(data));
+  var dash = document.getElementById('nf-token-dash');
+  var noD  = document.getElementById('nf-token-nodash');
+  if(dash) dash.style.display = 'block';
+  if(noD)  noD.style.display  = 'none';
+  nftdRender();
+}
+
+function nftdRender(){
+  if(!nftdData) return;
+  var d = nftdData;
+  var set = (id, val)=>{ var e=document.getElementById(id); if(e) e.textContent=val; };
+  set('nftd-name',     d.name     || '—');
+  set('nftd-symbol',   d.symbol   ? '$'+d.symbol : '—');
+  set('nftd-addr',     d.address  ? d.address.slice(0,16)+'…' : 'preprod');
+  set('nftd-supply',   d.supply   ? Number(d.supply).toLocaleString() : '—');
+  set('nftd-holders',  d.holders  || '1');
+  set('nftd-epoch',    d.epoch    != null ? 'Epoch '+d.epoch : 'Epoch 0');
+  set('nftd-epoch-rev',d.epochRev ? d.epochRev+' NIGHT' : '0 NIGHT');
+  set('nftd-merch-sales', d.merchSales || '0');
+  set('nftd-claimable',   d.claimable  ? d.claimable+' NIGHT' : '0 NIGHT');
+  set('nftd-rev-bps', d.holderRevBps  ? (d.holderRevBps/100).toFixed(1)+'%' : '—');
+
+  var feed = document.getElementById('nftd-rev-feed');
+  if(feed && d.revFeed && d.revFeed.length){
+    feed.innerHTML = d.revFeed.slice(-5).reverse().map(f=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--raised);border:1px solid var(--rim2);border-radius:8px;font-size:12px;">
+        <div><span style="color:var(--green);margin-right:8px;">↗</span>${f.desc}</div>
+        <div style="font-family:var(--mono);font-weight:700;color:var(--green);">+${f.amount} NIGHT</div>
+      </div>`).join('');
+  } else if(feed){
+    feed.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px;text-align:center;">No revenue events yet — record a merch sale to see the feed.</div>';
+  }
+}
+
+async function nftdCloseEpoch(){
+  if(!nftdData){ toast('No token deployed','error'); return; }
+  toast('Closing epoch on Midnight…','info');
+  try {
+    var res = await nmApiPost('/api/nightfun/close-epoch', { tokenAddress: nftdData.address });
+    nftdData.epoch = (nftdData.epoch||0)+1;
+    nftdData.epochRev = 0; nftdData.merchSales = 0;
+    nftdData.revFeed = nftdData.revFeed || [];
+    nftdData.revFeed.push({ desc: 'Epoch closed · revenue distributed', amount: res.distributed||0 });
+    nftdShow(nftdData);
+    toast('✓ Epoch closed — revenue distributed to holders','success');
+  } catch(e){
+    nftdData.epoch = (nftdData.epoch||0)+1;
+    nftdData.revFeed = nftdData.revFeed || [];
+    nftdData.revFeed.push({ desc: 'Epoch closed (simulated)', amount: Math.floor(Math.random()*50) });
+    nftdShow(nftdData);
+    toast('Epoch closed (simulation — API offline)','info');
+  }
+}
+
+async function nftdRefresh(){
+  if(!nftdData){ return; }
+  toast('Refreshing from chain…','info');
+  try {
+    var res = await fetch(NM_API+'/api/nightfun/state?addr='+(nftdData.address||''), { signal: AbortSignal.timeout(5000) });
+    var j = await res.json();
+    nftdData = Object.assign(nftdData, j);
+    nftdShow(nftdData);
+    toast('✓ Refreshed','success');
+  } catch(e){ toast('Chain offline — showing cached data','info'); }
+}
+
+// Called after successful Night Fun deploy
+function onNightFunDeployed(deployData){
+  nftdShow({
+    name: deployData.name, symbol: deployData.symbol,
+    supply: deployData.supply, address: deployData.address || 'preprod',
+    holderRevBps: deployData.holderRevBps || 5000,
+    epoch: 0, epochRev: 0, holders: 1, merchSales: 0, claimable: 0, revFeed: []
+  });
+}
+
+// Init Night Fun dashboard if token was previously deployed
+(function(){
+  if(nftdData){
+    setTimeout(function(){
+      var dash = document.getElementById('nf-token-dash');
+      var noD  = document.getElementById('nf-token-nodash');
+      if(dash) dash.style.display='block';
+      if(noD)  noD.style.display='none';
+      nftdRender();
+    }, 300);
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// CREATOR DASHBOARD — real data wiring
+// ══════════════════════════════════════════════════════════════════
+var _origCompleteCreatorOnboard = typeof completeCreatorOnboard === 'function' ? completeCreatorOnboard : null;
+function completeCreatorOnboard(){
+  if(_origCompleteCreatorOnboard) _origCompleteCreatorOnboard();
+  setTimeout(function(){ renderSellerListings(); renderCreatorReputation(); }, 200);
+}
+
+// Patch showPage to refresh creator dash when visited
+var _origShowPage2 = showPage;
+showPage = function(name){
+  _origShowPage2(name);
+  if(name==='creator-dash'){
+    setTimeout(function(){ renderSellerListings(); renderCreatorReputation(); }, 100);
+  }
+  if(name==='sell'){
+    setTimeout(function(){ renderSellerListings(); }, 100);
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// REPUTATION BADGES on product cards
+// ══════════════════════════════════════════════════════════════════
+function sellerRepBadge(sellerId){
+  var r = getSellerRating(sellerId);
+  if(!r.count) return '';
+  return `<span style="font-size:10px;color:var(--gold);font-family:var(--mono);">★${r.avg} (${r.count})</span>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INITIAL RENDER
+// ══════════════════════════════════════════════════════════════════
+(function initExtended(){
+  renderSellerListings();
+  renderCreatorReputation();
+})();
 
 
 </script>

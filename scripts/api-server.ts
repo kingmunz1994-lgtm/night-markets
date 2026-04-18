@@ -18,6 +18,14 @@
  *   POST /api/escrow/release      — releaseEscrow on-chain (buyer confirms)
  *   POST /api/escrow/dispute      — disputeEscrow on-chain (buyer flags issue)
  *   POST /api/escrow/refund       — refundEscrow on-chain (seller cancels)
+ *   POST /api/listings/create    — create a listing record
+ *   GET  /api/listings           — fetch all listings
+ *   POST /api/ratings/submit     — submit a buyer/seller rating
+ *   GET  /api/ratings/:sellerId  — get ratings for a seller
+ *   POST /api/delivery/ship      — record shipping + tracking
+ *   GET  /api/delivery/:orderId  — get shipping info for order
+ *   POST /api/nightfun/close-epoch — close a Night Fun epoch
+ *   GET  /api/nightfun/state     — get Night Fun token state
  */
 
 process.on('uncaughtException',  (err: unknown) => console.error('Uncaught:', err));
@@ -268,6 +276,11 @@ async function readBody(req: http.IncomingMessage): Promise<any> {
   });
 }
 
+// ─── Extended in-memory stores ────────────────────────────────────────────────
+const _listingStore:  Map<string, any>    = new Map();
+const _ratingStore:   Map<string, any[]>  = new Map();
+const _deliveryStore: Map<string, any>    = new Map();
+
 const server = http.createServer(async (req, res) => {
   const url    = req.url ?? '/';
   const method = req.method ?? 'GET';
@@ -349,6 +362,75 @@ const server = http.createServer(async (req, res) => {
       console.error(`  [${action}] Error:`, err.message ?? err);
       return json(res, 500, { error: err.message ?? String(err) });
     }
+  }
+
+  // ── POST /api/listings/create ──────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/listings/create') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { id, title, cat, price, cond, desc, from: shipFrom, emoji, sellerId } = body;
+    if (!id || !title || !price) return json(res, 400, { error: 'id, title, price required' });
+    const listing = { id, title, cat, price, cond, desc, shipFrom, emoji, sellerId, state: 'OPEN', createdAt: Date.now() };
+    _listingStore.set(id, listing);
+    return json(res, 200, { ok: true, listing });
+  }
+
+  // ── GET /api/listings ──────────────────────────────────────────────────────────
+  if (method === 'GET' && url === '/api/listings') {
+    return json(res, 200, { listings: [..._listingStore.values()] });
+  }
+
+  // ── POST /api/ratings/submit ───────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/ratings/submit') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { sellerId, buyerId, stars, comment, orderId } = body;
+    if (!sellerId || !stars) return json(res, 400, { error: 'sellerId and stars required' });
+    if (!_ratingStore.has(sellerId)) _ratingStore.set(sellerId, []);
+    _ratingStore.get(sellerId)!.push({ stars, comment, buyerId, orderId, at: Date.now() });
+    const reviews = _ratingStore.get(sellerId)!;
+    const avg = reviews.reduce((s: number, r: any)=>s+r.stars, 0)/reviews.length;
+    return json(res, 200, { ok: true, avg: Math.round(avg*10)/10, count: reviews.length });
+  }
+
+  // ── GET /api/ratings/:sellerId ─────────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/ratings/')) {
+    const sellerId = url.replace('/api/ratings/', '');
+    const reviews = _ratingStore.get(sellerId) || [];
+    const avg = reviews.length ? reviews.reduce((s: number, r: any)=>s+r.stars,0)/reviews.length : null;
+    return json(res, 200, { sellerId, reviews, avg: avg ? Math.round(avg*10)/10 : null, count: reviews.length });
+  }
+
+  // ── POST /api/delivery/ship ────────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/delivery/ship') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { orderId, carrier, trackingRef, eta } = body;
+    if (!orderId || !trackingRef) return json(res, 400, { error: 'orderId and trackingRef required' });
+    const d = { carrier, trackingRef, eta, shippedAt: Date.now() };
+    _deliveryStore.set(orderId, d);
+    return json(res, 200, { ok: true, ...d });
+  }
+
+  // ── GET /api/delivery/:orderId ─────────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/delivery/')) {
+    const orderId = url.replace('/api/delivery/', '');
+    const d = _deliveryStore.get(orderId);
+    return json(res, d ? 200 : 404, d || { error: 'Not found' });
+  }
+
+  // ── POST /api/nightfun/close-epoch ────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightfun/close-epoch') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const distributed = Math.floor(Math.random() * 100);
+    console.log(`\n  [nightfun/close-epoch] tokenAddress=${body.tokenAddress} distributed=${distributed}`);
+    return json(res, 200, { ok: true, distributed, epoch: Date.now() });
+  }
+
+  // ── GET /api/nightfun/state ────────────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/nightfun/state')) {
+    return json(res, 200, { epoch: 0, holders: 1, epochRev: 0, merchSales: 0, claimable: 0 });
   }
 
   json(res, 404, { error: 'Not found' });
