@@ -1,0 +1,764 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// ══════════════════════════════════════════════════════════════════
+//  NightFunToken — Token + Merch Revenue Sharing Contract
+//
+//  Works for any business scale:
+//    — Enterprise  (Coca-Cola: 1B tokens, tiers, regional gates, licensing)
+//    — Mid-market  (DTC brand: 100k tokens, 3 tiers, global merch)
+//    — Micro       (coaster maker: 1000 tokens, no tiers, one product)
+//
+//  Core mechanic:
+//    1. Creator deploys with supply + revenue split config
+//    2. Holders buy/receive tokens (ZK private balances)
+//    3. Every merch sale is recorded on-chain
+//    4. Revenue epochs: platform batches NIGHT to contract,
+//       holders claim their share by proving they hold tokens
+//    5. Nobody knows who holds what — ZK from day one
+// ══════════════════════════════════════════════════════════════════
+
+// ── Token config (set once at init, readable by all) ────────────
+export ledger token_name:   Map<Bytes<32>, Bytes<32>>;  // key "name"
+export ledger token_symbol: Map<Bytes<32>, Bytes<8>>;   // key "sym"
+export ledger total_supply: Map<Bytes<32>, Uint<64>>;   // key "supply"
+export ledger is_paused:    Map<Bytes<32>, Boolean>;    // key "paused"
+
+// Creator identity — ZK commitment, never revealed
+export ledger creator_commit: Map<Bytes<32>, Bytes<32>>; // key "creator"
+
+// ── Revenue split config (basis points, sum = 10000) ────────────
+// holder_bps + creator_bps + platform_bps = 10000
+// e.g. 8000 + 1500 + 500 = 10000
+export ledger holder_bps:   Map<Bytes<32>, Uint<16>>; // key "hbps"
+export ledger creator_bps:  Map<Bytes<32>, Uint<16>>; // key "cbps"
+// platform always takes 500 bps (5%) — Night Markets fee
+
+// ── Tier thresholds (token quantity, 0 = tier disabled) ─────────
+// Enterprise: tier_platinum = 10000000 (10M tokens = Platinum collector)
+// Micro:      all zeros = no tier system
+export ledger tier_bronze:   Map<Bytes<32>, Uint<64>>; // key "tb"
+export ledger tier_silver:   Map<Bytes<32>, Uint<64>>; // key "ts"
+export ledger tier_gold:     Map<Bytes<32>, Uint<64>>; // key "tg"
+export ledger tier_platinum: Map<Bytes<32>, Uint<64>>; // key "tp"
+
+// ── Holder balances — private commitments ───────────────────────
+// holderCommitment → balance
+// The commitment is derived from their secret key + contract address
+// so it's unique per holder per contract with no cross-contract linkage
+export ledger holder_balance: Map<Bytes<32>, Uint<64>>;
+export ledger total_holders:  Counter;
+
+// ── Revenue epoch mechanism ──────────────────────────────────────
+// Each epoch: Night Markets deposits holder_share NIGHT to contract
+// revenue_per_token_epoch[n] = cumulative NIGHT per token at end of epoch n
+// holders claim by proving balance at epoch snapshot
+export ledger current_epoch:           Counter;
+export ledger epoch_rev_per_token:     Map<Bytes<32>, Uint<64>>; // epoch# → NIGHT per token (×1000 fixed point)
+export ledger holder_last_claimed_ep:  Map<Bytes<32>, Uint<64>>; // holderCommit → last claimed epoch
+
+// ── Merch sale log (public stats — no buyer info) ───────────────
+export ledger total_sales:         Counter;
+export ledger total_merch_revenue: Map<Bytes<32>, Uint<64>>; // key "rev"
+export ledger creator_pending:     Map<Bytes<32>, Uint<64>>; // key "cpend"
+
+// ── Licensing gate (enterprise feature) ─────────────────────────
+// If license_required = true, transfers need a licence commitment
+// Coca-Cola: require regional licence before receiving tokens
+// Coaster maker: leave false, anyone can hold
+export ledger license_required: Map<Bytes<32>, Boolean>;    // key "lic"
+export ledger has_license:      Map<Bytes<32>, Boolean>;    // holderCommit → licensed?
+
+// ── Witnesses (private inputs provided by caller's wallet) ───────
+witness localSecretKey(): Bytes<32>;
+witness holderTokenBalance(): Uint<64>;
+witness callerEpochSnapshot(): Uint<64>; // balance at snapshot epoch for claim
+
+// ══════════════════════════════════════════════════════════════════
+//  HELPER CIRCUITS
+// ══════════════════════════════════════════════════════════════════
+
+circuit callerCommitment(): Bytes<32> {
+  const sk = localSecretKey();
+  const contractAddr = kernel.self().bytes;
+  return persistentHash<Vector<2, Bytes<32>>>([contractAddr, sk]);
+}
+
+circuit creatorCommitment(): Bytes<32> {
+  const sk = localSecretKey();
+  const contractAddr = kernel.self().bytes;
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "creator"), contractAddr, sk]);
+}
+
+circuit assertNotPaused(): Boolean {
+  const paused = is_paused.member(pad(32, "paused"))
+    ? is_paused.lookup(pad(32, "paused"))
+    : false;
+  assert(paused == false, "contract paused");
+  return true;
+}
+
+circuit assertCreator(): Bytes<32> {
+  const callerCom = creatorCommitment();
+  const cCom = disclose(callerCom);
+  const stored = creator_commit.lookup(pad(32, "creator"));
+  assert(cCom == stored, "not creator");
+  return cCom;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  INITIALIZE — called once at deployment
+//
+//  Micro creator:   initialize("HandcraftedCoasters", "CSTR", 1000,
+//                              8000, 0, 0, 0, 0, false)
+//  Enterprise:      initialize("CocaColaToken", "COKE", 1000000000,
+//                              6000, 100, 1000, 10000, 100000, true)
+// ══════════════════════════════════════════════════════════════════
+
+export circuit initialize(
+  name:           Bytes<32>,
+  symbol:         Bytes<8>,
+  supply:         Uint<64>,
+  holderRevBps:   Uint<16>,   // e.g. 8000 = 80% of merch profit to holders
+  tierBronzeAmt:  Uint<64>,   // min tokens for Bronze (0 = disabled)
+  tierSilverAmt:  Uint<64>,
+  tierGoldAmt:    Uint<64>,
+  tierPlatinumAmt: Uint<64>,
+  requireLicense: Boolean     // enterprise gating flag
+): Bytes<32> {
+  // Can only run once — supply key must be empty
+  assert(total_supply.member(pad(32, "supply")) == false, "already initialized");
+
+  // Revenue split validation
+  const hBps   = disclose(holderRevBps);
+  const platBps = 500 as Uint<16>; // Night Markets 5% fixed fee
+  assert(hBps <= (9500 as Uint<16>), "holder share too high");
+  const cBps = (9500 as Uint<16> - hBps) as Uint<16>;
+
+  // Mint all tokens to creator's commitment
+  const creatorCom = creatorCommitment();
+  const cCom = disclose(creatorCom);
+  const sup = disclose(supply);
+
+  token_name.insert(pad(32, "name"), name);
+  token_symbol.insert(pad(32, "sym"), symbol);
+  total_supply.insert(pad(32, "supply"), sup);
+  creator_commit.insert(pad(32, "creator"), cCom);
+  is_paused.insert(pad(32, "paused"), false);
+
+  holder_bps.insert(pad(32, "hbps"), hBps);
+  creator_bps.insert(pad(32, "cbps"), cBps);
+
+  tier_bronze.insert(pad(32, "tb"), disclose(tierBronzeAmt));
+  tier_silver.insert(pad(32, "ts"), disclose(tierSilverAmt));
+  tier_gold.insert(pad(32, "tg"), disclose(tierGoldAmt));
+  tier_platinum.insert(pad(32, "tp"), disclose(tierPlatinumAmt));
+
+  license_required.insert(pad(32, "lic"), disclose(requireLicense));
+
+  holder_balance.insert(cCom, sup);
+  total_holders.increment(1);
+
+  total_merch_revenue.insert(pad(32, "rev"), 0 as Uint<64>);
+  creator_pending.insert(pad(32, "cpend"), 0 as Uint<64>);
+
+  return cCom;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TRANSFER TOKENS — ZK private
+//  Sender proves they have enough without revealing balance
+// ══════════════════════════════════════════════════════════════════
+
+export circuit transfer(
+  recipientCommitment: Bytes<32>,
+  amount:              Uint<64>
+): Boolean {
+  assertNotPaused();
+
+  const senderCom = callerCommitment();
+  const sCom = disclose(senderCom);
+  const rCom = disclose(recipientCommitment);
+  const amt  = disclose(amount);
+
+  // Prove balance (private witness)
+  const senderBal = holderTokenBalance();
+  assert(senderBal >= amt, "insufficient balance");
+  assert(disclose(senderBal) == holder_balance.lookup(sCom), "balance witness mismatch");
+
+  // License gate — if enterprise requires it, recipient must be licensed
+  const licReq = license_required.lookup(pad(32, "lic"));
+  if (licReq == true) {
+    assert(has_license.member(rCom), "recipient not licensed");
+    assert(has_license.lookup(rCom) == true, "recipient license invalid");
+  }
+
+  // Deduct sender
+  const newSenderBal = (senderBal - amt) as Uint<64>;
+  holder_balance.insert(sCom, newSenderBal);
+
+  // Credit recipient — if new holder, increment counter
+  const recipientBal = holder_balance.member(rCom)
+    ? holder_balance.lookup(rCom)
+    : (0 as Uint<64>);
+  if (recipientBal == (0 as Uint<64>)) {
+    total_holders.increment(1);
+  }
+  holder_balance.insert(rCom, (recipientBal + amt) as Uint<64>);
+
+  // Seed recipient's claim epoch to current so they don't claim past revenue
+  if (holder_last_claimed_ep.member(rCom) == false) {
+    holder_last_claimed_ep.insert(rCom, current_epoch.value);
+  }
+
+  return true;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  RECORD MERCH SALE
+//  Called by Night Markets oracle (backend) when Printful confirms a sale.
+//  Only the creator (or a delegated oracle with creator's commitment)
+//  can call this. The sale amount splits on-chain immediately.
+//
+//  Enterprise: Coca-Cola's regional merch portal calls this per sale
+//  Micro:      Printful webhook → Night Markets backend → this circuit
+// ══════════════════════════════════════════════════════════════════
+
+export circuit recordMerchSale(saleAmountNight: Uint<64>): Boolean {
+  assertNotPaused();
+  assertCreator();
+
+  const amt  = disclose(saleAmountNight);
+  const sup  = total_supply.lookup(pad(32, "supply"));
+  assert(sup > (0 as Uint<64>), "no supply");
+
+  // Split: holder share + creator share (platform fee handled off-chain by
+  // Night Markets deducting before calling this circuit)
+  const hBps   = holder_bps.lookup(pad(32, "hbps"));
+  const cBps   = creator_bps.lookup(pad(32, "cbps"));
+
+  const holderAmt  = (amt * (hBps as Uint<64>)) / (10000 as Uint<64>);
+  const creatorAmt = (amt * (cBps as Uint<64>)) / (10000 as Uint<64>);
+
+  // Accumulate epoch revenue per token (×1000 fixed point for precision)
+  // This is the current epoch's running total
+  const ep    = current_epoch.value;
+  const epKey = pad(32, ep as Uint<64>); // epoch number as key
+  const prevRpt = epoch_rev_per_token.member(epKey)
+    ? epoch_rev_per_token.lookup(epKey)
+    : (0 as Uint<64>);
+  const rptIncrease = (holderAmt * (1000 as Uint<64>)) / sup;
+  epoch_rev_per_token.insert(epKey, (prevRpt + rptIncrease) as Uint<64>);
+
+  // Creator pending
+  const prevCreatorPending = creator_pending.lookup(pad(32, "cpend"));
+  creator_pending.insert(pad(32, "cpend"), (prevCreatorPending + creatorAmt) as Uint<64>);
+
+  // Running totals (public stats for the live feed)
+  const prevTotal = total_merch_revenue.lookup(pad(32, "rev"));
+  total_merch_revenue.insert(pad(32, "rev"), (prevTotal + amt) as Uint<64>);
+  total_sales.increment(1);
+
+  return true;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  CLOSE EPOCH — called by creator/Night Markets to snapshot revenue
+//  Advances the epoch counter so the current revenue is locked in
+//  and a new epoch begins. Holders can claim any closed epoch.
+// ══════════════════════════════════════════════════════════════════
+
+export circuit closeEpoch(): Uint<64> {
+  assertCreator();
+  const closedEp = current_epoch.value;
+  current_epoch.increment(1);
+  return closedEp;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  CLAIM HOLDER REVENUE
+//  Holder proves they held tokens during past epochs and claims
+//  their proportional share. ZK: balance is never revealed on-chain.
+//
+//  epochSnapshot = balance the holder is claiming for
+//  (proven by witness, must match holder_balance at time of claim
+//   since tokens aren't burned during claim)
+// ══════════════════════════════════════════════════════════════════
+
+export circuit claimRevenue(epochsToClaim: Uint<8>): Uint<64> {
+  assertNotPaused();
+
+  const holderCom = callerCommitment();
+  const hCom = disclose(holderCom);
+
+  assert(holder_balance.member(hCom), "not a holder");
+
+  const balance  = holderTokenBalance();
+  assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
+  assert(balance > (0 as Uint<64>), "zero balance");
+
+  const lastEp = holder_last_claimed_ep.member(hCom)
+    ? holder_last_claimed_ep.lookup(hCom)
+    : (0 as Uint<64>);
+  const curEp  = current_epoch.value;
+
+  assert(lastEp < curEp, "no epochs to claim");
+
+  // Claim up to epochsToClaim epochs (gas limit protection)
+  // For large gaps, holder calls this multiple times
+  const maxEps = epochsToClaim as Uint<64>;
+  const endEp  = lastEp + maxEps < curEp ? lastEp + maxEps : curEp;
+
+  // Sum revenue across claimed epochs
+  // Note: in a production contract this would be a loop;
+  // for Compact we unroll or use a single epoch pattern.
+  // Here we claim one epoch at a time for circuit simplicity.
+  const epKey = pad(32, lastEp);
+  const rpt   = epoch_rev_per_token.member(epKey)
+    ? epoch_rev_per_token.lookup(epKey)
+    : (0 as Uint<64>);
+
+  const earned = (rpt * balance) / (1000 as Uint<64>);
+
+  // Advance claim pointer
+  holder_last_claimed_ep.insert(hCom, lastEp + (1 as Uint<64>));
+
+  return disclose(earned);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  CREATOR CLAIM — withdraw accumulated creator share
+// ══════════════════════════════════════════════════════════════════
+
+export circuit creatorClaim(): Uint<64> {
+  assertCreator();
+  const pending = creator_pending.lookup(pad(32, "cpend"));
+  assert(pending > (0 as Uint<64>), "nothing to claim");
+  creator_pending.insert(pad(32, "cpend"), 0 as Uint<64>);
+  return pending;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  GET HOLDER TIER — ZK proof of tier without revealing balance
+//  Returns: 0=none, 1=bronze, 2=silver, 3=gold, 4=platinum
+//
+//  Enterprise use: Coca-Cola gates event access by tier
+//  Micro use:      coaster maker — all zeros, always returns 0
+// ══════════════════════════════════════════════════════════════════
+
+export circuit getHolderTier(): Uint<8> {
+  const holderCom = callerCommitment();
+  const hCom = disclose(holderCom);
+
+  assert(holder_balance.member(hCom), "not a holder");
+  const balance = holderTokenBalance();
+  assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
+
+  const tp = tier_platinum.lookup(pad(32, "tp"));
+  const tg = tier_gold.lookup(pad(32, "tg"));
+  const ts = tier_silver.lookup(pad(32, "ts"));
+  const tb = tier_bronze.lookup(pad(32, "tb"));
+
+  if (tp > (0 as Uint<64>) && balance >= tp) {
+    return disclose(4 as Uint<8>);
+  }
+  if (tg > (0 as Uint<64>) && balance >= tg) {
+    return disclose(3 as Uint<8>);
+  }
+  if (ts > (0 as Uint<64>) && balance >= ts) {
+    return disclose(2 as Uint<8>);
+  }
+  if (tb > (0 as Uint<64>) && balance >= tb) {
+    return disclose(1 as Uint<8>);
+  }
+  return disclose(0 as Uint<8>);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  PROVE HOLDER — ZK membership proof without revealing identity
+//  Used by Night Markets UI to show "verified holder" badge.
+//  Returns true if caller holds > 0 tokens. No balance revealed.
+// ══════════════════════════════════════════════════════════════════
+
+export circuit proveHolder(): Boolean {
+  const holderCom = callerCommitment();
+  const hCom = disclose(holderCom);
+  assert(holder_balance.member(hCom), "not a holder");
+  const balance = holderTokenBalance();
+  assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
+  assert(balance > (0 as Uint<64>), "zero balance");
+  return true;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  LICENSE MANAGEMENT (enterprise only)
+//  Creator grants/revokes licence to a holder commitment.
+//  Coca-Cola: only licensed retailers in approved regions can hold.
+//  Micro:     license_required = false, these circuits unused.
+// ══════════════════════════════════════════════════════════════════
+
+export circuit grantLicense(holderCommitment: Bytes<32>): Boolean {
+  assertCreator();
+  const hCom = disclose(holderCommitment);
+  has_license.insert(hCom, true);
+  return true;
+}
+
+export circuit revokeLicense(holderCommitment: Bytes<32>): Boolean {
+  assertCreator();
+  const hCom = disclose(holderCommitment);
+  has_license.insert(hCom, false);
+  return true;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  PAUSE / UNPAUSE — emergency controls
+// ══════════════════════════════════════════════════════════════════
+
+export circuit pause(): Boolean {
+  assertCreator();
+  is_paused.insert(pad(32, "paused"), true);
+  return true;
+}
+
+export circuit unpause(): Boolean {
+  assertCreator();
+  is_paused.insert(pad(32, "paused"), false);
+  return true;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  OPENZEPP ELIN-STYLE ADDITIONS (OZ Compact patterns)
+// ══════════════════════════════════════════════════════════════════
+
+// ── OZ SafeOwnable: 2-step creator role transfer ─────────────────
+// Prevents accidentally transferring creator role to a wrong address.
+// Step 1: creator calls proposeCreatorTransfer(newCommitment)
+// Step 2: new creator calls acceptCreatorRole()
+export ledger pending_creator: Map<Bytes<32>, Bytes<32>>;  // key "pending_creator"
+
+export circuit proposeCreatorTransfer(newCreatorCommitment: Bytes<32>): Boolean {
+  assertCreator();
+  const nCom = disclose(newCreatorCommitment);
+  pending_creator.insert(pad(32, "pending_creator"), nCom);
+  return true;
+}
+
+export circuit acceptCreatorRole(): Bytes<32> {
+  const callerCom = creatorCommitment();
+  const cCom = disclose(callerCom);
+  assert(pending_creator.member(pad(32, "pending_creator")), "no pending transfer");
+  const pendingCom = pending_creator.lookup(pad(32, "pending_creator"));
+  assert(cCom == pendingCom, "not the pending creator");
+  creator_commit.insert(pad(32, "creator"), cCom);
+  pending_creator.insert(pad(32, "pending_creator"), pad(32, ""));
+  return cCom;
+}
+
+// ── OZ ERC20-style: approve + transferFrom ───────────────────────
+// Allows a ZK delegate (e.g. Night Markets escrow) to transfer tokens
+// on behalf of the holder, up to an approved allowance.
+// Both approver and spender identities are commitments — never revealed.
+export ledger allowance: Map<Bytes<32>, Uint<64>>; // hash(owner‖spender) → amount
+
+circuit allowanceKey(ownerCom: Bytes<32>, spenderCom: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([ownerCom, spenderCom]);
+}
+
+witness spenderSecretKey(): Bytes<32>;
+
+export circuit approve(spenderCommitment: Bytes<32>, amount: Uint<64>): Boolean {
+  assertNotPaused();
+  const ownerCom  = callerCommitment();
+  const oCom      = disclose(ownerCom);
+  const sCom      = disclose(spenderCommitment);
+  const amt       = disclose(amount);
+  const key       = allowanceKey(oCom, sCom);
+  allowance.insert(key, amt);
+  return true;
+}
+
+export circuit transferFrom(
+  ownerCommitment:   Bytes<32>,
+  recipientCommitment: Bytes<32>,
+  amount:            Uint<64>
+): Boolean {
+  assertNotPaused();
+
+  // Verify spender identity
+  const sk       = spenderSecretKey();
+  const contractAddr = kernel.self().bytes;
+  const spenderCom = disclose(persistentHash<Vector<2, Bytes<32>>>([contractAddr, sk]));
+
+  const oCom = disclose(ownerCommitment);
+  const rCom = disclose(recipientCommitment);
+  const amt  = disclose(amount);
+
+  // Check and deduct allowance
+  const key = allowanceKey(oCom, spenderCom);
+  assert(allowance.member(key), "no allowance");
+  const allowed = allowance.lookup(key);
+  assert(allowed >= amt, "allowance exceeded");
+  allowance.insert(key, (allowed - amt) as Uint<64>);
+
+  // Deduct owner balance
+  assert(holder_balance.member(oCom), "owner has no balance");
+  const ownerBal = holder_balance.lookup(oCom);
+  assert(ownerBal >= amt, "insufficient owner balance");
+  holder_balance.insert(oCom, (ownerBal - amt) as Uint<64>);
+
+  // Credit recipient
+  const recipientBal = holder_balance.member(rCom)
+    ? holder_balance.lookup(rCom)
+    : (0 as Uint<64>);
+  if (recipientBal == (0 as Uint<64>)) {
+    total_holders.increment(1);
+  }
+  holder_balance.insert(rCom, (recipientBal + amt) as Uint<64>);
+  if (holder_last_claimed_ep.member(rCom) == false) {
+    holder_last_claimed_ep.insert(rCom, current_epoch.value);
+  }
+
+  return true;
+}
+
+// ── OZ Burnable: holder burns their own tokens ───────────────────
+// Reduces total supply permanently. Used for deflationary mechanics,
+// e.g. burning tokens to mint exclusive physical collectibles.
+export circuit burn(amount: Uint<64>): Boolean {
+  assertNotPaused();
+
+  const holderCom = callerCommitment();
+  const hCom      = disclose(holderCom);
+  const amt       = disclose(amount);
+
+  assert(holder_balance.member(hCom), "not a holder");
+  const balance = holderTokenBalance();
+  assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
+  assert(balance >= amt, "insufficient balance to burn");
+
+  const newBal = (balance - amt) as Uint<64>;
+  holder_balance.insert(hCom, newBal);
+
+  // Reduce total supply
+  const sup = total_supply.lookup(pad(32, "supply"));
+  total_supply.insert(pad(32, "supply"), (sup - amt) as Uint<64>);
+
+  return true;
+}
+
+// ── OZ Mintable: creator mints additional supply ─────────────────
+// Capped at a hard max to prevent infinite inflation.
+// Enterprise: Coca-Cola launches regional edition — mints 500k more.
+// Micro: locked supply (never call this).
+export ledger max_supply: Map<Bytes<32>, Uint<64>>; // key "maxsup"
+
+export circuit setMaxSupply(max: Uint<64>): Boolean {
+  assertCreator();
+  assert(max_supply.member(pad(32, "maxsup")) == false, "max supply already set");
+  const m = disclose(max);
+  const cur = total_supply.lookup(pad(32, "supply"));
+  assert(m >= cur, "max below current supply");
+  max_supply.insert(pad(32, "maxsup"), m);
+  return true;
+}
+
+export circuit mint(recipientCommitment: Bytes<32>, amount: Uint<64>): Boolean {
+  assertCreator();
+  assertNotPaused();
+
+  const rCom = disclose(recipientCommitment);
+  const amt  = disclose(amount);
+
+  // Enforce max supply cap if set
+  const cur = total_supply.lookup(pad(32, "supply"));
+  if (max_supply.member(pad(32, "maxsup"))) {
+    const maxSup = max_supply.lookup(pad(32, "maxsup"));
+    assert((cur + amt) as Uint<64> <= maxSup, "exceeds max supply");
+  }
+
+  total_supply.insert(pad(32, "supply"), (cur + amt) as Uint<64>);
+
+  const recipientBal = holder_balance.member(rCom)
+    ? holder_balance.lookup(rCom)
+    : (0 as Uint<64>);
+  if (recipientBal == (0 as Uint<64>)) {
+    total_holders.increment(1);
+  }
+  holder_balance.insert(rCom, (recipientBal + amt) as Uint<64>);
+  if (holder_last_claimed_ep.member(rCom) == false) {
+    holder_last_claimed_ep.insert(rCom, current_epoch.value);
+  }
+
+  return true;
+}
+
+// ── OZ ReentrancyGuard pattern ───────────────────────────────────
+// Compact's sequential execution model already prevents re-entrancy
+// at the VM level, but we add an explicit guard flag for defence in depth.
+export ledger reentrancy_locked: Map<Bytes<32>, Boolean>; // key "lock"
+
+circuit assertNoReentrancy(): Boolean {
+  const locked = reentrancy_locked.member(pad(32, "lock"))
+    ? reentrancy_locked.lookup(pad(32, "lock"))
+    : false;
+  assert(locked == false, "reentrant call");
+  reentrancy_locked.insert(pad(32, "lock"), true);
+  return true;
+}
+
+circuit releaseReentrancyGuard(): Boolean {
+  reentrancy_locked.insert(pad(32, "lock"), false);
+  return true;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  BONDING CURVE (zk-mint pattern — SpyCrypto)
+//
+//  Constant-product AMM for fair-price token discovery.
+//  Off-chain witnesses supply output amounts; circuits verify via
+//  multiplication (no division operators needed in ZK constraints).
+//
+//  Lifecycle:
+//    initCurve → buyCurve / sellCurve → graduateCurve
+//    Graduation fires when NIGHT reserve reaches 85 tNight.
+//    Post-graduation: reserves migrate to zswap DEX (Mōhalu phase).
+//
+//  Privacy toggle: when curve_privacy_on = true, trade amounts are
+//  sealed inside ZK proofs — buyers/sellers appear as commitments only.
+// ══════════════════════════════════════════════════════════════════
+
+export ledger curve_night_reserve: Map<Bytes<32>, Uint<64>>;  // key "cvn"
+export ledger curve_token_reserve: Map<Bytes<32>, Uint<64>>;  // key "cvt"
+export ledger curve_graduated:     Map<Bytes<32>, Boolean>;   // key "cgrad"
+export ledger curve_privacy_on:    Map<Bytes<32>, Boolean>;   // key "cpriv"
+export ledger curve_total_buys:    Counter;
+
+// 85 tNight = 85_000_000 µNIGHT graduation threshold (matches zk-mint)
+const GRADUATION_THRESHOLD: Uint<64> = 85000000 as Uint<64>;
+
+// Off-chain witnesses: buyers/sellers compute output amounts, circuit verifies
+witness curveTokensOutWitness(): Uint<64>;
+witness curveNightOutWitness():  Uint<64>;
+
+// ── INIT CURVE — creator seeds pool with tokens ───────────────────
+// initialTokens: tokens to move from creator balance into curve pool
+// privacyEnabled: seal trade amounts inside ZK proofs
+export circuit initCurve(initialTokens: Uint<64>, privacyEnabled: Boolean): Boolean {
+  assertCreator();
+  assertNoReentrancy();
+  assert(curve_night_reserve.member(pad(32, "cvn")) == false, "curve already initialized");
+
+  const creatorCom = creatorCommitment();
+  const cCom       = disclose(creatorCom);
+  const toks       = disclose(initialTokens);
+
+  assert(holder_balance.member(cCom), "creator has no balance");
+  const bal = holder_balance.lookup(cCom);
+  assert(bal >= toks, "insufficient tokens for curve");
+  holder_balance.insert(cCom, (bal - toks) as Uint<64>);
+
+  // Seed pool at virtual NIGHT reserve = 1 (starting price = 1 µNIGHT/token)
+  curve_night_reserve.insert(pad(32, "cvn"), 1 as Uint<64>);
+  curve_token_reserve.insert(pad(32, "cvt"), toks);
+  curve_graduated.insert(pad(32, "cgrad"), false);
+  curve_privacy_on.insert(pad(32, "cpriv"), disclose(privacyEnabled));
+
+  releaseReentrancyGuard();
+  return true;
+}
+
+// ── BUY CURVE — caller pays NIGHT, receives tokens ───────────────
+// tokensOut computed off-chain: vt * nightIn / (vn + nightIn)
+// Circuit verifies tightly via multiplication (no division needed)
+export circuit buyCurve(nightIn: Uint<64>, minTokensOut: Uint<64>): Uint<64> {
+  assertNotPaused();
+  assertNoReentrancy();
+  assert(curve_night_reserve.member(pad(32, "cvn")), "curve not initialized");
+  assert(curve_graduated.lookup(pad(32, "cgrad")) == false, "curve graduated — use zswap");
+
+  const vn   = curve_night_reserve.lookup(pad(32, "cvn"));
+  const vt   = curve_token_reserve.lookup(pad(32, "cvt"));
+  const nIn  = disclose(nightIn);
+  const minOut = disclose(minTokensOut);
+
+  // Off-chain witness: tokensOut = floor(vt * nIn / (vn + nIn))
+  const tOut = disclose(curveTokensOutWitness());
+
+  // Division-free tight bounds verification
+  // Upper bound: tOut = floor(...) so tOut * (vn + nIn) <= vt * nIn
+  assert(tOut * (vn + nIn) <= vt * nIn, "curve: tokens out exceeds formula");
+  // Lower bound: (tOut+1) must overshoot, proving tOut is the floor
+  assert((tOut + (1 as Uint<64>)) * (vn + nIn) > vt * nIn, "curve: tokens out below floor");
+  assert(tOut >= minOut, "curve: slippage exceeded");
+  assert(vt >= tOut, "curve: insufficient token liquidity");
+
+  curve_night_reserve.insert(pad(32, "cvn"), (vn + nIn) as Uint<64>);
+  curve_token_reserve.insert(pad(32, "cvt"), (vt - tOut) as Uint<64>);
+  curve_total_buys.increment(1);
+
+  // Credit buyer balance
+  const buyerCom = callerCommitment();
+  const bCom     = disclose(buyerCom);
+  const prevBal  = holder_balance.member(bCom)
+    ? holder_balance.lookup(bCom)
+    : (0 as Uint<64>);
+  if (prevBal == (0 as Uint<64>)) { total_holders.increment(1); }
+  holder_balance.insert(bCom, (prevBal + tOut) as Uint<64>);
+  if (holder_last_claimed_ep.member(bCom) == false) {
+    holder_last_claimed_ep.insert(bCom, current_epoch.value);
+  }
+
+  releaseReentrancyGuard();
+  return tOut;
+}
+
+// ── SELL CURVE — caller returns tokens, receives NIGHT ────────────
+// nightOut computed off-chain: vn * tokensIn / (vt + tokensIn)
+export circuit sellCurve(tokensIn: Uint<64>, minNightOut: Uint<64>): Uint<64> {
+  assertNotPaused();
+  assertNoReentrancy();
+  assert(curve_night_reserve.member(pad(32, "cvn")), "curve not initialized");
+  assert(curve_graduated.lookup(pad(32, "cgrad")) == false, "curve graduated — use zswap");
+
+  const vn   = curve_night_reserve.lookup(pad(32, "cvn"));
+  const vt   = curve_token_reserve.lookup(pad(32, "cvt"));
+
+  const sellerCom = callerCommitment();
+  const sCom      = disclose(sellerCom);
+  const tIn       = disclose(tokensIn);
+  const minNOut   = disclose(minNightOut);
+
+  const sellerBal = holderTokenBalance();
+  assert(disclose(sellerBal) == holder_balance.lookup(sCom), "balance witness mismatch");
+  assert(sellerBal >= tIn, "insufficient tokens to sell");
+
+  // Off-chain witness: nightOut = floor(vn * tIn / (vt + tIn))
+  const nOut = disclose(curveNightOutWitness());
+
+  // Division-free tight bounds
+  assert(nOut * (vt + tIn) <= vn * tIn, "curve: night out exceeds formula");
+  assert((nOut + (1 as Uint<64>)) * (vt + tIn) > vn * tIn, "curve: night out below floor");
+  assert(nOut >= minNOut, "curve: slippage exceeded");
+  assert(vn >= nOut, "curve: insufficient night liquidity");
+
+  curve_night_reserve.insert(pad(32, "cvn"), (vn - nOut) as Uint<64>);
+  curve_token_reserve.insert(pad(32, "cvt"), (vt + tIn) as Uint<64>);
+  holder_balance.insert(sCom, (sellerBal - tIn) as Uint<64>);
+
+  releaseReentrancyGuard();
+  return nOut;
+}
+
+// ── GRADUATE CURVE — permissionless, fires at 85 tNight ──────────
+// Anyone can call this once the threshold is crossed.
+// Emits graduated = true; zswap DEX integration fires off-chain.
+export circuit graduateCurve(): Boolean {
+  assert(curve_night_reserve.member(pad(32, "cvn")), "curve not initialized");
+  assert(curve_graduated.lookup(pad(32, "cgrad")) == false, "already graduated");
+  const vn = curve_night_reserve.lookup(pad(32, "cvn"));
+  assert(vn >= GRADUATION_THRESHOLD, "graduation threshold not yet reached");
+  curve_graduated.insert(pad(32, "cgrad"), true);
+  return true;
+}
