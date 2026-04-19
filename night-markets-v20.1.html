@@ -5054,6 +5054,7 @@ function renderCoStep(){
           + '<div style="display:flex;gap:20px;font-size:13px;">'
           + '<span>🌑 NIGHT: <strong>' + (walletState.night||'0') + '</strong></span>'
           + '<span>💧 DUST: <strong>' + (walletState.dust||'0') + '</strong></span>'
+          + (walletState.has1AMSponsorship ? '<span style="color:#f59e0b;font-size:11px;">⚡ 1AM sponsored</span>' : '')
           + '</div>'
           + '</div>'
           + '<div style="font-size:13px;color:var(--green);text-align:center;padding:10px;background:rgba(0,214,143,.06);border-radius:10px;">'
@@ -6284,6 +6285,14 @@ document.addEventListener('click',function(e){
         </div>
         <div style="margin-left:auto;font-size:12px;background:rgba(6,182,212,.1);color:#06b6d4;padding:3px 10px;border-radius:6px;font-weight:700;">Beta</div>
       </div>
+      <div onclick="connect1AM()" style="background:#16122a;border:1px solid #2d2550;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:10px;" onmouseover="this.style.borderColor='#f59e0b'" onmouseout="this.style.borderColor='#2d2550'">
+        <div style="font-size:28px;">⏱</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:2px;">1AM Wallet</div>
+          <div style="font-size:12px;color:#6b7280;">Built-in DUST sponsorship · in-browser ZK proofs</div>
+        </div>
+        <div style="margin-left:auto;font-size:12px;background:rgba(245,158,11,.1);color:#f59e0b;padding:3px 10px;border-radius:6px;font-weight:700;">⚡ Free fees</div>
+      </div>
       <div onclick="connectDemo()" style="background:#16122a;border:1px solid #2d2550;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='#2d2550'">
         <div style="font-size:28px;">🎭</div>
         <div>
@@ -6947,10 +6956,17 @@ function updateWalletUI(){
   var label = document.getElementById('wallet-label');
   if(!dot || !label) return;
   if(walletState.connected){
-    dot.style.background = '#00d68f';
+    dot.style.background = walletState.demo ? '#f59e0b' : '#00d68f';
+    var prefix = walletState.demo ? '🎭 Demo'
+      : walletState.wallet === '1am' ? '⏱ '
+      : walletState.wallet === 'nocturne' ? '🦉 '
+      : '🌑 ';
     label.textContent = walletState.demo
-      ? '🎭 Demo'
-      : walletState.address.slice(0,14) + '…' + walletState.address.slice(-4);
+      ? prefix
+      : prefix + walletState.address.slice(0,10) + '…' + walletState.address.slice(-4);
+    // Update Night-ID badge in creator dash
+    var cdWrap = document.getElementById('cd-nightid-wrap');
+    if(cdWrap && walletState.address) cdWrap.innerHTML = nightIdBadgeHtml(walletState.address);
   } else {
     dot.style.background = '#ef4444';
     label.textContent = 'Sign in';
@@ -9447,6 +9463,98 @@ async function connectNocturne(){
 }
 
 // ══════════════════════════════════════════════════════════════════
+// 1AM WALLET
+// ══════════════════════════════════════════════════════════════════
+async function connect1AM(){
+  var body = document.getElementById('wallet-modal-body');
+  if(body) body.innerHTML = '<div style="text-align:center;padding:32px;"><div style="font-size:32px;margin-bottom:12px;">⏱</div><div style="font-weight:700;margin-bottom:8px;">Connecting 1AM…</div><div style="font-size:12px;color:#6b7280;">Approve the connection in your 1AM wallet</div></div>';
+
+  try {
+    // 1AM uses window.midnight connector standard (DApp Connector API v4.0.0)
+    // Provider key is typically "1am" or similar — scan all keys
+    var providers = window.midnight;
+    var prov = null;
+    var provKey = null;
+    if(providers){
+      // Priority: exact "1am" key, then fallback scan for non-Lace/non-Nocturne
+      var candidates = ['1am','oneam','1AM','_1am'];
+      for(var c of candidates){
+        if(providers[c]){ prov = providers[c]; provKey = c; break; }
+      }
+      if(!prov){
+        for(var key of Object.keys(providers)){
+          var p = providers[key];
+          if(p && key !== 'mnLace' && !key.toLowerCase().includes('nocturne') && typeof p.connect === 'function'){
+            prov = p; provKey = key; break;
+          }
+        }
+      }
+    }
+    if(!prov) throw new Error('1AM Wallet not found.\n• Install 1AM from <a href="https://1am.xyz" target="_blank" style="color:#f59e0b;">1am.xyz</a>\n• Enable Midnight network in 1AM settings\n• Allow access to file URLs if serving locally');
+
+    // Connect — try mainnet then preprod (1AM supports multi-network)
+    var api = null;
+    var connectedNet = 'preprod';
+    var nets = ['mainnet','preprod','undeployed'];
+    for(var net of nets){
+      try { api = await prov.connect(net); connectedNet = net; break; } catch(e){}
+    }
+    if(!api) throw new Error('1AM connection rejected — approve the connection request in the 1AM extension.');
+
+    // DApp Connector API v4 methods
+    var shieldedAddr   = null;
+    var unshieldedAddr = null;
+    try {
+      var shRes = await api.getShieldedAddresses?.();
+      shieldedAddr = shRes?.shieldedAddress || shRes?.[0] || null;
+    } catch(e){ console.warn('[1AM] getShieldedAddresses:', e); }
+    try { unshieldedAddr = await api.getUnshieldedAddress?.(); } catch(e){ console.warn('[1AM] getUnshieldedAddress:', e); }
+
+    var dust = '0', night = '0';
+    try {
+      var db = await api.getDustBalance?.();
+      dust = db != null ? (Number(db) / 1e6).toFixed(4) : '0';
+    } catch(e){}
+    try {
+      var ub = await api.getUnshieldedBalances?.();
+      if(ub){ var k = Object.keys(ub); if(k.length) night = (Number(ub[k[0]]) / 1e6).toFixed(4); }
+    } catch(e){}
+
+    // 1AM has built-in DUST sponsorship — flag so we skip our dust-sponsor service
+    var hasSponsor = !!(api.balanceSealedTransaction || api.sponsor);
+
+    walletState = {
+      connected:       true,
+      wallet:          '1am',
+      address:         unshieldedAddr || shieldedAddr || 'mn_1am_addr',
+      shielded:        shieldedAddr,
+      unshielded:      unshieldedAddr,
+      dust:            dust,
+      night:           night,
+      api:             api,
+      provKey:         provKey,
+      network:         connectedNet,
+      has1AMSponsorship: hasSponsor,
+      demo:            false,
+    };
+
+    updateWalletUI();
+    closeWalletModal();
+    toast('✓ 1AM Wallet connected' + (hasSponsor ? ' · DUST fees sponsored' : '') + ' · Midnight ' + connectedNet, 'success');
+
+  } catch(err){
+    var msg = (err.message || String(err)).replace(/\n/g,'<br>');
+    if(body) body.innerHTML = `<div style="text-align:center;padding:24px 0;">
+      <div style="font-size:36px;margin-bottom:12px;">⏱</div>
+      <div style="font-weight:700;margin-bottom:8px;color:#ef4444;">Connection failed</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.7;text-align:left;">${msg}</div>
+      <button class="btn btn-primary btn-sm" onclick="connect1AM()">Try again</button>
+      &nbsp;<button class="btn btn-ghost btn-sm" onclick="connectDemo()">Use demo instead</button>
+    </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
 // NETWORK / MAINNET CONFIG
 // ══════════════════════════════════════════════════════════════════
 var NM_NETWORK = localStorage.getItem('nm_network') || 'preprod';
@@ -9508,6 +9616,13 @@ function setNetwork(net){
 //   4. Sponsor returns sealed, fee-paid tx
 //   5. User submits via api.submitTransaction(sponsoredTx)
 async function requestDustSponsorship(unsealedTx){
+  // 1AM handles DUST sponsorship natively inside the wallet — skip our service
+  if(walletState?.has1AMSponsorship && walletState?.api?.balanceSealedTransaction){
+    try {
+      var sponsored = await walletState.api.balanceSealedTransaction(unsealedTx);
+      return sponsored || unsealedTx;
+    } catch(e){ console.warn('[DUST/1AM] Native sponsorship failed, falling back:', e.message); }
+  }
   if(NM_NETWORK !== 'mainnet') return unsealedTx; // preprod: no sponsorship needed
   try {
     var res = await fetch(NM_API + '/api/sponsor', {
