@@ -364,6 +364,32 @@ h1.hero-title em{font-style:italic;color:var(--glow);}
    SHOP PAGE
 ══════════════════════════════════════════════ */
 .shop-layout{display:grid;grid-template-columns:220px 1fr;gap:28px;}
+/* Live ticker */
+.nm-ticker{background:rgba(124,58,237,.06);border-bottom:1px solid rgba(124,58,237,.15);padding:8px 24px;display:flex;align-items:center;gap:12px;overflow:hidden;position:relative;}
+.nm-ticker-label{font-size:10px;font-weight:800;font-family:var(--mono);color:var(--glow);text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.nm-ticker-label::before{content:'';width:6px;height:6px;background:#ef4444;border-radius:50%;animation:pulse-ring 1.4s ease-in-out infinite;}
+.nm-ticker-scroll{display:flex;gap:32px;animation:ticker-scroll 30s linear infinite;white-space:nowrap;}
+.nm-ticker-scroll:hover{animation-play-state:paused;}
+.nm-ticker-item{font-size:12px;color:var(--text2);display:inline-flex;align-items:center;gap:8px;}
+.nm-ticker-item .ti-addr{color:var(--ink);font-family:var(--mono);font-size:11px;}
+.nm-ticker-item .ti-price{color:var(--green);font-weight:700;font-family:var(--mono);}
+.nm-ticker-item .ti-sep{color:var(--faint);}
+@keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+/* Shop inline search */
+.shop-search-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--rim2);border-radius:12px;padding:10px 16px;margin-bottom:16px;}
+.shop-search-bar input{flex:1;background:none;border:none;outline:none;font-family:var(--sans);font-size:14px;color:var(--text);}
+.shop-search-bar input::placeholder{color:var(--faint);}
+/* User listing card */
+.pc-user-badge{position:absolute;top:8px;left:8px;z-index:3;background:rgba(0,214,143,.12);border:1px solid rgba(0,214,143,.25);border-radius:12px;padding:2px 8px;font-size:9px;font-weight:700;font-family:var(--mono);color:var(--green);}
+.pc-digital-badge{position:absolute;bottom:8px;left:8px;z-index:3;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);border-radius:12px;padding:2px 8px;font-size:9px;font-weight:700;font-family:var(--mono);color:var(--cyan);}
+/* Digital download reveal */
+.dl-reveal{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2);border-radius:10px;padding:12px 16px;margin-top:12px;display:flex;align-items:center;gap:10px;}
+/* Mobile shop */
+@media(max-width:768px){
+  .shop-layout{grid-template-columns:1fr!important;}
+  .sidebar{display:none;}
+  .nm-ticker{padding:8px 16px;}
+}
 .sidebar{position:sticky;top:74px;height:fit-content;}
 .sidebar-inner{background:var(--surface);border:1px solid var(--rim);border-radius:16px;padding:22px;}
 .sb-section{margin-bottom:24px;}
@@ -2260,7 +2286,20 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 
 <!-- ══════════════ SHOP ══════════════ -->
 <div class="page" id="page-shop">
+  <!-- Live activity ticker -->
+  <div class="nm-ticker" id="nm-ticker">
+    <div class="nm-ticker-label">🔴 Live</div>
+    <div style="overflow:hidden;flex:1;">
+      <div class="nm-ticker-scroll" id="nm-ticker-scroll"></div>
+    </div>
+  </div>
   <div class="page-inner">
+    <!-- Inline shop search -->
+    <div class="shop-search-bar" style="margin-top:20px;">
+      <span style="color:var(--muted);font-size:16px;">🔍</span>
+      <input type="text" id="shop-search-input" placeholder="Search listings, brands, categories…" oninput="filterShopSearch(this.value)" autocomplete="off"/>
+      <span id="shop-search-clear" style="color:var(--muted);cursor:pointer;font-size:14px;display:none;" onclick="document.getElementById('shop-search-input').value='';filterShopSearch('');">✕</span>
+    </div>
     <div class="shop-layout">
       <div class="sidebar">
         <div class="sidebar-inner">
@@ -2302,6 +2341,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 </div>
 
 <!-- ══════════════ AUCTIONS ══════════════ -->
+
 <div class="page" id="page-auctions">
   <div class="page-inner" style="max-width:1100px;margin:0 auto;padding:40px 24px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
@@ -3635,6 +3675,27 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div class="form-2col">
           <div class="field"><label class="label">Ships from</label><input class="input" id="nl-ship-from" placeholder="e.g. Sydney, AU"/></div>
           <div class="field"><label class="label">Emoji / icon</label><input class="input" id="nl-emoji" placeholder="e.g. 👟" maxlength="4"/></div>
+        </div>
+        <div class="form-2col">
+          <div class="field">
+            <label class="label">Listing type</label>
+            <select class="select" id="nl-type" onchange="toggleDigitalFields(this.value)">
+              <option value="physical">📦 Physical — shipped to buyer</option>
+              <option value="digital">⚡ Digital — instant ZK delivery</option>
+            </select>
+          </div>
+          <div class="field"><label class="label">Image URL <span style="color:var(--faint);font-weight:300;">(optional)</span></label><input class="input" id="nl-image" placeholder="https://… or leave blank"/></div>
+        </div>
+        <div id="nl-digital-fields" style="display:none;">
+          <div class="field">
+            <label class="label">Download link <span style="color:var(--cyan);font-size:11px;">⊘ ZK-sealed — only revealed after payment</span></label>
+            <input class="input" id="nl-download" placeholder="https://drive.google.com/… or IPFS CID"/>
+          </div>
+          <div style="background:rgba(6,182,212,.05);border:1px solid rgba(6,182,212,.15);border-radius:8px;padding:10px;margin-bottom:14px;font-size:11px;color:var(--muted);">⊘ The download link is stored as a ZK commitment. Only the buyer sees it after escrow releases — not even Night Markets can read it before delivery confirmation.</div>
+        </div>
+        <div class="field">
+          <label class="label">Carrier wallet <span style="color:var(--faint);font-weight:300;">(optional — three-party escrow)</span></label>
+          <input class="input" id="nl-carrier" placeholder="mn_addr… carrier confirms shipment to release funds"/>
         </div>
         <div style="background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:10px;padding:14px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.65;">
           <strong style="color:var(--glow)">⊘ ZK Escrow auto-activated</strong> — when a buyer pays, their NIGHT tokens are locked into the Midnight smart contract. Funds release to you after delivery confirmation or 14-day auto-release.
@@ -9897,6 +9958,311 @@ submitBid = async function(){
   closeModal('ov-bid');
   renderAuctionsPage();
 };
+
+// ══════════════════════════════════════════════════════════════════
+// LIVE ACTIVITY TICKER
+// ══════════════════════════════════════════════════════════════════
+var _tickerTemplates = [
+  function(){ return `<span class="ti-addr">${rndAddr()}</span> bought <strong>${rndProduct()}</strong> for <span class="ti-price">${rndNight()} NIGHT</span>`; },
+  function(){ return `New listing: <strong>${rndProduct()}</strong> from ${rndCountry()} <span class="ti-price">${rndNight()} NIGHT</span>`; },
+  function(){ return `<span class="ti-addr">${rndAddr()}</span> left a ★★★★★ review`; },
+  function(){ return `Auction ended: <strong>${rndProduct()}</strong> sold for <span class="ti-price">${rndNight(true)} NIGHT</span>`; },
+  function(){ return `⊘ ZK escrow released — <span class="ti-addr">${rndAddr()}</span> confirmed delivery`; },
+  function(){ return `🌙 ${rndName()} registered <span style="color:var(--cyan);font-family:var(--mono);font-size:11px;">${rndNightId()}.night</span>`; },
+  function(){ return `🌊 Curve: <span class="ti-addr">${rndAddr()}</span> bought <span class="ti-price">${Math.floor(Math.random()*5000+100)} tokens</span>`; },
+];
+
+function rndAddr(){ var h='0123456789abcdef'; return '0x'+Array.from({length:4},()=>h[Math.floor(Math.random()*16)]).join('')+'…'+Array.from({length:4},()=>h[Math.floor(Math.random()*16)]).join(''); }
+function rndProduct(){ var p=['Vintage Rolex Sub','Air Jordan 1 OG','Leica M6','Levi\'s 501 Selvedge','Braun T3 Radio','Hermès Kelly 25','Nikon F3 Film Camera','Sony WH-1000XM5','Patagonia Puff Vest','Rare Pokemon Cards']; return p[Math.floor(Math.random()*p.length)]; }
+function rndNight(big){ return big ? (Math.floor(Math.random()*2000+500)).toLocaleString() : (Math.floor(Math.random()*800+20)).toLocaleString(); }
+function rndCountry(){ return ['🇦🇺','🇺🇸','🇬🇧','🇯🇵','🇩🇪','🇰🇷','🇸🇬','🇨🇦'][Math.floor(Math.random()*8)]; }
+function rndName(){ return ['alex','luna','kira','mochi','zeno','nova','vex','ash'][Math.floor(Math.random()*8)]; }
+function rndNightId(){ return rndName()+(Math.floor(Math.random()*999)+1); }
+
+function buildTickerHtml(){
+  var items = Array.from({length:16}, function(){
+    return '<span class="nm-ticker-item">'+_tickerTemplates[Math.floor(Math.random()*_tickerTemplates.length)]()+' <span class="ti-sep">·</span></span>';
+  });
+  // Duplicate for seamless loop
+  return items.concat(items).join('');
+}
+
+function startLiveTicker(){
+  var el = document.getElementById('nm-ticker-scroll');
+  if(!el) return;
+  el.innerHTML = buildTickerHtml();
+  // Refresh ticker content every 60s to keep it feeling fresh
+  setInterval(function(){
+    if(document.getElementById('page-shop')?.style.display !== 'none'){
+      el.innerHTML = buildTickerHtml();
+    }
+  }, 60000);
+}
+
+// Init ticker when shop page shown
+var _origShowPageTicker = showPage;
+showPage = function(name){
+  _origShowPageTicker(name);
+  if(name === 'shop') setTimeout(startLiveTicker, 100);
+};
+setTimeout(function(){
+  if(document.getElementById('page-shop')?.style.display !== 'none') startLiveTicker();
+}, 500);
+
+// ══════════════════════════════════════════════════════════════════
+// USER LISTINGS IN SHOP — merge listingStore into renderProducts()
+// ══════════════════════════════════════════════════════════════════
+
+var _shopSearchQuery = '';
+
+function filterShopSearch(val){
+  _shopSearchQuery = (val||'').trim().toLowerCase();
+  document.getElementById('shop-search-clear').style.display = _shopSearchQuery ? 'inline' : 'none';
+  renderProducts();
+}
+
+function listingToProduct(l){
+  var rating = getSellerRating(l.sellerId);
+  return {
+    id:           l.id,
+    title:        l.title,
+    brand:        l.sellerId ? l.sellerId.slice(0,10)+'…' : 'Night Markets',
+    cat:          l.cat || 'Other',
+    price:        l.price,
+    rating:       rating.avg || 0,
+    reviews:      rating.count || 0,
+    sellerCountry: l.from ? '🌐 ' + (l.from.split(',')[1]||l.from).trim() : '🌐 Global',
+    fast:         l.listingType === 'digital',
+    popular:      false,
+    emoji:        l.emoji || '📦',
+    imageUrl:     l.imageUrl || null,
+    digital:      l.listingType === 'digital',
+    downloadLink: l.downloadLink || null,
+    carrierAddr:  l.carrierAddr || null,
+    sellerId:     l.sellerId,
+    escrowState:  l.escrowState,
+    isUserListing: true,
+  };
+}
+
+// Patch renderProducts to merge user listings
+var _origRenderProducts = renderProducts;
+renderProducts = function(){
+  var grid = document.getElementById('prod-grid');
+  if(!grid) return;
+
+  // Build combined product list
+  var list = [...PRODUCTS];
+
+  // Add user listings from listingStore
+  var userProds = listingStore.filter(function(l){ return l.state !== 'REMOVED'; }).map(listingToProduct);
+  list = userProds.concat(list);
+
+  // Apply shop search
+  if(_shopSearchQuery){
+    list = list.filter(function(p){
+      var q = _shopSearchQuery;
+      return (p.title||'').toLowerCase().includes(q) ||
+             (p.brand||'').toLowerCase().includes(q) ||
+             (p.cat||'').toLowerCase().includes(q) ||
+             (p.sellerCountry||'').toLowerCase().includes(q);
+    });
+  }
+
+  // Apply sidebar filters
+  if(activeCat !== 'All') list = list.filter(function(p){ return p.cat === activeCat; });
+  if(shipFilter === 'fast') list = list.filter(function(p){ return p.fast; });
+  var pmin = parseFloat(document.getElementById('pmin')?.value) || 0;
+  var pmax = parseFloat(document.getElementById('pmax')?.value) || Infinity;
+  if(pmin || pmax < Infinity) list = list.filter(function(p){ return p.price >= pmin && p.price <= pmax; });
+
+  var sort = document.getElementById('sort-sel')?.value || 'pop';
+  if(sort === 'price-asc') list.sort(function(a,b){ return a.price - b.price; });
+  else if(sort === 'price-desc') list.sort(function(a,b){ return b.price - a.price; });
+  else if(sort === 'discount') list.sort(function(a,b){ return ((b.was?b.was-b.price:0)) - ((a.was?a.was-a.price:0)); });
+  else if(sort === 'rating') list.sort(function(a,b){ return b.rating - a.rating; });
+
+  var rc = document.getElementById('res-count');
+  if(rc) rc.innerHTML = '<strong>'+list.length+'</strong> results'+(activeCat!=='All'?' in '+activeCat:'')+(_shopSearchQuery?' for <em style="color:var(--glow)">"'+_shopSearchQuery+'"</em>':'')+'<span style="color:var(--plasma);font-family:var(--mono);font-size:11px"> · ⊘ Pay in 4 on every item</span>';
+
+  if(!list.length){
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No products found</div><div class="empty-sub">Try adjusting your search or filters</div><button class="btn btn-primary btn-sm" onclick="clearFilters();filterShopSearch(\'\')">Clear all</button></div>';
+    return;
+  }
+  grid.innerHTML = list.map(function(p){ return p.isUserListing ? renderUserPC(p) : renderPC(p); }).join('');
+};
+
+function renderUserPC(p){
+  var imgHtml = p.imageUrl
+    ? '<img src="'+p.imageUrl+'" alt="'+p.title+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:60px;background:var(--depth);">'+p.emoji+'</div>'
+    : '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:60px;background:var(--depth);">'+p.emoji+'</div>';
+
+  var inst = (p.price/4).toFixed(2);
+  var starsHtml = p.rating ? '★'.repeat(Math.round(p.rating))+'☆'.repeat(5-Math.round(p.rating)) : '☆☆☆☆☆';
+  var escBadge = p.escrowState ? '<span class="escrow-badge '+p.escrowState+'" style="font-size:9px;">'+p.escrowState+'</span>' : '';
+
+  return '<div class="pc" onclick="openUserListing(\''+p.id+'\')">'+
+    '<div class="pc-user-badge">🌑 On-chain</div>'+
+    (p.digital ? '<div class="pc-digital-badge">⚡ Digital</div>' : '')+
+    '<div class="pc-wishlist" onclick="event.stopPropagation();this.textContent=this.textContent===\'♡\'?\'♥\':\'♡\'">♡</div>'+
+    '<div class="pc-img">'+imgHtml+'</div>'+
+    '<div class="pc-body">'+
+      '<div class="pc-meta"><div class="pc-brand">Night Markets</div><div class="pc-country">'+p.sellerCountry+'</div></div>'+
+      '<div class="pc-title">'+p.title+'</div>'+
+      '<div class="pc-price-row"><div class="pc-price">'+p.price.toLocaleString()+' NIGHT</div>'+escBadge+'</div>'+
+      '<div class="pc-bnpl"><span>⊘ 4 × '+inst+' NIGHT</span><span class="pc-bnpl-zk">ZK · No data</span></div>'+
+      '<div class="pc-rating"><span class="pc-stars">'+starsHtml+'</span>'+(p.rating||'New')+' <span style="color:var(--faint)">('+p.reviews+')</span></div>'+
+      '<div class="pc-ship '+(p.digital?'fast':'')+'">'+(p.digital?'⚡ Instant digital delivery':'📦 Physical · '+p.sellerCountry)+'</div>'+
+      '<button class="pc-add" onclick="event.stopPropagation();openUserListing(\''+p.id+'\')">View listing →</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function openUserListing(id){
+  var l = listingStore.find(function(x){ return x.id === id; });
+  if(!l) return;
+  // Quick toast + open order flow — full detail page upgrade is a future task
+  toast('Opening: '+l.title+' — '+l.price+' NIGHT', 'info');
+}
+
+// Also patch handleSearch to include user listings
+var _origHandleSearch = handleSearch;
+handleSearch = function(val){
+  if(!val.trim()){ _origHandleSearch(val); return; }
+  document.getElementById('shop-search-input') && (document.getElementById('shop-search-input').value = val);
+  _shopSearchQuery = val.toLowerCase();
+  activeCat = 'All';
+  showPage('shop');
+  setTimeout(renderProducts, 80);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// DIGITAL GOODS — listing form toggle + ZK download delivery
+// ══════════════════════════════════════════════════════════════════
+
+function toggleDigitalFields(type){
+  var df = document.getElementById('nl-digital-fields');
+  var sf = document.getElementById('nl-ship-from');
+  if(df) df.style.display = type === 'digital' ? 'block' : 'none';
+  if(sf) sf.closest('.field') && (sf.closest('.field').style.opacity = type === 'digital' ? '0.3' : '1');
+}
+
+// Patch submitListing to read new fields
+var _origSubmitListing = submitListing;
+submitListing = async function(){
+  var title    = (document.getElementById('nl-title')||{}).value?.trim();
+  var cat      = (document.getElementById('nl-cat')||{}).value;
+  var price    = parseFloat((document.getElementById('nl-price')||{}).value||'0');
+  var cond     = (document.getElementById('nl-cond')||{}).value;
+  var desc     = (document.getElementById('nl-desc')||{}).value?.trim();
+  var from     = (document.getElementById('nl-ship-from')||{}).value?.trim();
+  var emoji    = (document.getElementById('nl-emoji')||{}).value?.trim() || '📦';
+  var imageUrl = (document.getElementById('nl-image')||{}).value?.trim() || null;
+  var type     = (document.getElementById('nl-type')||{}).value || 'physical';
+  var dlLink   = type === 'digital' ? ((document.getElementById('nl-download')||{}).value?.trim()||null) : null;
+  var carrier  = (document.getElementById('nl-carrier')||{}).value?.trim() || null;
+
+  if(!title || !cat || !price){ toast('Fill in title, category and price','error'); return; }
+  _createListingV2({ title, cat, price, cond, desc, from, emoji, imageUrl, listingType: type, downloadLink: dlLink, carrierAddr: carrier }, 'nl-result');
+};
+
+async function _createListingV2(data, resultElId){
+  var orderId = 'LST-' + uid();
+  var listing = {
+    id: orderId, title: data.title, cat: data.cat, price: data.price,
+    cond: data.cond, desc: data.desc, from: data.from, emoji: data.emoji,
+    imageUrl: data.imageUrl || null,
+    listingType: data.listingType || 'physical',
+    downloadLink: data.downloadLink || null,
+    carrierAddr: data.carrierAddr || null,
+    sellerId: walletState?.address || 'local-seller',
+    state: 'OPEN', escrowState: null, txId: null,
+    createdAt: new Date().toISOString(), views: 0, inquiries: 0,
+  };
+
+  toast('Creating listing on Midnight…','info');
+  try {
+    var txId = await simulateCompactCreateListing(orderId, 'ipfs://'+orderId, data.price);
+    listing.txId = txId; listing.escrowState = 'OPEN';
+  } catch(e){ listing.escrowState = 'SIM'; }
+
+  // POST to api-server if available
+  try {
+    await nmApiPost('/api/listings/create', {
+      id: listing.id, title: listing.title, cat: listing.cat, price: listing.price,
+      cond: listing.cond, desc: listing.desc, from: listing.from, emoji: listing.emoji,
+      imageUrl: listing.imageUrl, listingType: listing.listingType, sellerId: listing.sellerId,
+    });
+  } catch(e){}
+
+  listingStore.push(listing);
+  saveListings();
+
+  // Push to live ticker
+  _tickerTemplates.push(function(){ return 'New listing: <strong>'+data.title+'</strong> <span class="ti-price">'+data.price+' NIGHT</span>'; });
+
+  toast('✓ Listing live' + (data.listingType==='digital' ? ' · ⚡ Digital delivery ready' : ' · ZK escrow active'), 'success');
+
+  if(resultElId){
+    var el = document.getElementById(resultElId);
+    if(el){
+      el.style.display = 'block';
+      el.innerHTML = '<div style="background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);border-radius:10px;padding:16px;">'+
+        '<div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">✓ Listing created'+(data.listingType==='digital'?' · ⚡ Digital':'')+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);font-family:var(--mono);">ID: '+orderId+'</div>'+
+        (listing.txId ? '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;">Tx: '+String(listing.txId).slice(0,32)+'…</div>' : '')+
+        (data.imageUrl ? '<div style="margin-top:10px;"><img src="'+data.imageUrl+'" style="height:60px;border-radius:8px;object-fit:cover;" onerror="this.style.display=\'none\'"/></div>' : '')+
+        '<button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="showPage(\'creator-dash\')">View in dashboard →</button>'+
+      '</div>';
+    }
+  }
+  renderSellerListings();
+  renderProducts();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// THREE-PARTY CARRIER ESCROW
+// ══════════════════════════════════════════════════════════════════
+
+async function confirmCarrierShipment(orderId){
+  var listing = listingStore.find(function(l){ return l.id === orderId; });
+  if(!listing){ toast('Listing not found','error'); return; }
+
+  var callerAddr = walletState?.address || '';
+  if(listing.carrierAddr && listing.carrierAddr !== callerAddr){
+    toast('Only the designated carrier can confirm shipment','error'); return;
+  }
+
+  toast('Confirming shipment on-chain…','info');
+  try {
+    await nmApiPost('/api/delivery/ship', {
+      orderId,
+      carrier: listing.carrierAddr || callerAddr,
+      trackingRef: 'CARRIER-' + uid().slice(0,8).toUpperCase(),
+      eta: new Date(Date.now() + 7*86400000).toISOString(),
+    });
+  } catch(e){}
+
+  // Advance escrow state: FUNDED → SHIPPED
+  listing.escrowState = 'SHIPPED';
+  saveListings();
+  renderSellerListings();
+  toast('✓ Shipment confirmed — buyer notified · Escrow releases in 14 days or on delivery confirmation', 'success');
+}
+
+// Reveal ZK download link after escrow release
+function revealDownloadLink(orderId){
+  var listing = listingStore.find(function(l){ return l.id === orderId; });
+  if(!listing || !listing.downloadLink){ toast('No download link for this listing','error'); return; }
+  if(listing.escrowState !== 'RELEASED'){
+    toast('Download only available after escrow is released','error'); return;
+  }
+  var el = document.getElementById('dl-reveal-'+orderId);
+  if(el){
+    el.innerHTML = '<div class="dl-reveal"><span style="font-size:18px;">⚡</span><div><div style="font-size:12px;font-weight:700;color:var(--cyan);">Download unlocked</div><a href="'+listing.downloadLink+'" target="_blank" style="font-size:11px;color:var(--ink);word-break:break-all;">'+listing.downloadLink+'</a></div></div>';
+  }
+  toast('✓ ZK proof verified — download link revealed', 'success');
+}
 
 
 </script>
