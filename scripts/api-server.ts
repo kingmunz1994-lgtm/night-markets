@@ -26,6 +26,18 @@
  *   GET  /api/delivery/:orderId  — get shipping info for order
  *   POST /api/nightfun/close-epoch — close a Night Fun epoch
  *   GET  /api/nightfun/state     — get Night Fun token state
+ *   POST /api/sponsor            — proxy to dust-sponsor service (port 3002)
+ *
+ * ZK proof generation note:
+ *   Server-side: httpClientProofProvider → local proof server (port 6300)
+ *   Client-side: @midnight-ntwrk/dapp-connector-proof-provider v4.0.4
+ *     → wallet.getProvingProvider() via Lace/Nocturne browser extension
+ *
+ * Future — Night Fun bonding curve (SpyCrypto/zk-mint pattern):
+ *   Constant-product AMM for token launches with privacy toggle.
+ *   POST /api/nightfun/launch-curve — initialise bonding curve
+ *   POST /api/nightfun/buy          — buy tokens along curve
+ *   POST /api/nightfun/sell         — sell tokens along curve
  */
 
 process.on('uncaughtException',  (err: unknown) => console.error('Uncaught:', err));
@@ -431,6 +443,44 @@ const server = http.createServer(async (req, res) => {
   // ── GET /api/nightfun/state ────────────────────────────────────────────────────
   if (method === 'GET' && url.startsWith('/api/nightfun/state')) {
     return json(res, 200, { epoch: 0, holders: 1, epochRev: 0, merchSales: 0, claimable: 0 });
+  }
+
+  // ── POST /api/sponsor — proxy to dust-sponsor service (port 3002) ─────────────
+  // Browser UI calls this; we forward to the DUST sponsor service.
+  // On mainnet: DUST sponsor attaches fee-paying DUST to user's unbalanced tx.
+  // On preprod: returns tx unchanged (no DUST needed on testnet).
+  // dapp-connector-proof-provider note: for client-side ZK proof generation,
+  //   the browser uses @midnight-ntwrk/dapp-connector-proof-provider v4.0.4
+  //   via the Lace/Nocturne wallet. The proof is generated in the wallet extension,
+  //   not here — this server handles server-side contract calls only.
+  //   Client flow: wallet.getProvingProvider() → proofProvider.generateProof(circuit)
+  if (method === 'POST' && url === '/api/sponsor') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+
+    const SPONSOR_PORT = process.env.SPONSOR_PORT ?? '3002';
+    const SPONSOR_URL  = `http://127.0.0.1:${SPONSOR_PORT}/api/sponsor`;
+
+    try {
+      // Forward to dust-sponsor service
+      const resp = await fetch(SPONSOR_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(30_000),
+      });
+      const result = await resp.json();
+      return json(res, resp.status, result);
+    } catch (err: any) {
+      // Sponsor service offline — return tx unchanged (preprod graceful fallback)
+      console.warn('  [sponsor] Dust sponsor service offline:', err.message);
+      return json(res, 200, {
+        sponsored:  false,
+        simulation: true,
+        sponsoredTx: body.tx,
+        message: 'DUST sponsor service offline — tx returned unchanged. Start dust-sponsor service for mainnet.',
+      });
+    }
   }
 
   json(res, 404, { error: 'Not found' });
