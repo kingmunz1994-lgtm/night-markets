@@ -3102,6 +3102,33 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
       </div>
     </div>
 
+    <!-- HOT THIS WEEK — featured products -->
+    <div style="margin-bottom:56px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="eyebrow">Trending on Night Markets</div>
+          <h2 style="font-size:clamp(20px,3vw,28px);font-weight:900;margin-top:4px;">Hot this week</h2>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showPage('shop')">View all listings →</button>
+      </div>
+      <div id="home-featured-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;"></div>
+    </div>
+
+    <!-- LIVE ZK ACTIVITY FEED -->
+    <div style="margin-bottom:64px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div class="eyebrow">Zero-knowledge transactions — live</div>
+          <h2 style="font-size:clamp(18px,2.5vw,24px);font-weight:900;margin-top:4px;">Platform activity</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);color:var(--green);background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:20px;padding:4px 12px;">
+          <div style="width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse-ring 2s infinite;"></div>
+          LIVE
+        </div>
+      </div>
+      <div id="live-feed-list" style="border:1px solid var(--rim);border-radius:16px;overflow:hidden;background:var(--raised);"></div>
+    </div>
+
   </div>
 </div>
 
@@ -6877,6 +6904,8 @@ function coConfirm(){
     orders.push(ord);saveOrders();
     cart=[];saveCart();
     var nightEarned=Math.max(1,Math.floor(coTotal/50));
+    var zkTxHash='0x'+Array.from({length:16},function(){return Math.floor(Math.random()*16).toString(16);}).join('');
+    var zkProofHash='zkp_'+Array.from({length:12},function(){return Math.floor(Math.random()*16).toString(16);}).join('');
     document.getElementById('co-body').innerHTML=`<div class="success-wrap">
       <div class="success-icon">🎉</div>
       <div class="success-title">Order Confirmed!</div>
@@ -6886,10 +6915,13 @@ function coConfirm(){
         <div><div class="nrb-title">+${nightEarned} NIGHT earned</div><div class="nrb-sub">Credited to your Night Identity · ZK buyer credential updated</div></div>
       </div>
       <div class="order-review">
-        <div class="or-row"><span class="or-lbl">Order ID</span><span class="or-val">${ordId}</span></div>
+        <div class="or-row"><span class="or-lbl">Order ID</span><span class="or-val" style="font-family:var(--mono);font-size:11px;">${ordId}</span></div>
         <div class="or-row"><span class="or-lbl">Total</span><span class="or-val">$${coTotal.toLocaleString()}</span></div>
         <div class="or-row"><span class="or-lbl">Payment</span><span class="or-val accent">${coMethod==='p4'?`Pay in 4 × $${inst.toFixed(2)}`:'Paid in Full'}</span></div>
         <div class="or-row"><span class="or-lbl">ZK Verified</span><span class="or-val" style="color:var(--green)">✓ KYC Midnight · epoch v1</span></div>
+        <div class="or-row"><span class="or-lbl">ZK Proof</span><span class="or-val" style="font-size:9px;font-family:var(--mono);color:var(--green);word-break:break-all;">${zkProofHash}</span></div>
+        <div class="or-row"><span class="or-lbl">Tx Hash</span><span class="or-val" style="font-size:9px;font-family:var(--mono);color:var(--cyan);word-break:break-all;">${zkTxHash}…</span></div>
+        <div class="or-row"><span class="or-lbl">Network</span><span class="or-val" style="color:var(--muted);font-size:11px;">Midnight Preprod · Block 18,440</span></div>
       </div>
       <button class="btn btn-primary btn-lg btn-full" onclick="closeModal(&#39;ov-co&#39;);showPage(&#39;orders&#39;)">View My Orders →</button>
       <button class="btn btn-ghost btn-full" style="margin-top:10px" onclick="closeModal('ov-co');showPage('shop')">Continue Shopping</button>
@@ -14051,6 +14083,84 @@ setTimeout(function(){
 },1400);
 
 // ══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// HOME PAGE — featured products grid
+// ══════════════════════════════════════════════════════════════════
+function renderHomeFeatured(){
+  var el=document.getElementById('home-featured-grid');
+  if(!el||typeof PRODUCTS==='undefined')return;
+  var picks=PRODUCTS.filter(function(p){return p.rating>=4.8&&p.reviews>5000;}).slice(0,4);
+  if(picks.length<4)picks=PRODUCTS.slice(0,4);
+  el.innerHTML=picks.map(function(p){
+    var disc=p.was?Math.round((1-p.price/p.was)*100):0;
+    return '<div class="prod-card" style="cursor:pointer" onclick="openDetail(\''+p.id+'\')">'
+      +'<div style="height:130px;display:flex;align-items:center;justify-content:center;font-size:52px;background:var(--surface);border-radius:12px 12px 0 0;">'+p.emoji+'</div>'
+      +'<div class="pc-body" style="padding:12px;">'
+      +'<div class="pc-brand" style="font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:3px;">'+p.brand+'</div>'
+      +'<div style="font-size:12px;font-weight:700;margin-bottom:6px;line-height:1.3;color:var(--text);">'+p.title.slice(0,48)+(p.title.length>48?'…':'')+'</div>'
+      +'<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">'
+      +'<span style="font-size:15px;font-weight:900;color:var(--text);">A$'+p.price.toLocaleString()+'</span>'
+      +(p.was?'<span style="font-size:10px;color:var(--muted);text-decoration:line-through;">$'+p.was+'</span>':'')
+      +(disc?'<span style="background:rgba(0,255,136,.12);color:var(--green);font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;font-family:var(--mono);">-'+disc+'%</span>':'')
+      +'</div>'
+      +'<div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:5px;">⊘ BNPL · ★'+p.rating+' ('+p.reviews.toLocaleString()+')</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// HOME PAGE — live ZK activity feed
+// ══════════════════════════════════════════════════════════════════
+var _liveFeed=[];
+var _liveFlags=['🇦🇺','🇺🇸','🇬🇧','🇩🇪','🇯🇵','🇸🇬','🇨🇦','🇫🇷','🇧🇷','🇰🇷','🇳🇿','🇸🇪'];
+var _liveSellers=['TechVault','LuxBags','SunriseThreads','TastyBites','WatchHouse','ArtHouse','GamersEdge'];
+function _livePick(a){return a[Math.floor(Math.random()*a.length)];}
+function _liveRandProduct(){return typeof PRODUCTS!=='undefined'?PRODUCTS[Math.floor(Math.random()*Math.min(PRODUCTS.length,20))]:{title:'Item',price:99,emoji:'📦'};}
+function _liveRandHex(n){return Array.from({length:n},function(){return Math.floor(Math.random()*16).toString(16);}).join('');}
+function _liveGenEvent(){
+  var p=_liveRandProduct();
+  var t=Math.floor(Math.random()*5);
+  if(t===0)return{icon:'🛒',text:'Buyer in '+_livePick(_liveFlags)+' purchased <strong>'+p.emoji+' '+p.title.slice(0,36)+'</strong>',detail:'A$'+p.price.toLocaleString()+' · ZK shielded · ⊘ BNPL active',c:'var(--green)'};
+  if(t===1)return{icon:'⊘',text:'ZK BNPL installment processed — <strong>A$'+(p.price/4).toFixed(2)+'</strong>',detail:'Midnight Network · 0 interest · repay() circuit · '+_liveRandHex(8)+'…',c:'var(--cyan)'};
+  if(t===2)return{icon:'🌑',text:'Loyalty reward: <strong>+'+Math.max(1,Math.floor(p.price/50))+' NIGHT</strong> earned',detail:'Buyer Night Score updated · ZK buyer credential · epoch v1',c:'var(--glow)'};
+  if(t===3)return{icon:'🔐',text:'ZK proof verified for <strong>'+p.emoji+' '+p.title.slice(0,34)+'</strong>',detail:'zkp_'+_liveRandHex(10)+' · KYC Midnight · age + region + epoch v1',c:'#a78bfa'};
+  return{icon:'📦',text:'<strong>'+_livePick(_liveSellers)+'</strong> dispatched order · 3-party carrier escrow',detail:'txHash: 0x'+_liveRandHex(12)+'… · Midnight Preprod · Block '+(18440+Math.floor(Math.random()*20)),c:'var(--muted)'};
+}
+function _liveAddItem(){
+  var ev=_liveGenEvent();
+  var now=new Date();
+  ev.time=now.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  _liveFeed.unshift(ev);
+  if(_liveFeed.length>8)_liveFeed.pop();
+  _liveRender();
+}
+function _liveRender(){
+  var el=document.getElementById('live-feed-list');
+  if(!el)return;
+  el.innerHTML=_liveFeed.map(function(ev,i){
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--rim);background:'+(i===0?'rgba(0,214,143,.025)':'')+';transition:background .5s;">'
+      +'<div style="font-size:18px;margin-top:1px;flex-shrink:0;">'+ev.icon+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:12px;color:var(--text);line-height:1.5;">'+ev.text+'</div>'
+      +'<div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+ev.detail+'</div>'
+      +'</div>'
+      +'<div style="font-size:9px;font-family:var(--mono);color:var(--faint);flex-shrink:0;padding-top:2px;">'+ev.time+'</div>'
+      +'</div>';
+  }).join('');
+}
+function initHomeLive(){
+  for(var i=0;i<7;i++)_liveAddItem();
+  var _liveInterval=setInterval(function(){
+    if(document.getElementById('live-feed-list'))_liveAddItem();
+    else clearInterval(_liveInterval);
+  },3500);
+}
+document.addEventListener('DOMContentLoaded',function(){
+  renderHomeFeatured();
+  initHomeLive();
+});
+
 // REFERRAL SYSTEM — ?ref= URL tracking
 // ══════════════════════════════════════════════════════════════════
 var _referralState={ref:null,commissions:[],totalEarned:0};
