@@ -9470,77 +9470,82 @@ async function connect1AM(){
   if(body) body.innerHTML = '<div style="text-align:center;padding:32px;"><div style="font-size:32px;margin-bottom:12px;">⏱</div><div style="font-weight:700;margin-bottom:8px;">Connecting 1AM…</div><div style="font-size:12px;color:#6b7280;">Approve the connection in your 1AM wallet</div></div>';
 
   try {
-    // 1AM uses window.midnight connector standard (DApp Connector API v4.0.0)
-    // Provider key is typically "1am" or similar — scan all keys
+    // 1AM follows the DApp Connector API spec strictly:
+    // wallets register as window.midnight[uuid] with an InitialAPI object.
+    // Detection: match by rdns ("com.oneam.wallet") or name ("1AM") — NOT by key.
     var providers = window.midnight;
-    var prov = null;
-    var provKey = null;
+    var prov = null, provKey = null;
     if(providers){
-      // Priority: exact "1am" key, then fallback scan for non-Lace/non-Nocturne
-      var candidates = ['1am','oneam','1AM','_1am'];
-      for(var c of candidates){
-        if(providers[c]){ prov = providers[c]; provKey = c; break; }
+      for(var key of Object.keys(providers)){
+        var p = providers[key];
+        if(!p || typeof p.connect !== 'function') continue;
+        if(p.rdns === 'com.oneam.wallet' || p.name === '1AM' || (p.name||'').toLowerCase().includes('1am')){
+          prov = p; provKey = key; break;
+        }
       }
+      // Fallback: any non-Lace, non-Nocturne provider
       if(!prov){
-        for(var key of Object.keys(providers)){
-          var p = providers[key];
-          if(p && key !== 'mnLace' && !key.toLowerCase().includes('nocturne') && typeof p.connect === 'function'){
-            prov = p; provKey = key; break;
+        for(var key2 of Object.keys(providers)){
+          var p2 = providers[key2];
+          if(p2 && key2 !== 'mnLace' && typeof p2.connect === 'function' && !(p2.name||'').toLowerCase().includes('nocturne')){
+            prov = p2; provKey = key2; break;
           }
         }
       }
     }
-    if(!prov) throw new Error('1AM Wallet not found.\n• Install 1AM from <a href="https://1am.xyz" target="_blank" style="color:#f59e0b;">1am.xyz</a>\n• Enable Midnight network in 1AM settings\n• Allow access to file URLs if serving locally');
+    if(!prov) throw new Error('1AM Wallet not found.\n• Install 1AM from 1am.xyz\n• Enable Midnight network in 1AM settings\n• Reload this page after installing');
 
-    // Connect — try mainnet then preprod (1AM supports multi-network)
-    var api = null;
-    var connectedNet = 'preprod';
-    var nets = ['mainnet','preprod','undeployed'];
-    for(var net of nets){
-      try { api = await prov.connect(net); connectedNet = net; break; } catch(e){}
+    // Try networks in order (1AM is multi-network)
+    var api = null, connectedNet = 'preprod';
+    for(var net of ['mainnet','preprod','undeployed']){
+      try { api = await prov.connect(net); connectedNet = net; break; } catch(e){
+        if(e?.code === 'PermissionRejected') throw new Error('1AM blocked this connection. Open 1AM settings to allow Night Markets.');
+      }
     }
-    if(!api) throw new Error('1AM connection rejected — approve the connection request in the 1AM extension.');
+    if(!api) throw new Error('1AM connection rejected — approve the connection request in the wallet extension.');
 
-    // DApp Connector API v4 methods
-    var shieldedAddr   = null;
+    // getShieldedAddresses() → Array<{ shieldedAddress, shieldedCoinPublicKey, ... }>
+    var shieldedAddr = null;
+    try {
+      var shArr = await api.getShieldedAddresses?.();
+      shieldedAddr = Array.isArray(shArr) ? shArr[0]?.shieldedAddress : shArr?.shieldedAddress || null;
+    } catch(e){ console.warn('[1AM] getShieldedAddresses:', e); }
+
+    // getUnshieldedAddress() → { unshieldedAddress: string }
     var unshieldedAddr = null;
     try {
-      var shRes = await api.getShieldedAddresses?.();
-      shieldedAddr = shRes?.shieldedAddress || shRes?.[0] || null;
-    } catch(e){ console.warn('[1AM] getShieldedAddresses:', e); }
-    try { unshieldedAddr = await api.getUnshieldedAddress?.(); } catch(e){ console.warn('[1AM] getUnshieldedAddress:', e); }
+      var unshRes = await api.getUnshieldedAddress?.();
+      unshieldedAddr = unshRes?.unshieldedAddress || unshRes || null;
+    } catch(e){ console.warn('[1AM] getUnshieldedAddress:', e); }
 
     var dust = '0', night = '0';
-    try {
-      var db = await api.getDustBalance?.();
-      dust = db != null ? (Number(db) / 1e6).toFixed(4) : '0';
-    } catch(e){}
+    try { var db = await api.getDustBalance?.(); dust = db != null ? (Number(db)/1e6).toFixed(4) : '0'; } catch(e){}
     try {
       var ub = await api.getUnshieldedBalances?.();
-      if(ub){ var k = Object.keys(ub); if(k.length) night = (Number(ub[k[0]]) / 1e6).toFixed(4); }
+      if(ub){ var ks = Object.keys(ub); if(ks.length) night = (Number(ub[ks[0]])/1e6).toFixed(4); }
     } catch(e){}
 
-    // 1AM has built-in DUST sponsorship — flag so we skip our dust-sponsor service
-    var hasSponsor = !!(api.balanceSealedTransaction || api.sponsor);
+    // 1AM sponsors DUST automatically via balanceSealedTransaction — flag it
+    var hasSponsor = typeof api.balanceSealedTransaction === 'function';
 
     walletState = {
-      connected:       true,
-      wallet:          '1am',
-      address:         unshieldedAddr || shieldedAddr || 'mn_1am_addr',
-      shielded:        shieldedAddr,
-      unshielded:      unshieldedAddr,
-      dust:            dust,
-      night:           night,
-      api:             api,
-      provKey:         provKey,
-      network:         connectedNet,
+      connected:         true,
+      wallet:            '1am',
+      provKey,
+      apiVersion:        prov.apiVersion || 'unknown',
+      address:           unshieldedAddr || shieldedAddr || 'mn_1am_unknown',
+      shielded:          shieldedAddr,
+      unshielded:        unshieldedAddr,
+      dust, night,
+      api,
+      network:           connectedNet,
       has1AMSponsorship: hasSponsor,
-      demo:            false,
+      demo:              false,
     };
 
     updateWalletUI();
     closeWalletModal();
-    toast('✓ 1AM Wallet connected' + (hasSponsor ? ' · DUST fees sponsored' : '') + ' · Midnight ' + connectedNet, 'success');
+    toast('✓ 1AM connected' + (hasSponsor ? ' · DUST sponsored ⚡' : '') + ' · ' + connectedNet, 'success');
 
   } catch(err){
     var msg = (err.message || String(err)).replace(/\n/g,'<br>');
@@ -9548,6 +9553,7 @@ async function connect1AM(){
       <div style="font-size:36px;margin-bottom:12px;">⏱</div>
       <div style="font-weight:700;margin-bottom:8px;color:#ef4444;">Connection failed</div>
       <div style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.7;text-align:left;">${msg}</div>
+      <a href="https://1am.xyz" target="_blank" style="color:#f59e0b;font-size:12px;display:block;margin-bottom:16px;">Get 1AM Wallet →</a>
       <button class="btn btn-primary btn-sm" onclick="connect1AM()">Try again</button>
       &nbsp;<button class="btn btn-ghost btn-sm" onclick="connectDemo()">Use demo instead</button>
     </div>`;
