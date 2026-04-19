@@ -1157,12 +1157,23 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 /* ANIMATIONS */
 
 
+/* ── MOBILE BOTTOM TAB BAR ──────────────────────────────────── */
+.mob-tabs{display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;background:rgba(6,4,14,.96);backdrop-filter:blur(24px);border-top:1px solid var(--rim2);height:64px;padding:0 4px;grid-template-columns:repeat(5,1fr);}
+.mob-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;padding:8px 4px;border-radius:10px;transition:all .15s;flex:1;}
+.mob-tab-icon{font-size:20px;line-height:1;}
+.mob-tab-label{font-size:10px;font-weight:600;color:var(--muted);font-family:var(--sans);letter-spacing:-.01em;transition:color .15s;}
+.mob-tab.active .mob-tab-label{color:var(--glow);}
+.mob-tab.active .mob-tab-icon{filter:drop-shadow(0 0 6px rgba(124,58,237,.8));}
+
 /* ── MOBILE ─────────────────────────────────────────────────── */
 @media(max-width:768px){
   .nav-links{display:none!important;}
-  .nav-right .search-wrap,.nav-right .voice-btn,.nav-right .btn{display:none!important;}
-  .nav-inner{padding:0 16px!important;grid-template-columns:1fr auto!important;}
-  #mob-hamburger{display:flex!important;align-items:center;justify-content:center;width:36px;height:36px;background:var(--raised);border:1px solid var(--rim2);border-radius:8px;font-size:18px;}
+  .nav-right .search-wrap,.nav-right .voice-btn{display:none!important;}
+  .nav-right .btn-primary{display:none!important;}
+  .nav-inner{padding:0 16px!important;grid-template-columns:auto 1fr auto!important;}
+  #mob-hamburger{display:none!important;}
+  .mob-tabs{display:grid!important;}
+  body{padding-bottom:64px;}
   .page-inner{padding:24px 16px!important;}
   .hero-title{font-size:36px!important;}
   .hero-btns{flex-direction:column!important;align-items:center!important;}
@@ -1965,71 +1976,37 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <div class="logo-mark">⊘</div>
         <div class="logo-text">Night<em>Markets</em></div>
       </a>
-      <button id="mob-hamburger" onclick="openMobNav()" style="display:none;">☰</button>
     </div>
     <div class="nav-links">
 
-      <!-- Shop -->
-      <div class="nav-dropdown" id="nav-shop-wrap">
-        <button class="nav-link" id="nl-shop-dd" onclick="toggleNavDrop('shop',event)">Shop ▾</button>
-        <div class="nav-drop-menu" id="shop-drop-menu">
-          <div class="ndm-item" onclick="showPage('home');closeAllNavDrops()">🏠 Home</div>
-          <div class="ndm-item" onclick="showPage('shop');closeAllNavDrops()">⊘ Marketplace</div>
-          <div class="ndm-item" onclick="showPage('auctions');renderAuctionsPage();closeAllNavDrops()">🔨 Auctions</div>
+      <button class="nav-link" id="nl-marketplace" onclick="showPage('shop')">Marketplace</button>
+      <button class="nav-link" id="nl-auctions" onclick="showPage('auctions');renderAuctionsPage()">🔨 Auctions</button>
+      <button class="nav-link" id="nl-nightfun" onclick="showPage('nightfun')" style="color:var(--plasma);">🌙 Night Fun</button>
+      <button class="nav-link" id="nl-creator" onclick="showPage('sell')" style="color:var(--green);">🎬 Sell</button>
+
+      <!-- More dropdown -->
+      <div class="nav-dropdown" id="nav-more-wrap">
+        <button class="nav-link" id="nl-more-dd" onclick="toggleNavDrop('more',event)">More ▾</button>
+        <div class="nav-drop-menu" id="more-drop-menu" style="min-width:260px;left:auto;right:0;transform:none;">
+          <div style="padding:6px 10px 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);">Shop</div>
           <div class="ndm-item" onclick="showPage('stores');renderStoresPage();closeAllNavDrops()">🏪 Stores</div>
-          <div class="ndm-item" onclick="showPage('cart');closeAllNavDrops()">🛒 Cart</div>
+          <div class="ndm-item" onclick="showPage('feed');closeAllNavDrops()">▶ For You Feed</div>
           <div class="ndm-item" onclick="showPage('orders');closeAllNavDrops()">📦 My Orders</div>
-        </div>
-      </div>
-
-      <!-- Feed -->
-      <div class="nav-dropdown" id="nav-feed-wrap">
-        <button class="nav-link" id="nl-feed-dd" onclick="toggleNavDrop('feed',event)" style="color:var(--plasma);">▶ Feed ▾</button>
-        <div class="nav-drop-menu" id="feed-drop-menu">
-          <div class="ndm-item" onclick="showPage('feed');closeAllNavDrops()">▶ For You</div>
-          <div class="ndm-item" onclick="showPage('live');closeAllNavDrops()"><span style="color:var(--red);">●</span> Live Drops</div>
-          <div class="ndm-item" onclick="showPage('social');closeAllNavDrops()">👥 Social Shopping</div>
-        </div>
-      </div>
-
-      <!-- Creator -->
-      <div class="nav-dropdown" id="nav-creator-wrap">
-        <button class="nav-link" id="nl-creator-dd" onclick="toggleNavDrop('creator',event)" style="color:var(--green);">🎬 Creator ▾</button>
-        <div class="nav-drop-menu" id="creator-drop-menu">
-          <div class="ndm-item" onclick="showPage('creator-dash');closeAllNavDrops()">🎬 Dashboard</div>
-          <div class="ndm-item highlight" onclick="showPage('sell');closeAllNavDrops()">🏪 Sell with us</div>
-          <div class="ndm-item" onclick="showPage('governance');closeAllNavDrops()">🏛️ Governance</div>
-          <div class="ndm-item" onclick="showPage('loyalty');closeAllNavDrops()">🏅 Loyalty</div>
-          <div class="ndm-item" onclick="showPage('bnpl');closeAllNavDrops()">💸 BNPL Stake</div>
-        </div>
-      </div>
-
-      <!-- ⊘ Night Ecosystem -->
-      <div class="nav-dropdown" id="nav-night-wrap">
-        <button class="night-eco-btn" onclick="toggleNavDrop('night',event)">⊘ Night ▾</button>
-        <div class="nav-drop-menu" id="night-drop-menu" style="min-width:240px;">
-          <div style="padding:8px 12px 4px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);">The Night Ecosystem</div>
-          <div class="ndm-item" onclick="showPage('shop');closeAllNavDrops()"><span style="margin-right:6px;">⊘</span>Night Markets <span class="nem-status live" style="margin-left:auto;">Live</span></div>
-          <div class="ndm-item" onclick="showPage('nightfun');closeAllNavDrops()"><span style="margin-right:6px;">🌙</span>Night Fun <span class="nem-status soon" style="margin-left:auto;">Soon</span></div>
-          <div class="ndm-item" onclick="showPage('nightstore');closeAllNavDrops()"><span style="margin-right:6px;">🛍️</span>Night Store <span class="nem-status live" style="margin-left:auto;">Live</span></div>
-          <div class="ndm-item" onclick="showPage('nightsave');closeAllNavDrops()"><span style="margin-right:6px;">💎</span>Night Save <span class="nem-status soon" style="margin-left:auto;">Soon</span></div>
-          <div class="ndm-item" onclick="showPage('nightdata');closeAllNavDrops()"><span style="margin-right:6px;">🔐</span>Night Data <span class="nem-status planned" style="margin-left:auto;">Planned</span></div>
-          <div class="ndm-item" onclick="showPage('nightwork');closeAllNavDrops()"><span style="margin-right:6px;">👤</span>Night Work <span class="nem-status planned" style="margin-left:auto;">Planned</span></div>
           <div class="ndm-sep"></div>
+          <div style="padding:6px 10px 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);">Creator</div>
+          <div class="ndm-item" onclick="showPage('creator-dash');closeAllNavDrops()">🎬 Dashboard</div>
+          <div class="ndm-item" onclick="showPage('governance');closeAllNavDrops()">🏛️ Governance</div>
+          <div class="ndm-item" onclick="showPage('loyalty');closeAllNavDrops()">🏅 Loyalty & Points</div>
+          <div class="ndm-item" onclick="showPage('bnpl');closeAllNavDrops()">💸 BNPL Stake</div>
+          <div class="ndm-sep"></div>
+          <div style="padding:6px 10px 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);">Night Ecosystem</div>
+          <div class="ndm-item" onclick="showPage('nightstore');closeAllNavDrops()">🛍️ Night Store <span class="nem-status live" style="margin-left:auto;">Live</span></div>
+          <div class="ndm-item" onclick="showPage('nightsave');closeAllNavDrops()">💎 Night Save <span class="nem-status soon" style="margin-left:auto;">Soon</span></div>
           <div class="ndm-item" onclick="showPage('ecosystem');closeAllNavDrops()">🌐 Partners & Ecosystem</div>
-        </div>
-      </div>
-
-      <!-- Discover -->
-      <div class="nav-dropdown" id="nav-disc-wrap">
-        <button class="nav-link" id="nl-disc-dd" onclick="toggleNavDrop('disc',event)">Discover ▾</button>
-        <div class="nav-drop-menu" id="disc-drop-menu">
+          <div class="ndm-sep"></div>
+          <div style="padding:6px 10px 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);">About</div>
           <div class="ndm-item" onclick="showPage('privacy');closeAllNavDrops()">⊘ ZK Privacy</div>
           <div class="ndm-item" onclick="showPage('midnight');closeAllNavDrops()">🌑 About Midnight</div>
-          <div class="ndm-item" onclick="showPage('vision');closeAllNavDrops()">🌍 A Better World</div>
-          <div class="ndm-item" onclick="showPage('ar');closeAllNavDrops()">🥽 AR Try-On</div>
-          <div class="ndm-item" onclick="showPage('ai');closeAllNavDrops()">🤖 AI Picks</div>
-          <div class="ndm-sep"></div>
           <div class="ndm-item" onclick="showZKOnboard();closeAllNavDrops()">⊘ How it works</div>
         </div>
       </div>
@@ -2069,6 +2046,30 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
       </button>
     </div>
   </div>
+</nav>
+
+<!-- ══ MOBILE BOTTOM TAB BAR ══ -->
+<nav class="mob-tabs" id="mob-tabs">
+  <button class="mob-tab active" id="mobtab-home" onclick="showPage('home')">
+    <span class="mob-tab-icon">🏠</span>
+    <span class="mob-tab-label">Home</span>
+  </button>
+  <button class="mob-tab" id="mobtab-shop" onclick="showPage('shop')">
+    <span class="mob-tab-icon">🛒</span>
+    <span class="mob-tab-label">Shop</span>
+  </button>
+  <button class="mob-tab" id="mobtab-nightfun" onclick="showPage('nightfun')">
+    <span class="mob-tab-icon">🌙</span>
+    <span class="mob-tab-label">Night Fun</span>
+  </button>
+  <button class="mob-tab" id="mobtab-sell" onclick="showPage('sell')">
+    <span class="mob-tab-icon">🎬</span>
+    <span class="mob-tab-label">Sell</span>
+  </button>
+  <button class="mob-tab" id="mobtab-profile" onclick="showPage('creator-dash')">
+    <span class="mob-tab-icon">👤</span>
+    <span class="mob-tab-label">Profile</span>
+  </button>
 </nav>
 
 <!-- ══ DEMO BANNER ══ -->
@@ -4830,12 +4831,41 @@ setInterval(()=>{
 
 
 // ── NAV ──
+var _mobTabMap = {
+  home:'home', shop:'shop', detail:'shop', cart:'shop', orders:'shop',
+  auctions:'shop', stores:'shop', feed:'shop', live:'shop', social:'shop',
+  nightfun:'nightfun',
+  sell:'sell', 'creator-dash':'profile', governance:'profile',
+  loyalty:'profile', bnpl:'profile',
+};
+
+function _syncMobTabs(name){
+  document.querySelectorAll('.mob-tab').forEach(t=>t.classList.remove('active'));
+  var key = _mobTabMap[name] || 'home';
+  var tab = document.getElementById('mobtab-'+key);
+  if(tab) tab.classList.add('active');
+}
+
+function _syncTopNav(name){
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  var map = {
+    shop:'nl-marketplace', auctions:'nl-auctions', detail:'nl-marketplace',
+    cart:'nl-marketplace', orders:'nl-marketplace', stores:'nl-marketplace',
+    nightfun:'nl-nightfun', nightstore:'nl-nightfun', nightsave:'nl-nightfun',
+    sell:'nl-creator', 'creator-dash':'nl-creator',
+  };
+  var id = map[name] || ('nl-'+name);
+  var el = document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  const nl=document.getElementById('nl-'+name);
-  if(nl)nl.classList.add('active');
+  var pg = document.getElementById('page-'+name);
+  if(pg) pg.classList.add('active');
+  _syncTopNav(name);
+  _syncMobTabs(name);
+  closeAllNavDrops();
   window.scrollTo(0,0);
   if(name==='shop')renderProducts();
   if(name==='cart')renderCart();
