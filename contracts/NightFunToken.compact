@@ -612,3 +612,153 @@ circuit releaseReentrancyGuard(): Boolean {
   reentrancy_locked.insert(pad(32, "lock"), false);
   return true;
 }
+
+// ══════════════════════════════════════════════════════════════════
+//  BONDING CURVE (zk-mint pattern — SpyCrypto)
+//
+//  Constant-product AMM for fair-price token discovery.
+//  Off-chain witnesses supply output amounts; circuits verify via
+//  multiplication (no division operators needed in ZK constraints).
+//
+//  Lifecycle:
+//    initCurve → buyCurve / sellCurve → graduateCurve
+//    Graduation fires when NIGHT reserve reaches 85 tNight.
+//    Post-graduation: reserves migrate to zswap DEX (Mōhalu phase).
+//
+//  Privacy toggle: when curve_privacy_on = true, trade amounts are
+//  sealed inside ZK proofs — buyers/sellers appear as commitments only.
+// ══════════════════════════════════════════════════════════════════
+
+export ledger curve_night_reserve: Map<Bytes<32>, Uint<64>>;  // key "cvn"
+export ledger curve_token_reserve: Map<Bytes<32>, Uint<64>>;  // key "cvt"
+export ledger curve_graduated:     Map<Bytes<32>, Boolean>;   // key "cgrad"
+export ledger curve_privacy_on:    Map<Bytes<32>, Boolean>;   // key "cpriv"
+export ledger curve_total_buys:    Counter;
+
+// 85 tNight = 85_000_000 µNIGHT graduation threshold (matches zk-mint)
+const GRADUATION_THRESHOLD: Uint<64> = 85000000 as Uint<64>;
+
+// Off-chain witnesses: buyers/sellers compute output amounts, circuit verifies
+witness curveTokensOutWitness(): Uint<64>;
+witness curveNightOutWitness():  Uint<64>;
+
+// ── INIT CURVE — creator seeds pool with tokens ───────────────────
+// initialTokens: tokens to move from creator balance into curve pool
+// privacyEnabled: seal trade amounts inside ZK proofs
+export circuit initCurve(initialTokens: Uint<64>, privacyEnabled: Boolean): Boolean {
+  assertCreator();
+  assertNoReentrancy();
+  assert(curve_night_reserve.member(pad(32, "cvn")) == false, "curve already initialized");
+
+  const creatorCom = creatorCommitment();
+  const cCom       = disclose(creatorCom);
+  const toks       = disclose(initialTokens);
+
+  assert(holder_balance.member(cCom), "creator has no balance");
+  const bal = holder_balance.lookup(cCom);
+  assert(bal >= toks, "insufficient tokens for curve");
+  holder_balance.insert(cCom, (bal - toks) as Uint<64>);
+
+  // Seed pool at virtual NIGHT reserve = 1 (starting price = 1 µNIGHT/token)
+  curve_night_reserve.insert(pad(32, "cvn"), 1 as Uint<64>);
+  curve_token_reserve.insert(pad(32, "cvt"), toks);
+  curve_graduated.insert(pad(32, "cgrad"), false);
+  curve_privacy_on.insert(pad(32, "cpriv"), disclose(privacyEnabled));
+
+  releaseReentrancyGuard();
+  return true;
+}
+
+// ── BUY CURVE — caller pays NIGHT, receives tokens ───────────────
+// tokensOut computed off-chain: vt * nightIn / (vn + nightIn)
+// Circuit verifies tightly via multiplication (no division needed)
+export circuit buyCurve(nightIn: Uint<64>, minTokensOut: Uint<64>): Uint<64> {
+  assertNotPaused();
+  assertNoReentrancy();
+  assert(curve_night_reserve.member(pad(32, "cvn")), "curve not initialized");
+  assert(curve_graduated.lookup(pad(32, "cgrad")) == false, "curve graduated — use zswap");
+
+  const vn   = curve_night_reserve.lookup(pad(32, "cvn"));
+  const vt   = curve_token_reserve.lookup(pad(32, "cvt"));
+  const nIn  = disclose(nightIn);
+  const minOut = disclose(minTokensOut);
+
+  // Off-chain witness: tokensOut = floor(vt * nIn / (vn + nIn))
+  const tOut = disclose(curveTokensOutWitness());
+
+  // Division-free tight bounds verification
+  // Upper bound: tOut = floor(...) so tOut * (vn + nIn) <= vt * nIn
+  assert(tOut * (vn + nIn) <= vt * nIn, "curve: tokens out exceeds formula");
+  // Lower bound: (tOut+1) must overshoot, proving tOut is the floor
+  assert((tOut + (1 as Uint<64>)) * (vn + nIn) > vt * nIn, "curve: tokens out below floor");
+  assert(tOut >= minOut, "curve: slippage exceeded");
+  assert(vt >= tOut, "curve: insufficient token liquidity");
+
+  curve_night_reserve.insert(pad(32, "cvn"), (vn + nIn) as Uint<64>);
+  curve_token_reserve.insert(pad(32, "cvt"), (vt - tOut) as Uint<64>);
+  curve_total_buys.increment(1);
+
+  // Credit buyer balance
+  const buyerCom = callerCommitment();
+  const bCom     = disclose(buyerCom);
+  const prevBal  = holder_balance.member(bCom)
+    ? holder_balance.lookup(bCom)
+    : (0 as Uint<64>);
+  if (prevBal == (0 as Uint<64>)) { total_holders.increment(1); }
+  holder_balance.insert(bCom, (prevBal + tOut) as Uint<64>);
+  if (holder_last_claimed_ep.member(bCom) == false) {
+    holder_last_claimed_ep.insert(bCom, current_epoch.value);
+  }
+
+  releaseReentrancyGuard();
+  return tOut;
+}
+
+// ── SELL CURVE — caller returns tokens, receives NIGHT ────────────
+// nightOut computed off-chain: vn * tokensIn / (vt + tokensIn)
+export circuit sellCurve(tokensIn: Uint<64>, minNightOut: Uint<64>): Uint<64> {
+  assertNotPaused();
+  assertNoReentrancy();
+  assert(curve_night_reserve.member(pad(32, "cvn")), "curve not initialized");
+  assert(curve_graduated.lookup(pad(32, "cgrad")) == false, "curve graduated — use zswap");
+
+  const vn   = curve_night_reserve.lookup(pad(32, "cvn"));
+  const vt   = curve_token_reserve.lookup(pad(32, "cvt"));
+
+  const sellerCom = callerCommitment();
+  const sCom      = disclose(sellerCom);
+  const tIn       = disclose(tokensIn);
+  const minNOut   = disclose(minNightOut);
+
+  const sellerBal = holderTokenBalance();
+  assert(disclose(sellerBal) == holder_balance.lookup(sCom), "balance witness mismatch");
+  assert(sellerBal >= tIn, "insufficient tokens to sell");
+
+  // Off-chain witness: nightOut = floor(vn * tIn / (vt + tIn))
+  const nOut = disclose(curveNightOutWitness());
+
+  // Division-free tight bounds
+  assert(nOut * (vt + tIn) <= vn * tIn, "curve: night out exceeds formula");
+  assert((nOut + (1 as Uint<64>)) * (vt + tIn) > vn * tIn, "curve: night out below floor");
+  assert(nOut >= minNOut, "curve: slippage exceeded");
+  assert(vn >= nOut, "curve: insufficient night liquidity");
+
+  curve_night_reserve.insert(pad(32, "cvn"), (vn - nOut) as Uint<64>);
+  curve_token_reserve.insert(pad(32, "cvt"), (vt + tIn) as Uint<64>);
+  holder_balance.insert(sCom, (sellerBal - tIn) as Uint<64>);
+
+  releaseReentrancyGuard();
+  return nOut;
+}
+
+// ── GRADUATE CURVE — permissionless, fires at 85 tNight ──────────
+// Anyone can call this once the threshold is crossed.
+// Emits graduated = true; zswap DEX integration fires off-chain.
+export circuit graduateCurve(): Boolean {
+  assert(curve_night_reserve.member(pad(32, "cvn")), "curve not initialized");
+  assert(curve_graduated.lookup(pad(32, "cgrad")) == false, "already graduated");
+  const vn = curve_night_reserve.lookup(pad(32, "cvn"));
+  assert(vn >= GRADUATION_THRESHOLD, "graduation threshold not yet reached");
+  curve_graduated.insert(pad(32, "cgrad"), true);
+  return true;
+}

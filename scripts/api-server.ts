@@ -27,6 +27,13 @@
  *   POST /api/nightfun/close-epoch — close a Night Fun epoch
  *   GET  /api/nightfun/state     — get Night Fun token state
  *   POST /api/sponsor            — proxy to dust-sponsor service (port 3002)
+ *   POST /api/nightfun/launch-curve — init bonding curve pool for a token
+ *   POST /api/nightfun/buy          — buy tokens from bonding curve (constant-product)
+ *   POST /api/nightfun/sell         — sell tokens back to curve
+ *   GET  /api/nightfun/curve        — curve state (reserves, price, graduation %)
+ *   POST /api/nightid/register      — register a .night name (Night-ID service)
+ *   GET  /api/nightid/resolve/:name — resolve name → address
+ *   GET  /api/nightid/lookup/:addr  — reverse lookup address → name
  *
  * ZK proof generation note:
  *   Server-side: httpClientProofProvider → local proof server (port 6300)
@@ -292,6 +299,22 @@ async function readBody(req: http.IncomingMessage): Promise<any> {
 const _listingStore:  Map<string, any>    = new Map();
 const _ratingStore:   Map<string, any[]>  = new Map();
 const _deliveryStore: Map<string, any>    = new Map();
+const _curveStore:    Map<string, any>    = new Map(); // tokenAddress → curve state
+const _nightIdStore:  Map<string, string> = new Map(); // "name.night" → address
+
+// Bonding curve math (bigint, constant-product AMM)
+function calcBuy(nightReserve: bigint, tokenReserve: bigint, nightIn: bigint): bigint {
+  if (nightIn <= 0n || tokenReserve <= 0n) return 0n;
+  return tokenReserve * nightIn / (nightReserve + nightIn);
+}
+function calcSell(nightReserve: bigint, tokenReserve: bigint, tokensIn: bigint): bigint {
+  if (tokensIn <= 0n || nightReserve <= 0n) return 0n;
+  return nightReserve * tokensIn / (tokenReserve + tokensIn);
+}
+
+function normalizeNightName(raw: string): string {
+  return raw.toLowerCase().replace(/\.night$/, '').replace(/[^a-z0-9-]/g, '').slice(0, 32);
+}
 
 const server = http.createServer(async (req, res) => {
   const url    = req.url ?? '/';
@@ -443,6 +466,112 @@ const server = http.createServer(async (req, res) => {
   // ── GET /api/nightfun/state ────────────────────────────────────────────────────
   if (method === 'GET' && url.startsWith('/api/nightfun/state')) {
     return json(res, 200, { epoch: 0, holders: 1, epochRev: 0, merchSales: 0, claimable: 0 });
+  }
+
+  // ── POST /api/nightfun/launch-curve ───────────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightfun/launch-curve') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { tokenAddress, initialTokens = 10000, privacyEnabled = false } = body;
+    if (!tokenAddress) return json(res, 400, { error: 'tokenAddress required' });
+    if (_curveStore.has(tokenAddress)) return json(res, 400, { error: 'curve already initialized for this token' });
+    const curve = {
+      tokenAddress,
+      nightReserve:  1n,
+      tokenReserve:  BigInt(initialTokens),
+      privacy:       privacyEnabled,
+      graduated:     false,
+      totalBuys:     0,
+      createdAt:     Date.now(),
+    };
+    _curveStore.set(tokenAddress, curve);
+    console.log(`\n  [curve/launch] ${tokenAddress} — ${initialTokens} tokens seeded`);
+    return json(res, 200, { ok: true, curve: { ...curve, nightReserve: curve.nightReserve.toString(), tokenReserve: curve.tokenReserve.toString() } });
+  }
+
+  // ── POST /api/nightfun/buy ────────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightfun/buy') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { tokenAddress, nightIn, minTokensOut = 0 } = body;
+    const curve = _curveStore.get(tokenAddress);
+    if (!curve) return json(res, 404, { error: 'curve not found — call launch-curve first' });
+    if (curve.graduated) return json(res, 400, { error: 'curve graduated — use zswap' });
+    const nIn   = BigInt(Math.round(Number(nightIn) * 1_000_000));
+    const tOut  = calcBuy(curve.nightReserve, curve.tokenReserve, nIn);
+    if (tOut < BigInt(minTokensOut)) return json(res, 400, { error: `slippage: got ${tOut} tokens, min ${minTokensOut}` });
+    curve.nightReserve += nIn;
+    curve.tokenReserve -= tOut;
+    curve.totalBuys++;
+    const graduated = curve.nightReserve >= 85_000_000n;
+    if (graduated) { curve.graduated = true; console.log(`  [curve] GRADUATED — 85 tNight reached!`); }
+    const price = Number(curve.nightReserve) / Number(curve.tokenReserve) / 1_000_000;
+    console.log(`\n  [curve/buy] ${nIn} µNIGHT → ${tOut} tokens | price ${price.toFixed(8)}`);
+    return json(res, 200, { ok: true, tokensOut: tOut.toString(), graduated, curve: { ...curve, nightReserve: curve.nightReserve.toString(), tokenReserve: curve.tokenReserve.toString() } });
+  }
+
+  // ── POST /api/nightfun/sell ───────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightfun/sell') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { tokenAddress, tokensIn, minNightOut = 0 } = body;
+    const curve = _curveStore.get(tokenAddress);
+    if (!curve) return json(res, 404, { error: 'curve not found' });
+    if (curve.graduated) return json(res, 400, { error: 'curve graduated — use zswap' });
+    const tIn  = BigInt(Math.round(Number(tokensIn)));
+    const nOut = calcSell(curve.nightReserve, curve.tokenReserve, tIn);
+    if (nOut < BigInt(minNightOut)) return json(res, 400, { error: `slippage: got ${nOut} µNIGHT, min ${minNightOut}` });
+    curve.nightReserve -= nOut;
+    curve.tokenReserve += tIn;
+    const nightOutDisplay = Number(nOut) / 1_000_000;
+    console.log(`\n  [curve/sell] ${tIn} tokens → ${nightOutDisplay.toFixed(6)} NIGHT`);
+    return json(res, 200, { ok: true, nightOut: nOut.toString(), nightOutDisplay: nightOutDisplay.toFixed(6), curve: { ...curve, nightReserve: curve.nightReserve.toString(), tokenReserve: curve.tokenReserve.toString() } });
+  }
+
+  // ── GET /api/nightfun/curve ───────────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/nightfun/curve')) {
+    const tokenAddress = new URL('http://x' + url).searchParams.get('addr') ?? '';
+    const curve = _curveStore.get(tokenAddress);
+    if (!curve) return json(res, 404, { error: 'curve not found' });
+    const price = Number(curve.nightReserve) / Number(curve.tokenReserve) / 1_000_000;
+    const gradPct = Math.min(100, Number(curve.nightReserve) / 85_000_000 * 100);
+    return json(res, 200, { ...curve, nightReserve: curve.nightReserve.toString(), tokenReserve: curve.tokenReserve.toString(), pricePerToken: price.toFixed(8), graduationPct: gradPct.toFixed(2) });
+  }
+
+  // ── POST /api/nightid/register ────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightid/register') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { name: rawName, address } = body;
+    const name = normalizeNightName(rawName ?? '');
+    if (!name || name.length < 3) return json(res, 400, { error: 'name must be 3–32 lowercase alphanumeric chars' });
+    if (!address) return json(res, 400, { error: 'address required' });
+    const full = `${name}.night`;
+    if (_nightIdStore.has(full)) {
+      const existing = _nightIdStore.get(full);
+      if (existing !== address) return json(res, 409, { error: `${full} already registered to a different address` });
+    }
+    _nightIdStore.set(full, address);
+    console.log(`\n  [nightid/register] ${full} → ${address.slice(0, 20)}…`);
+    return json(res, 200, { ok: true, name: full, address });
+  }
+
+  // ── GET /api/nightid/resolve/:name ────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/nightid/resolve/')) {
+    const rawName = url.replace('/api/nightid/resolve/', '');
+    const name    = normalizeNightName(rawName);
+    const full    = `${name}.night`;
+    const address = _nightIdStore.get(full);
+    if (!address) return json(res, 404, { error: `${full} not registered` });
+    return json(res, 200, { name: full, address });
+  }
+
+  // ── GET /api/nightid/lookup/:address ─────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/nightid/lookup/')) {
+    const addr = url.replace('/api/nightid/lookup/', '');
+    const entry = [..._nightIdStore.entries()].find(([, a]) => a === addr);
+    if (!entry) return json(res, 404, { error: 'no .night name registered for this address' });
+    return json(res, 200, { name: entry[0], address: addr });
   }
 
   // ── POST /api/sponsor — proxy to dust-sponsor service (port 3002) ─────────────

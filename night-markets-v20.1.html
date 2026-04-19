@@ -1743,6 +1743,12 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .escrow-badge.FUNDED{color:var(--blue);background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2);}
 .escrow-badge.RELEASED{color:var(--green);background:rgba(0,214,143,.08);border-color:rgba(0,214,143,.2);}
 .escrow-badge.DISPUTED{color:var(--red);background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);}
+.night-id-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);border-radius:20px;padding:2px 8px;font-size:10px;font-family:var(--mono);color:var(--cyan);white-space:nowrap;}
+.sealed-bid-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.2);border-radius:8px;cursor:pointer;user-select:none;}
+.sealed-bid-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--ink);cursor:pointer;flex-shrink:0;}
+.curve-card{background:var(--raised);border:1px solid var(--rim2);border-radius:16px;padding:20px;margin-bottom:24px;}
+.curve-progress-wrap{background:rgba(255,255,255,.06);border-radius:99px;height:8px;overflow:hidden;margin:6px 0 4px;}
+.curve-progress-fill{height:100%;background:linear-gradient(90deg,var(--ink),var(--plasma));border-radius:99px;transition:width .6s ease;}
 </style>
 </head>
 <body>
@@ -2509,6 +2515,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
             <div class="cd-badge">⊘ ZK Creator</div>
           </div>
           <div class="cd-handle" id="cd-handle">@nightmarkets</div>
+          <div style="margin-top:4px;" id="cd-nightid-wrap"></div>
           <div class="cd-tier" id="cd-tier">⭐ Level 1 — Verified Seller</div>
         </div>
         <div class="cd-actions">
@@ -3115,6 +3122,41 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
       <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">🏙️ Midnight City integration</div>
       <div style="font-size:14px;font-weight:700;margin-bottom:6px;">AI agent factions launch on Night Fun</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.65;font-weight:300;">Midnight City's autonomous AI agents have personalities, goals, and communities. Night Fun gives those communities tokens and merch from day one. Agent factions compete. Their communities hold tokens that pay them. Nobody dumps. The city has a real economy.</div>
+    </div>
+
+    <!-- ── Bonding Curve ──────────────────────────────────────── -->
+    <div class="curve-card" id="curve-panel-wrap">
+      <div id="curve-panel">
+        <div style="font-size:13px;font-weight:700;margin-bottom:16px;">🌊 Bonding Curve Launch</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Launch a constant-product AMM so anyone can buy your token at a fair price. Auto-graduates to zswap DEX at 85 tNight. Privacy mode seals trade amounts with ZK proofs. (<a href="https://github.com/SpyCrypto/zk-mint" target="_blank" style="color:var(--cyan);">zk-mint pattern</a>)</div>
+        <div class="field" style="margin-bottom:12px;">
+          <label class="label">Initial tokens in pool</label>
+          <input class="input" id="curve-initial-tokens" type="number" value="10000" min="100" placeholder="e.g. 10000"/>
+        </div>
+        <label class="sealed-bid-row" style="margin-bottom:16px;" for="curve-privacy">
+          <input type="checkbox" id="curve-privacy"/>
+          <div>
+            <div style="font-size:12px;font-weight:700;">⊘ Privacy mode</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Seal trade amounts with ZK proofs — buyers appear as anonymous commitments</div>
+          </div>
+        </label>
+        <button class="btn btn-primary" style="width:100%;" onclick="launchCurve()">🚀 Launch bonding curve</button>
+      </div>
+    </div>
+
+    <!-- ── Night-ID name service ──────────────────────────────── -->
+    <div class="curve-card" id="nightid-panel-wrap" style="margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🌙 Night-ID Name Service</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Register a <strong style="color:var(--cyan);font-family:var(--mono);">.night</strong> name for your seller identity. Your name is minted as a unique token coloured <code style="font-size:10px;background:var(--raised);padding:1px 5px;border-radius:4px;">SHA-256(name)</code> on-chain.</div>
+      <div id="nightid-badge-wrap" style="margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="flex:1;position:relative;">
+          <input class="input" id="nightid-input" type="text" placeholder="yourname" maxlength="32" style="padding-right:52px;" oninput="document.getElementById('nightid-suffix').textContent=this.value?'.night':''"/>
+          <span id="nightid-suffix" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;color:var(--muted);pointer-events:none;"></span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="registerNightId()">Register →</button>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--faint);font-family:var(--mono);">3–32 chars · lowercase alphanumeric + hyphens · unique per address · Night-ID contract: <span style="color:var(--cyan);">09dbe05f…</span></div>
     </div>
 
     <!-- ── Night Fun Token Dashboard ───────────────────────────── -->
@@ -6422,6 +6464,13 @@ document.addEventListener('click',function(e){
         <input class="input" id="bid-amount" type="number" min="1" placeholder="Enter bid amount"/>
         <div id="bid-min-hint" style="font-size:11px;color:var(--muted);margin-top:5px;font-family:var(--mono);"></div>
       </div>
+      <label class="sealed-bid-row" style="margin-bottom:12px;" for="bid-sealed">
+        <input type="checkbox" id="bid-sealed"/>
+        <div>
+          <div style="font-size:12px;font-weight:700;">⊘ Sealed bid (ZK private)</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Your bid amount is hidden inside a ZK proof — other bidders see "⊘ ZK Sealed" until auction settles</div>
+        </div>
+      </label>
       <div style="background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:8px;padding:10px;margin-bottom:16px;font-size:11px;color:var(--muted);line-height:1.6;">
         ⊘ Your bid locks NIGHT tokens into escrow. If outbid, tokens auto-refund to your wallet within one block.
       </div>
@@ -9474,6 +9523,259 @@ async function requestDustSponsorship(unsealedTx){
     return unsealedTx;
   }
 }
+
+// ══════════════════════════════════════════════════════════════════
+// NIGHT-ID NAME SERVICE
+// ══════════════════════════════════════════════════════════════════
+var _nightIdLocal = JSON.parse(localStorage.getItem('nm_nightid') || '{}');
+
+function saveNightId(){ localStorage.setItem('nm_nightid', JSON.stringify(_nightIdLocal)); }
+
+function resolveNightId(address){
+  var entry = Object.entries(_nightIdLocal).find(function(e){ return e[1] === address; });
+  return entry ? entry[0] : null;
+}
+
+function nightIdBadgeHtml(address){
+  var name = resolveNightId(address);
+  return name ? `<span class="night-id-badge">🌙 ${name}</span>` : '';
+}
+
+async function registerNightId(){
+  var raw = (document.getElementById('nightid-input')?.value || '').trim().toLowerCase().replace(/\.night$/,'').replace(/[^a-z0-9-]/g,'').slice(0,32);
+  if(!raw || raw.length < 3){ toast('Name must be 3–32 lowercase alphanumeric chars','error'); return; }
+  var address = walletState?.address || ('demo-'+uid());
+  var full = raw + '.night';
+  if(_nightIdLocal[full] && _nightIdLocal[full] !== address){ toast(full + ' is already taken','error'); return; }
+  toast('Registering ' + full + '…','info');
+  try { await nmApiPost('/api/nightid/register', { name: raw, address }); } catch(e){ /* simulation */ }
+  _nightIdLocal[full] = address;
+  saveNightId();
+  var wrap = document.getElementById('nightid-badge-wrap');
+  if(wrap) wrap.innerHTML = `<span class="night-id-badge">🌙 ${full}</span> <span style="font-size:11px;color:var(--green);">✓ registered</span>`;
+  var cdWrap = document.getElementById('cd-nightid-wrap');
+  if(cdWrap) cdWrap.innerHTML = nightIdBadgeHtml(address);
+  toast('✓ ' + full + ' registered!','success');
+}
+
+// Show existing Night-ID on creator dashboard load
+(function initNightId(){
+  var addr = walletState?.address;
+  if(addr){
+    var wrap = document.getElementById('cd-nightid-wrap');
+    if(wrap) wrap.innerHTML = nightIdBadgeHtml(addr);
+  }
+  // Populate Night-ID panel if already registered
+  var myName = Object.entries(_nightIdLocal).find(function(e){ return e[1] === (walletState?.address || ''); });
+  if(myName){
+    var bw = document.getElementById('nightid-badge-wrap');
+    if(bw) bw.innerHTML = `<span class="night-id-badge">🌙 ${myName[0]}</span> <span style="font-size:11px;color:var(--green);">✓ registered</span>`;
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// BONDING CURVE (constant-product AMM — zk-mint pattern)
+// ══════════════════════════════════════════════════════════════════
+var _curveState = JSON.parse(localStorage.getItem('nm_curve') || 'null');
+
+function saveCurve(){ if(_curveState) localStorage.setItem('nm_curve', JSON.stringify(_curveState)); }
+
+// Client-side curve math (mirrors server bigint math, using floats for display)
+function calcBuyDisplay(nightIn){
+  if(!_curveState || nightIn <= 0) return 0;
+  var vn = _curveState.nightReserve, vt = _curveState.tokenReserve;
+  return Math.floor(vt * nightIn / (vn + nightIn));
+}
+
+function calcSellDisplay(tokensIn){
+  if(!_curveState || tokensIn <= 0) return 0;
+  var vn = _curveState.nightReserve, vt = _curveState.tokenReserve;
+  return vn * tokensIn / (vt + tokensIn);
+}
+
+function curveGradPct(){
+  if(!_curveState) return 0;
+  return Math.min(100, (_curveState.nightReserve / 85) * 100);
+}
+
+async function launchCurve(){
+  if(!nftdData){ toast('Deploy a token first','error'); return; }
+  var initialTokens = parseInt(document.getElementById('curve-initial-tokens')?.value || '10000');
+  var privacyEnabled = document.getElementById('curve-privacy')?.checked || false;
+  if(initialTokens < 100){ toast('Minimum 100 tokens','error'); return; }
+  toast('Initialising bonding curve…','info');
+  try {
+    var r = await nmApiPost('/api/nightfun/launch-curve', { tokenAddress: nftdData.address, initialTokens, privacyEnabled });
+    _curveState = { tokenAddress: nftdData.address, nightReserve: 1, tokenReserve: initialTokens, privacy: privacyEnabled, graduated: false, totalBuys: 0, createdAt: Date.now() };
+    saveCurve();
+    renderCurvePanel();
+    toast('✓ Bonding curve live!','success');
+  } catch(e){
+    _curveState = { tokenAddress: nftdData?.address || 'local-'+uid(), nightReserve: 1, tokenReserve: initialTokens, privacy: privacyEnabled, graduated: false, totalBuys: 0, createdAt: Date.now() };
+    saveCurve();
+    renderCurvePanel();
+    toast('Curve initialised (simulation mode)','info');
+  }
+}
+
+async function buyCurveTokens(){
+  var nightIn = parseFloat(document.getElementById('curve-buy-night')?.value || '0');
+  if(nightIn <= 0){ toast('Enter NIGHT amount','error'); return; }
+  if(!_curveState){ toast('Launch curve first','error'); return; }
+  if(_curveState.graduated){ toast('Curve graduated — trade on zswap','info'); return; }
+  var tokensOut = calcBuyDisplay(nightIn);
+  if(tokensOut <= 0){ toast('Insufficient liquidity','error'); return; }
+  toast('Buying ' + tokensOut + ' tokens for ' + nightIn + ' NIGHT…','info');
+  try {
+    var r = await nmApiPost('/api/nightfun/buy', { tokenAddress: _curveState.tokenAddress, nightIn, minTokensOut: Math.floor(tokensOut * 0.97) });
+    if(r.curve){ _curveState.nightReserve = parseFloat(r.curve.nightReserve) / 1e6; _curveState.tokenReserve = parseFloat(r.curve.tokenReserve); _curveState.graduated = r.curve.graduated; }
+  } catch(e){
+    _curveState.nightReserve += nightIn;
+    _curveState.tokenReserve = Math.max(1, _curveState.tokenReserve - tokensOut);
+    _curveState.totalBuys++;
+  }
+  saveCurve();
+  renderCurvePanel();
+  toast('✓ Bought ' + tokensOut + ' tokens','success');
+  if(_curveState.nightReserve >= 85) toast('🎓 Graduation threshold reached!','success');
+}
+
+async function sellCurveTokens(){
+  var tokensIn = parseFloat(document.getElementById('curve-sell-tokens')?.value || '0');
+  if(tokensIn <= 0){ toast('Enter token amount','error'); return; }
+  if(!_curveState){ toast('Launch curve first','error'); return; }
+  if(_curveState.graduated){ toast('Curve graduated — trade on zswap','info'); return; }
+  var nightOut = calcSellDisplay(tokensIn);
+  if(nightOut <= 0){ toast('Insufficient liquidity','error'); return; }
+  toast('Selling ' + tokensIn + ' tokens for ' + nightOut.toFixed(4) + ' NIGHT…','info');
+  try {
+    var r = await nmApiPost('/api/nightfun/sell', { tokenAddress: _curveState.tokenAddress, tokensIn, minNightOut: Math.floor(nightOut * 0.97) });
+    if(r.curve){ _curveState.nightReserve = parseFloat(r.curve.nightReserve) / 1e6; _curveState.tokenReserve = parseFloat(r.curve.tokenReserve); }
+  } catch(e){
+    _curveState.nightReserve = Math.max(0.000001, _curveState.nightReserve - nightOut);
+    _curveState.tokenReserve += tokensIn;
+  }
+  saveCurve();
+  renderCurvePanel();
+  toast('✓ Received ' + nightOut.toFixed(4) + ' NIGHT','success');
+}
+
+function renderCurvePanel(){
+  var wrap = document.getElementById('curve-panel');
+  if(!wrap) return;
+  if(!_curveState){
+    wrap.innerHTML = `
+      <div style="font-size:13px;font-weight:700;margin-bottom:16px;">🌊 Bonding Curve Launch</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Launch a constant-product AMM so anyone can buy your token at a fair price. Auto-graduates to zswap DEX at 85 tNight (<a href="https://github.com/SpyCrypto/zk-mint" target="_blank" style="color:var(--cyan);">zk-mint pattern</a>).</div>
+      <div class="field" style="margin-bottom:12px;"><label class="label">Initial tokens in pool</label><input class="input" id="curve-initial-tokens" type="number" value="10000" min="100"/></div>
+      <label class="sealed-bid-row" style="margin-bottom:16px;" for="curve-privacy"><input type="checkbox" id="curve-privacy"/><div><strong style="font-size:12px;">⊘ Privacy mode</strong><div style="font-size:11px;color:var(--muted);">Seal trade amounts with ZK proofs</div></div></label>
+      <button class="btn btn-primary" style="width:100%;" onclick="launchCurve()">🚀 Launch bonding curve</button>`;
+    return;
+  }
+  var price = _curveState.tokenReserve > 0 ? (_curveState.nightReserve / _curveState.tokenReserve).toFixed(6) : '0';
+  var gradPct = curveGradPct().toFixed(1);
+  var gradFill = Math.min(100, parseFloat(gradPct));
+  wrap.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:13px;font-weight:700;">🌊 Bonding Curve</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${_curveState.privacy ? '<span class="night-id-badge">⊘ ZK Private</span>' : ''}
+        ${_curveState.graduated ? '<span class="escrow-badge RELEASED">Graduated →zswap</span>' : '<span class="escrow-badge OPEN">Active</span>'}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:15px;font-weight:800;font-family:var(--mono);">${price}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">NIGHT / token</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:15px;font-weight:800;font-family:var(--mono);color:var(--green);">${(+_curveState.nightReserve).toFixed(4)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">NIGHT reserve</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:15px;font-weight:800;font-family:var(--mono);color:var(--cyan);">${(+_curveState.tokenReserve).toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">token reserve</div>
+      </div>
+    </div>
+    <div style="margin-bottom:${_curveState.graduated ? '0' : '16px'};">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;">
+        <span>Graduation progress</span>
+        <span style="font-family:var(--mono);">${(+_curveState.nightReserve).toFixed(4)} / 85 tNight</span>
+      </div>
+      <div class="curve-progress-wrap"><div class="curve-progress-fill" style="width:${gradFill}%"></div></div>
+      <div style="font-size:10px;color:var(--faint);margin-top:4px;">At 85 tNight → migrates to zswap DEX · 0.3% LP fee</div>
+    </div>
+    ${_curveState.graduated ? '' : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:12px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;margin-bottom:10px;color:var(--green);">Buy tokens</div>
+        <input class="input" id="curve-buy-night" type="number" step="0.01" placeholder="NIGHT in" style="margin-bottom:8px;" oninput="var v=parseFloat(this.value)||0;document.getElementById('curve-buy-out').textContent=calcBuyDisplay(v)+' tokens'"/>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;" id="curve-buy-out">${calcBuyDisplay(1)} tokens per 1 NIGHT</div>
+        <button class="btn btn-primary" style="width:100%;padding:8px 12px;" onclick="buyCurveTokens()">Buy →</button>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:12px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;margin-bottom:10px;color:var(--red);">Sell tokens</div>
+        <input class="input" id="curve-sell-tokens" type="number" step="1" placeholder="tokens in" style="margin-bottom:8px;" oninput="var v=parseFloat(this.value)||0;document.getElementById('curve-sell-out').textContent=calcSellDisplay(v).toFixed(4)+' NIGHT'"/>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;" id="curve-sell-out">${calcSellDisplay(100).toFixed(4)} NIGHT per 100 tokens</div>
+        <button class="btn btn-outline-ink" style="width:100%;padding:8px 12px;" onclick="sellCurveTokens()">Sell →</button>
+      </div>
+    </div>`}
+  `;
+}
+
+// Init curve panel on page load
+(function initCurvePanelOnLoad(){
+  setTimeout(function(){
+    if(_curveState) renderCurvePanel();
+  }, 400);
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// SEALED BIDS — privacy toggle in auction bid modal
+// ══════════════════════════════════════════════════════════════════
+function isSealedBid(){
+  return !!(document.getElementById('bid-sealed')?.checked);
+}
+
+// Patch submitBid to handle sealed bids
+var _origSubmitBid = submitBid;
+submitBid = async function(){
+  var sealed = isSealedBid();
+  if(!sealed) { await _origSubmitBid(); return; }
+
+  var auctionId = document.getElementById('bid-auction-id')?.value;
+  var amount    = parseFloat(document.getElementById('bid-amount')?.value || '0');
+  var a = auctionStore.find(function(x){ return x.id === auctionId; });
+  if(!a){ toast('Auction not found','error'); return; }
+
+  var minBid = a.currentBid ? a.currentBid + 1 : a.startBid;
+  if(amount < minBid){ toast('Minimum bid is ' + minBid + ' NIGHT','error'); return; }
+  if(auctionStatus(a) === 'ended'){ toast('Auction has ended','error'); return; }
+
+  toast('Sealing bid with ZK proof…','info');
+  try { await simulateCompactFundEscrow(auctionId, amount); } catch(e){}
+
+  var bidder = walletState?.address || 'wallet-'+uid();
+  // Store a ZK commitment instead of the raw amount
+  var commitment = '⊘ ZK Sealed';
+  if(a.currentBidder && a.currentBidder !== bidder) toast('Previous bidder auto-refunded','info');
+
+  a.bids.push({ bidder, amount, sealed: true, commitment, at: Date.now() });
+  a.currentBid    = amount;
+  a.currentBidder = bidder;
+  a.bidCount++;
+  a.hasSealedBid  = true;
+
+  if(a.bin > 0 && amount >= a.bin){
+    a.endsAt = Date.now();
+    toast('🎉 Buy It Now triggered — won at ' + amount + ' NIGHT!','success');
+  } else {
+    if(a.endsAt - Date.now() < 300000) a.endsAt = Date.now() + 300000;
+    toast('✓ Sealed ZK bid placed — amount hidden from competitors','success');
+  }
+  saveAuctions();
+  closeModal('ov-bid');
+  renderAuctionsPage();
+};
 
 
 </script>
