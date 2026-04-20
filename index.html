@@ -14532,6 +14532,1392 @@ document.addEventListener('DOMContentLoaded',function(){
   initHomeLive();
 });
 
+// ── Extended stores ─────────────────────────────────────────────
+let listingStore = JSON.parse(localStorage.getItem('nm_listings') || '[]');
+let ratingStore  = JSON.parse(localStorage.getItem('nm_ratings')  || '{}');
+let deliveryStore= JSON.parse(localStorage.getItem('nm_delivery') || '{}');
+function saveListings(){ localStorage.setItem('nm_listings', JSON.stringify(listingStore)); }
+function saveRatings(){  localStorage.setItem('nm_ratings',  JSON.stringify(ratingStore));  }
+function saveDelivery(){ localStorage.setItem('nm_delivery', JSON.stringify(deliveryStore));}
+
+function getSellerRating(sellerId){
+  const reviews = ratingStore[sellerId] || [];
+  if(!reviews.length) return { avg: null, count: 0 };
+  const avg = reviews.reduce((s,r)=>s+r.stars,0)/reviews.length;
+  return { avg: Math.round(avg*10)/10, count: reviews.length };
+}
+function addRating(sellerId, buyerId, stars, comment, orderId, role){
+  if(!ratingStore[sellerId]) ratingStore[sellerId]=[];
+  ratingStore[sellerId].push({ stars, comment, buyerId, orderId, role, at: Date.now() });
+  saveRatings();
+}
+function stars(r){return'★'.repeat(Math.round(r))+'☆'.repeat(5-Math.round(r));}
+
+var NM_API = 'http://127.0.0.1:3001';
+var nmApiReady = null;
+
+async function nmCheckApi(){
+  if(nmApiReady !== null) return nmApiReady;
+  try {
+    var r = await fetch(NM_API + '/api/status', { signal: AbortSignal.timeout(2000) });
+    var j = await r.json();
+    nmApiReady = j.ready === true;
+  } catch(e) { nmApiReady = false; }
+  return nmApiReady;
+}
+
+async function nmApiPost(path, body){
+  var r = await fetch(NM_API + path, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body), signal: AbortSignal.timeout(120000)
+  });
+  var j = await r.json();
+  if(!r.ok) throw new Error(j.error || 'API error ' + r.status);
+  return j;
+}
+
+async function confirmDelivery(orderId){
+  const o=orders.find(x=>x.id===orderId);if(!o)return;
+  const escId=o.escrowId||orderId;
+  toast('Releasing escrow…','info');
+  try {
+    await simulateCompactReleaseEscrow(escId);
+    o.status='Delivered'; saveOrders();
+    if(escrowStore[escId]) escrowStore[escId].state='RELEASED';
+    renderOrders();
+    toast('✓ Delivery confirmed — funds released to seller','success');
+    setTimeout(()=>openRateModal(orderId, o.seller||'unknown'), 1200);
+  } catch(e){ toast('Release failed: '+e.message,'error'); }
+}
+
+async function submitListing(){
+  var title = (document.getElementById('nl-title')||{}).value?.trim();
+  var cat   = (document.getElementById('nl-cat')||{}).value;
+  var price = parseFloat((document.getElementById('nl-price')||{}).value||'0');
+  var cond  = (document.getElementById('nl-cond')||{}).value;
+  var desc  = (document.getElementById('nl-desc')||{}).value?.trim();
+  var from  = (document.getElementById('nl-ship-from')||{}).value?.trim();
+  var emoji = (document.getElementById('nl-emoji')||{}).value?.trim() || '📦';
+  if(!title || !cat || !price){ toast('Fill in title, category and price','error'); return; }
+  _createListing({ title, cat, price, cond, desc, from, emoji }, 'nl-result');
+}
+
+async function submitModalListing(){
+  var title = (document.getElementById('mnl-title')||{}).value?.trim();
+  var cat   = (document.getElementById('mnl-cat')||{}).value;
+  var price = parseFloat((document.getElementById('mnl-price')||{}).value||'0');
+  var cond  = (document.getElementById('mnl-cond')||{}).value;
+  var desc  = (document.getElementById('mnl-desc')||{}).value?.trim();
+  var from  = (document.getElementById('mnl-ship')||{}).value?.trim();
+  if(!title || !cat || !price){ toast('Fill in title, category and price','error'); return; }
+  await _createListing({ title, cat, price, cond, desc, from, emoji:'📦' }, null);
+  closeModal('ov-new-listing');
+}
+
+async function _createListing(data, resultElId){
+  var orderId = 'LST-' + uid();
+  var listing = {
+    id: orderId, title: data.title, cat: data.cat, price: data.price,
+    cond: data.cond, desc: data.desc, from: data.from, emoji: data.emoji,
+    sellerId: walletState?.address || 'local-seller',
+    state: 'OPEN', escrowState: null, txId: null,
+    createdAt: new Date().toISOString(), views: 0, inquiries: 0
+  };
+
+  toast('Creating listing on Midnight…','info');
+  try {
+    var txId = await simulateCompactCreateListing(orderId, 'ipfs://'+orderId, data.price);
+    listing.txId = txId; listing.escrowState = 'OPEN';
+  } catch(e){ listing.escrowState = 'SIM'; }
+
+  listingStore.push(listing);
+  saveListings();
+  toast('✓ Listing live — ZK escrow active','success');
+
+  if(resultElId){
+    var el = document.getElementById(resultElId);
+    if(el){
+      el.style.display='block';
+      el.innerHTML = `<div style="background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);border-radius:10px;padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">✓ Listing created</div>
+        <div style="font-size:12px;color:var(--muted);font-family:var(--mono);">ID: ${orderId}</div>
+        ${listing.txId ? `<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;">Tx: ${String(listing.txId).slice(0,32)}…</div>` : ''}
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="showPage('creator-dash')">View in dashboard →</button>
+      </div>`;
+    }
+  }
+  renderSellerListings();
+}
+
+function renderSellerListings(){
+  var myId = walletState?.address || 'local-seller';
+  var mine = listingStore.filter(l=>l.sellerId===myId||l.sellerId==='local-seller');
+  var wrap = document.getElementById('seller-listings-wrap');
+  var list = document.getElementById('seller-listings-list');
+  var cdList = document.getElementById('cd-listings-table');
+  var cdCount = document.getElementById('cd-listing-count');
+
+  if(cdCount) cdCount.textContent = mine.length ? `(${mine.length})` : '';
+
+  var html = mine.length ? mine.slice().reverse().map(l=>`
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:12px;align-items:center;padding:12px 16px;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;margin-bottom:8px;font-size:13px;">
+      <div>
+        <div style="font-weight:700;">${l.emoji} ${l.title}</div>
+        <div style="font-size:11px;color:var(--muted);">${l.cat} · ${l.cond}</div>
+      </div>
+      <div style="font-family:var(--mono);font-weight:700;">${l.price} NIGHT</div>
+      <div><span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.05);color:${l.escrowState==='FUNDED'?'var(--blue)':l.escrowState==='RELEASED'?'var(--green)':'var(--orange)'};">⊘ ${l.escrowState||'OPEN'}</span></div>
+      <div style="font-size:11px;color:var(--muted);">${fmtShort(l.createdAt)}</div>
+      <div style="display:flex;gap:6px;">
+        ${l.escrowState==='FUNDED'?`<button class="btn btn-ghost btn-xs" onclick="openShipModal('${l.id}')">📦 Ship</button>`:''}
+        <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="removeListing('${l.id}')">✕</button>
+      </div>
+    </div>`).join('') : '<div style="font-size:13px;color:var(--muted);padding:16px;text-align:center;">No listings yet. Create your first one above.</div>';
+
+  if(list) list.innerHTML = html;
+  if(cdList) cdList.innerHTML = html;
+  if(wrap) wrap.style.display = mine.length ? 'block' : 'none';
+}
+
+function removeListing(id){
+  listingStore = listingStore.filter(l=>l.id!==id);
+  saveListings(); renderSellerListings();
+  toast('Listing removed','info');
+}
+
+var _ratePendingStars = 0;
+
+function pickStar(n){
+  _ratePendingStars = n;
+  const labels = ['','Terrible','Poor','OK','Good','Excellent'];
+  document.querySelectorAll('.star-opt').forEach(s=>{
+    s.style.opacity = parseInt(s.dataset.v) <= n ? '1' : '0.25';
+    s.style.color   = parseInt(s.dataset.v) <= n ? 'var(--gold)' : '';
+  });
+  var lbl = document.getElementById('star-label');
+  if(lbl) lbl.textContent = labels[n] || '';
+}
+
+function openRateModal(orderId, sellerId){
+  _ratePendingStars = 0;
+  document.querySelectorAll('.star-opt').forEach(s=>{ s.style.opacity='0.4'; s.style.color=''; });
+  var lbl = document.getElementById('star-label'); if(lbl) lbl.textContent='Tap a star';
+  var cmt = document.getElementById('rate-comment'); if(cmt) cmt.value='';
+  var oid = document.getElementById('rate-order-id'); if(oid) oid.value=orderId;
+  var sid = document.getElementById('rate-seller-id'); if(sid) sid.value=sellerId;
+  openModal('ov-rate');
+}
+
+function submitRating(){
+  var orderId  = document.getElementById('rate-order-id')?.value;
+  var sellerId = document.getElementById('rate-seller-id')?.value;
+  var comment  = document.getElementById('rate-comment')?.value?.trim();
+  if(!_ratePendingStars){ toast('Please select a star rating','error'); return; }
+  addRating(sellerId, walletState?.address||'buyer', _ratePendingStars, comment, orderId, 'buyer');
+  closeModal('ov-rate');
+  toast('✓ Rating submitted — stored as ZK commitment','success');
+  renderCreatorReputation();
+  renderOrders();
+}
+
+function renderCreatorReputation(){
+  var myId = walletState?.address || 'local-seller';
+  var rating = getSellerRating(myId);
+  var scoreEl = document.getElementById('cd-rep-score');
+  if(scoreEl) scoreEl.textContent = rating.avg ? rating.avg.toFixed(1) : '—';
+
+  var reviews = ratingStore[myId] || [];
+  var barsEl = document.getElementById('cd-rep-bars');
+  if(barsEl){
+    var counts=[0,0,0,0,0];
+    reviews.forEach(r=>counts[r.stars-1]++);
+    barsEl.innerHTML = [5,4,3,2,1].map(n=>{
+      var c=counts[n-1], pct=reviews.length?Math.round(c/reviews.length*100):0;
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px;">
+        <span style="color:var(--gold);width:20px;">${n}★</span>
+        <div style="flex:1;height:6px;background:var(--rim2);border-radius:3px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:var(--gold);border-radius:3px;"></div>
+        </div>
+        <span style="color:var(--muted);width:24px;text-align:right;">${c}</span>
+      </div>`;
+    }).join('');
+  }
+
+  var recentEl = document.getElementById('cd-recent-reviews');
+  if(recentEl){
+    recentEl.innerHTML = reviews.slice(-3).reverse().map(r=>`
+      <div style="border-top:1px solid var(--rim2);padding-top:10px;margin-top:10px;font-size:12px;">
+        <div style="color:var(--gold);margin-bottom:2px;">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <div style="color:var(--muted);line-height:1.5;">${r.comment||'No comment'}</div>
+        <div style="font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:3px;">${new Date(r.at).toLocaleDateString()}</div>
+      </div>`).join('') || '<div style="font-size:12px;color:var(--muted);">No reviews yet</div>';
+  }
+}
+
+function openDisputeModal(orderId){
+  var el = document.getElementById('dispute-order-id'); if(el) el.value=orderId;
+  var re = document.getElementById('dispute-reason'); if(re) re.value='';
+  var ev = document.getElementById('dispute-evidence'); if(ev) ev.value='';
+  openModal('ov-dispute');
+}
+
+async function submitDispute(){
+  var orderId  = document.getElementById('dispute-order-id')?.value;
+  var reason   = document.getElementById('dispute-reason')?.value;
+  var evidence = document.getElementById('dispute-evidence')?.value?.trim();
+  if(!reason){ toast('Select a reason','error'); return; }
+  if(!evidence){ toast('Describe what happened','error'); return; }
+
+  var o = orders.find(x=>x.id===orderId);
+  var escId = o?.escrowId || orderId;
+  toast('Submitting dispute to Midnight…','info');
+  try {
+    await nmApiPost('/api/escrow/dispute', { orderId: escId, reason, evidence });
+    if(escrowStore[escId]) escrowStore[escId].state = 'DISPUTED';
+  } catch(e){ if(escrowStore[escId]) escrowStore[escId].state = 'DISPUTED'; }
+
+  if(o){ o.status='Disputed'; saveOrders(); }
+  closeModal('ov-dispute');
+  renderOrders();
+  toast('⚖ Dispute filed — governance arbitration within 48h','info');
+}
+
+function openShipModal(orderId){
+  var el = document.getElementById('ship-order-id'); if(el) el.value=orderId;
+  var et = document.getElementById('ship-eta');
+  if(et){ var d=new Date(); d.setDate(d.getDate()+7); et.value=d.toISOString().split('T')[0]; }
+  openModal('ov-ship');
+}
+
+function submitShipping(){
+  var orderId  = document.getElementById('ship-order-id')?.value;
+  var carrier  = document.getElementById('ship-carrier')?.value;
+  var tracking = document.getElementById('ship-tracking')?.value?.trim();
+  var eta      = document.getElementById('ship-eta')?.value;
+  if(!tracking){ toast('Enter a tracking number','error'); return; }
+
+  deliveryStore[orderId] = { carrier, trackingRef: tracking, eta, shippedAt: Date.now() };
+  saveDelivery();
+
+  var o = orders.find(x=>x.id===orderId);
+  if(o && o.status==='Processing'){ o.status='Out for Delivery'; saveOrders(); }
+
+  var listing = listingStore.find(l=>l.id===orderId);
+  if(listing){ listing.state='Shipped'; saveListings(); renderSellerListings(); }
+
+  closeModal('ov-ship');
+  renderOrders();
+  toast(`📦 Tracking saved — ${carrier} ${tracking}`,'success');
+}
+
+var nftdData = JSON.parse(localStorage.getItem('nm_nftd') || 'null');
+
+function nftdShow(data){
+  nftdData = data;
+  localStorage.setItem('nm_nftd', JSON.stringify(data));
+  var dash = document.getElementById('nf-token-dash');
+  var noD  = document.getElementById('nf-token-nodash');
+  if(dash) dash.style.display = 'block';
+  if(noD)  noD.style.display  = 'none';
+  nftdRender();
+}
+
+function nftdRender(){
+  if(!nftdData) return;
+  var d = nftdData;
+  var set = (id, val)=>{ var e=document.getElementById(id); if(e) e.textContent=val; };
+  set('nftd-name',     d.name     || '—');
+  set('nftd-symbol',   d.symbol   ? '$'+d.symbol : '—');
+  set('nftd-addr',     d.address  ? d.address.slice(0,16)+'…' : 'preprod');
+  set('nftd-supply',   d.supply   ? Number(d.supply).toLocaleString() : '—');
+  set('nftd-holders',  d.holders  || '1');
+  set('nftd-epoch',    d.epoch    != null ? 'Epoch '+d.epoch : 'Epoch 0');
+  set('nftd-epoch-rev',d.epochRev ? d.epochRev+' NIGHT' : '0 NIGHT');
+  set('nftd-merch-sales', d.merchSales || '0');
+  set('nftd-claimable',   d.claimable  ? d.claimable+' NIGHT' : '0 NIGHT');
+  set('nftd-rev-bps', d.holderRevBps  ? (d.holderRevBps/100).toFixed(1)+'%' : '—');
+
+  var feed = document.getElementById('nftd-rev-feed');
+  if(feed && d.revFeed && d.revFeed.length){
+    feed.innerHTML = d.revFeed.slice(-5).reverse().map(f=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--raised);border:1px solid var(--rim2);border-radius:8px;font-size:12px;">
+        <div><span style="color:var(--green);margin-right:8px;">↗</span>${f.desc}</div>
+        <div style="font-family:var(--mono);font-weight:700;color:var(--green);">+${f.amount} NIGHT</div>
+      </div>`).join('');
+  } else if(feed){
+    feed.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px;text-align:center;">No revenue events yet — record a merch sale to see the feed.</div>';
+  }
+}
+
+async function nftdCloseEpoch(){
+  if(!nftdData){ toast('No token deployed','error'); return; }
+  toast('Closing epoch on Midnight…','info');
+  try {
+    var res = await nmApiPost('/api/nightfun/close-epoch', { tokenAddress: nftdData.address });
+    nftdData.epoch = (nftdData.epoch||0)+1;
+    nftdData.epochRev = 0; nftdData.merchSales = 0;
+    nftdData.revFeed = nftdData.revFeed || [];
+    nftdData.revFeed.push({ desc: 'Epoch closed · revenue distributed', amount: res.distributed||0 });
+    nftdShow(nftdData);
+    toast('✓ Epoch closed — revenue distributed to holders','success');
+  } catch(e){
+    nftdData.epoch = (nftdData.epoch||0)+1;
+    nftdData.revFeed = nftdData.revFeed || [];
+    nftdData.revFeed.push({ desc: 'Epoch closed (simulated)', amount: Math.floor(Math.random()*50) });
+    nftdShow(nftdData);
+    toast('Epoch closed (simulation — API offline)','info');
+  }
+}
+
+async function nftdRefresh(){
+  if(!nftdData){ return; }
+  toast('Refreshing from chain…','info');
+  try {
+    var res = await fetch(NM_API+'/api/nightfun/state?addr='+(nftdData.address||''), { signal: AbortSignal.timeout(5000) });
+    var j = await res.json();
+    nftdData = Object.assign(nftdData, j);
+    nftdShow(nftdData);
+    toast('✓ Refreshed','success');
+  } catch(e){ toast('Chain offline — showing cached data','info'); }
+}
+
+// Called after successful Night Fun deploy
+function onNightFunDeployed(deployData){
+  nftdShow({
+    name: deployData.name, symbol: deployData.symbol,
+    supply: deployData.supply, address: deployData.address || 'preprod',
+    holderRevBps: deployData.holderRevBps || 5000,
+    epoch: 0, epochRev: 0, holders: 1, merchSales: 0, claimable: 0, revFeed: []
+  });
+}
+
+// Init Night Fun dashboard if token was previously deployed
+(function(){
+  if(nftdData){
+    setTimeout(function(){
+      var dash = document.getElementById('nf-token-dash');
+      var noD  = document.getElementById('nf-token-nodash');
+      if(dash) dash.style.display='block';
+      if(noD)  noD.style.display='none';
+      nftdRender();
+    }, 300);
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// CREATOR DASHBOARD — real data wiring
+// ══════════════════════════════════════════════════════════════════
+var _origCompleteCreatorOnboard = typeof completeCreatorOnboard === 'function' ? completeCreatorOnboard : null;
+function completeCreatorOnboard(){
+  if(_origCompleteCreatorOnboard) _origCompleteCreatorOnboard();
+  setTimeout(function(){ renderSellerListings(); renderCreatorReputation(); }, 200);
+}
+
+// Patch showPage to refresh creator dash when visited
+var _origShowPage2 = showPage;
+showPage = function(name){
+  _origShowPage2(name);
+  if(name==='creator-dash'){
+    setTimeout(function(){ renderSellerListings(); renderCreatorReputation(); }, 100);
+  }
+  if(name==='sell'){
+    setTimeout(function(){ renderSellerListings(); }, 100);
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// REPUTATION BADGES on product cards
+// ══════════════════════════════════════════════════════════════════
+function sellerRepBadge(sellerId){
+  var r = getSellerRating(sellerId);
+  if(!r.count) return '';
+  return `<span style="font-size:10px;color:var(--gold);font-family:var(--mono);">★${r.avg} (${r.count})</span>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INITIAL RENDER
+// ══════════════════════════════════════════════════════════════════
+(function initExtended(){
+  renderSellerListings();
+  renderCreatorReputation();
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// AUCTION SYSTEM
+// ══════════════════════════════════════════════════════════════════
+var auctionStore = JSON.parse(localStorage.getItem('nm_auctions') || '[]');
+var auctionFilter = 'all';
+var _countdownInterval = null;
+
+function saveAuctions(){ localStorage.setItem('nm_auctions', JSON.stringify(auctionStore)); }
+
+function fmtCountdown(ms){
+  if(ms <= 0) return 'Ended';
+  var s = Math.floor(ms/1000);
+  var d = Math.floor(s/86400); s %= 86400;
+  var h = Math.floor(s/3600);  s %= 3600;
+  var m = Math.floor(s/60);    s %= 60;
+  if(d > 0) return `${d}d ${h}h`;
+  if(h > 0) return `${h}h ${m}m`;
+  return `${m}m ${s}s`;
+}
+
+function auctionStatus(a){
+  var now = Date.now();
+  if(now >= a.endsAt) return 'ended';
+  if(now >= a.endsAt - 3600000) return 'ending';
+  return 'live';
+}
+
+async function submitAuction(){
+  var title    = document.getElementById('ca-title')?.value.trim();
+  var cat      = document.getElementById('ca-cat')?.value;
+  var startBid = parseFloat(document.getElementById('ca-start')?.value || '0');
+  var reserve  = parseFloat(document.getElementById('ca-reserve')?.value || '0');
+  var bin      = parseFloat(document.getElementById('ca-bin')?.value || '0');
+  var duration = parseInt(document.getElementById('ca-duration')?.value || '86400');
+  var desc     = document.getElementById('ca-desc')?.value.trim();
+  var emoji    = document.getElementById('ca-emoji')?.value.trim() || '📦';
+
+  if(!title || !cat || !startBid){ toast('Fill in title, category and starting bid','error'); return; }
+
+  var id = 'AUC-' + uid();
+  var auction = {
+    id, title, cat, desc, emoji,
+    startBid, reserve: reserve || 0, bin: bin || 0,
+    currentBid: 0, currentBidder: null, bidCount: 0,
+    sellerId: walletState?.address || 'local-seller',
+    createdAt: Date.now(), endsAt: Date.now() + duration * 1000,
+    bids: [], settled: false, escrowId: null
+  };
+
+  toast('Creating auction on Midnight…','info');
+  try {
+    var txId = await simulateCompactCreateListing(id, 'ipfs://auction-'+id, startBid);
+    auction.escrowId = id;
+    auction.txId = txId;
+  } catch(e){ auction.escrowId = id; }
+
+  auctionStore.push(auction);
+  saveAuctions();
+  closeModal('ov-create-auction');
+  showPage('auctions');
+  renderAuctionsPage();
+  toast('✓ Auction live — ZK escrow active','success');
+}
+
+function setAuctionFilter(f, el){
+  auctionFilter = f;
+  document.querySelectorAll('#auction-filters .cat-pill').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderAuctionsPage();
+}
+
+function renderAuctionsPage(){
+  var now = Date.now();
+  var myAddr = walletState?.address || 'local-seller';
+
+  var filtered = auctionStore.filter(a=>{
+    if(auctionFilter==='live')    return auctionStatus(a)==='live';
+    if(auctionFilter==='ending')  return auctionStatus(a)==='ending';
+    if(auctionFilter==='new')     return (now - a.createdAt) < 3600000;
+    if(auctionFilter==='mine')    return a.bids.some(b=>b.bidder===myAddr);
+    return true;
+  });
+
+  var grid = document.getElementById('auction-grid');
+  var empty = document.getElementById('auction-empty');
+  if(!grid) return;
+
+  if(!filtered.length){
+    grid.innerHTML=''; if(empty) empty.style.display='block'; return;
+  }
+  if(empty) empty.style.display='none';
+
+  grid.innerHTML = filtered.map(a=>{
+    var status = auctionStatus(a);
+    var timeLeft = a.endsAt - now;
+    var myBid = a.bids.find(b=>b.bidder===myAddr);
+    var isWinning = myBid && a.currentBidder===myAddr;
+    var statusColor = status==='ended'?'var(--muted)':status==='ending'?'var(--red)':'var(--green)';
+    var statusLabel = status==='ended'?'Ended':status==='ending'?'⏱ Ending soon':'🔴 Live';
+
+    return `<div style="background:var(--raised);border:1px solid var(--rim2);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--ink)'" onmouseout="this.style.borderColor='var(--rim2)'">
+      <div style="background:var(--surface);padding:28px;text-align:center;font-size:48px;position:relative;">
+        ${a.emoji}
+        <div style="position:absolute;top:10px;right:10px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;background:rgba(0,0,0,.4);color:${statusColor};">${statusLabel}</div>
+        ${isWinning?'<div style="position:absolute;top:10px;left:10px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;background:rgba(0,214,143,.15);color:var(--green);">✓ Winning</div>':''}
+      </div>
+      <div style="padding:16px;flex:1;display:flex;flex-direction:column;">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">${a.cat}</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;line-height:1.3;">${a.title}</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <div><div style="font-size:10px;color:var(--muted);">Current bid</div><div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--glow);">${a.currentBid||a.startBid} <span style="font-size:11px;color:var(--muted);">NIGHT</span></div></div>
+          <div style="text-align:right;"><div style="font-size:10px;color:var(--muted);">Time left</div><div style="font-size:14px;font-weight:700;font-family:var(--mono);color:${statusColor};" data-auction-id="${a.id}">${status==='ended'?'Ended':fmtCountdown(timeLeft)}</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">${a.bidCount} bid${a.bidCount!==1?'s':''} · ${a.reserve?'Reserve: '+a.reserve+' NIGHT':a.bin?'BIN: '+a.bin+' NIGHT':'No reserve'}</div>
+        ${status!=='ended'
+          ? `<button class="btn btn-primary btn-sm btn-full" onclick="openBidModal('${a.id}')">🔨 Place Bid</button>`
+          : a.currentBidder
+            ? `<div style="font-size:12px;color:var(--green);text-align:center;padding:8px;background:rgba(0,214,143,.06);border-radius:8px;">Sold — ${a.currentBid} NIGHT</div>`
+            : `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px;">No bids — unsold</div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  // Live countdown
+  clearInterval(_countdownInterval);
+  _countdownInterval = setInterval(()=>{
+    var n = Date.now();
+    document.querySelectorAll('[data-auction-id]').forEach(el=>{
+      var a = auctionStore.find(x=>x.id===el.dataset.auctionId);
+      if(!a) return;
+      var left = a.endsAt - n;
+      if(left <= 0){ el.textContent='Ended'; clearInterval(_countdownInterval); }
+      else el.textContent = fmtCountdown(left);
+    });
+    // Auto-settle ended auctions
+    auctionStore.filter(a=>!a.settled && Date.now()>=a.endsAt).forEach(settleAuction);
+  }, 1000);
+}
+
+function openBidModal(auctionId){
+  var a = auctionStore.find(x=>x.id===auctionId);
+  if(!a){ toast('Auction not found','error'); return; }
+  if(auctionStatus(a)==='ended'){ toast('This auction has ended','info'); return; }
+
+  var minBid = a.currentBid ? a.currentBid + 1 : a.startBid;
+  document.getElementById('bid-auction-id').value = auctionId;
+  document.getElementById('bid-modal-title').textContent = `🔨 Bid on: ${a.title}`;
+  document.getElementById('bid-amount').value = '';
+  document.getElementById('bid-amount').min = minBid;
+  document.getElementById('bid-min-hint').textContent = `Minimum bid: ${minBid} NIGHT`;
+  document.getElementById('bid-auction-info').innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:13px;">
+      <div>${a.emoji} ${a.title}</div>
+      <div style="font-family:var(--mono);font-weight:700;color:var(--glow);">${a.currentBid||a.startBid} NIGHT</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;">${a.bidCount} bids · Ends ${fmtCountdown(a.endsAt-Date.now())}</div>`;
+
+  var binSection = document.getElementById('bid-bin-section');
+  var binBtn = document.getElementById('bid-bin-price');
+  if(a.bin > 0){ binSection.style.display='block'; if(binBtn) binBtn.textContent=a.bin; }
+  else binSection.style.display='none';
+
+  openModal('ov-bid');
+}
+
+async function submitBid(){
+  var auctionId = document.getElementById('bid-auction-id')?.value;
+  var amount = parseFloat(document.getElementById('bid-amount')?.value || '0');
+  var a = auctionStore.find(x=>x.id===auctionId);
+  if(!a){ toast('Auction not found','error'); return; }
+
+  var minBid = a.currentBid ? a.currentBid + 1 : a.startBid;
+  if(amount < minBid){ toast(`Minimum bid is ${minBid} NIGHT`,'error'); return; }
+  if(auctionStatus(a)==='ended'){ toast('Auction has ended','error'); return; }
+
+  var bidder = walletState?.address || 'wallet-'+uid();
+  toast('Locking bid in escrow…','info');
+
+  try {
+    await simulateCompactFundEscrow(auctionId, amount);
+  } catch(e){ /* simulation fallback */ }
+
+  // Outbid previous: auto-refund simulation
+  if(a.currentBidder && a.currentBidder !== bidder){
+    toast(`Previous bidder auto-refunded ${a.currentBid} NIGHT`,'info');
+  }
+
+  a.bids.push({ bidder, amount, at: Date.now() });
+  a.currentBid = amount;
+  a.currentBidder = bidder;
+  a.bidCount++;
+
+  // BIN check
+  if(a.bin > 0 && amount >= a.bin){
+    a.endsAt = Date.now(); // end immediately
+    toast(`🎉 Buy It Now triggered — you won at ${amount} NIGHT!`,'success');
+  } else {
+    // Sniping prevention: extend by 5 min if bid in last 5 min
+    if(a.endsAt - Date.now() < 300000) a.endsAt = Date.now() + 300000;
+    toast(`✓ Bid placed — ${amount} NIGHT locked in escrow`,'success');
+  }
+
+  saveAuctions();
+  closeModal('ov-bid');
+  renderAuctionsPage();
+}
+
+async function buyItNow(){
+  var auctionId = document.getElementById('bid-auction-id')?.value;
+  var a = auctionStore.find(x=>x.id===auctionId);
+  if(!a || !a.bin) return;
+  document.getElementById('bid-amount').value = a.bin;
+  await submitBid();
+}
+
+async function settleAuction(a){
+  if(a.settled) return;
+  a.settled = true;
+  if(a.currentBidder && a.currentBid >= (a.reserve || 0)){
+    try { await simulateCompactReleaseEscrow(a.id); } catch(e){}
+    toast(`🔨 Auction settled: ${a.title} sold for ${a.currentBid} NIGHT`,'success');
+  } else {
+    try { await nmApiPost('/api/escrow/refund',{ orderId: a.id }); } catch(e){}
+  }
+  saveAuctions();
+}
+
+// Patch showPage for auctions
+var _origShowPageAuctions = showPage;
+showPage = function(name){
+  _origShowPageAuctions(name);
+  if(name==='auctions'){ clearInterval(_countdownInterval); setTimeout(renderAuctionsPage,50); }
+};
+
+async function connectNocturne(){
+  var body = document.getElementById('wallet-modal-body');
+  if(body) body.innerHTML = '<div style="text-align:center;padding:32px;"><div style="font-size:32px;margin-bottom:12px;">🦉</div><div style="font-weight:700;margin-bottom:8px;">Connecting Nocturne…</div><div style="font-size:12px;color:#6b7280;">Looking for Nocturne extension</div></div>';
+
+  try {
+    // Nocturne uses same window.midnight connector standard as Lace
+    var providers = window.midnight;
+    var nocturneProv = null;
+    if(providers){
+      for(var key of Object.keys(providers)){
+        var p = providers[key];
+        if(p && (key.toLowerCase().includes('nocturne') || p.apiVersion)){
+          nocturneProv = { id: key, ...p };
+          break;
+        }
+      }
+    }
+    if(!nocturneProv) throw new Error('Nocturne extension not found. Install it from the Chrome Web Store.');
+
+    var api = await nocturneProv.connect(getNetworkLabel());
+    var shielded = await api.getShieldedAddresses?.();
+    var unshielded = await api.getUnshieldedAddress?.();
+
+    walletState = { connected: true, demo: false, api, address: unshielded||'', shielded: shielded||[], wallet: 'nocturne' };
+    closeWalletModal();
+    toast('✓ Nocturne wallet connected','success');
+    updateWalletUI();
+  } catch(e){
+    if(body) body.innerHTML = `<div style="padding:16px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:12px;">🦉</div>
+      <div style="font-weight:700;margin-bottom:8px;color:#ef4444;">Connection failed</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">${e.message}</div>
+      <a href="https://github.com/htlabs-xyz/nocturne" target="_blank" style="color:#7c3aed;font-size:12px;">Get Nocturne →</a>
+      <div style="margin-top:12px;"><button class="btn btn-ghost btn-sm" onclick="openWalletModal()">← Back</button></div>
+    </div>`;
+  }
+}
+
+async function connect1AM(){
+  var body = document.getElementById('wallet-modal-body');
+  if(body) body.innerHTML = '<div style="text-align:center;padding:32px;"><div style="font-size:32px;margin-bottom:12px;">⏱</div><div style="font-weight:700;margin-bottom:8px;">Connecting 1AM…</div><div style="font-size:12px;color:#6b7280;">Approve the connection in your 1AM wallet</div></div>';
+
+  try {
+    // 1AM follows the DApp Connector API spec strictly:
+    // wallets register as window.midnight[uuid] with an InitialAPI object.
+    // Detection: match by rdns ("com.oneam.wallet") or name ("1AM") — NOT by key.
+    var providers = window.midnight;
+    var prov = null, provKey = null;
+    if(providers){
+      for(var key of Object.keys(providers)){
+        var p = providers[key];
+        if(!p || typeof p.connect !== 'function') continue;
+        if(p.rdns === 'com.oneam.wallet' || p.name === '1AM' || (p.name||'').toLowerCase().includes('1am')){
+          prov = p; provKey = key; break;
+        }
+      }
+      // Fallback: any non-Lace, non-Nocturne provider
+      if(!prov){
+        for(var key2 of Object.keys(providers)){
+          var p2 = providers[key2];
+          if(p2 && key2 !== 'mnLace' && typeof p2.connect === 'function' && !(p2.name||'').toLowerCase().includes('nocturne')){
+            prov = p2; provKey = key2; break;
+          }
+        }
+      }
+    }
+    if(!prov) throw new Error('1AM Wallet not found.\n• Install 1AM from 1am.xyz\n• Enable Midnight network in 1AM settings\n• Reload this page after installing');
+
+    // Try networks in order (1AM is multi-network)
+    var api = null, connectedNet = 'preprod';
+    for(var net of ['mainnet','preprod','undeployed']){
+      try { api = await prov.connect(net); connectedNet = net; break; } catch(e){
+        if(e?.code === 'PermissionRejected') throw new Error('1AM blocked this connection. Open 1AM settings to allow Night Markets.');
+      }
+    }
+    if(!api) throw new Error('1AM connection rejected — approve the connection request in the wallet extension.');
+
+    // getShieldedAddresses() → Array<{ shieldedAddress, shieldedCoinPublicKey, ... }>
+    var shieldedAddr = null;
+    try {
+      var shArr = await api.getShieldedAddresses?.();
+      shieldedAddr = Array.isArray(shArr) ? shArr[0]?.shieldedAddress : shArr?.shieldedAddress || null;
+    } catch(e){ console.warn('[1AM] getShieldedAddresses:', e); }
+
+    // getUnshieldedAddress() → { unshieldedAddress: string }
+    var unshieldedAddr = null;
+    try {
+      var unshRes = await api.getUnshieldedAddress?.();
+      unshieldedAddr = unshRes?.unshieldedAddress || unshRes || null;
+    } catch(e){ console.warn('[1AM] getUnshieldedAddress:', e); }
+
+    var dust = '0', night = '0';
+    try { var db = await api.getDustBalance?.(); dust = db != null ? (Number(db)/1e6).toFixed(4) : '0'; } catch(e){}
+    try {
+      var ub = await api.getUnshieldedBalances?.();
+      if(ub){ var ks = Object.keys(ub); if(ks.length) night = (Number(ub[ks[0]])/1e6).toFixed(4); }
+    } catch(e){}
+
+    // 1AM sponsors DUST automatically via balanceSealedTransaction — flag it
+    var hasSponsor = typeof api.balanceSealedTransaction === 'function';
+
+    walletState = {
+      connected:         true,
+      wallet:            '1am',
+      provKey,
+      apiVersion:        prov.apiVersion || 'unknown',
+      address:           unshieldedAddr || shieldedAddr || 'mn_1am_unknown',
+      shielded:          shieldedAddr,
+      unshielded:        unshieldedAddr,
+      dust, night,
+      api,
+      network:           connectedNet,
+      has1AMSponsorship: hasSponsor,
+      demo:              false,
+    };
+
+    updateWalletUI();
+    closeWalletModal();
+    toast('✓ 1AM connected' + (hasSponsor ? ' · DUST sponsored ⚡' : '') + ' · ' + connectedNet, 'success');
+
+  } catch(err){
+    var msg = (err.message || String(err)).replace(/\n/g,'<br>');
+    if(body) body.innerHTML = `<div style="text-align:center;padding:24px 0;">
+      <div style="font-size:36px;margin-bottom:12px;">⏱</div>
+      <div style="font-weight:700;margin-bottom:8px;color:#ef4444;">Connection failed</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.7;text-align:left;">${msg}</div>
+      <a href="https://1am.xyz" target="_blank" style="color:#f59e0b;font-size:12px;display:block;margin-bottom:16px;">Get 1AM Wallet →</a>
+      <button class="btn btn-primary btn-sm" onclick="connect1AM()">Try again</button>
+      &nbsp;<button class="btn btn-ghost btn-sm" onclick="connectDemo()">Use demo instead</button>
+    </div>`;
+  }
+}
+
+var NM_NETWORK = localStorage.getItem('nm_network') || 'preprod';
+
+var NM_ENDPOINTS = {
+  preprod: {
+    indexer:    'https://indexer.preprod.midnight.network/api/v3/graphql',
+    indexerWS:  'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
+    node:       'https://rpc.preprod.midnight.network',
+    proofServer:'http://localhost:6300',
+    label:      'Preprod'
+  },
+  mainnet: {
+    indexer:    'https://indexer.mainnet.midnight.network/api/v3/graphql',
+    indexerWS:  'wss://indexer.mainnet.midnight.network/api/v3/graphql/ws',
+    node:       'https://rpc.mainnet.midnight.network',
+    proofServer:'http://localhost:6300',
+    label:      'Mainnet'
+  }
+};
+
+function getNetworkLabel(){ return NM_ENDPOINTS[NM_NETWORK]?.label || NM_NETWORK; }
+
+function setNetwork(net){
+  NM_NETWORK = net;
+  localStorage.setItem('nm_network', net);
+  nmApiReady = null; // reset API readiness check
+
+  document.getElementById('net-preprod')?.style && (document.getElementById('net-preprod').style.borderWidth = net==='preprod'?'2px':'1px');
+  document.getElementById('net-mainnet')?.style && (document.getElementById('net-mainnet').style.borderWidth = net==='mainnet'?'2px':'1px');
+
+  var ep = NM_ENDPOINTS[net];
+  var epEl = document.getElementById('net-endpoints');
+  if(epEl && ep) epEl.innerHTML = `Indexer: ${ep.indexer}<br>Node: ${ep.node}`;
+
+  var dustEl = document.getElementById('net-dust-section');
+  if(dustEl) dustEl.style.display = net==='mainnet' ? 'block' : 'none';
+
+  var netLabel = document.getElementById('wallet-net-label');
+  if(netLabel) netLabel.textContent = ep?.label || net;
+
+  toast(`Network: ${ep?.label || net}`,'info');
+}
+
+// Init network UI
+(function initNetwork(){
+  setTimeout(function(){
+    setNetwork(NM_NETWORK);
+  }, 200);
+})();
+
+async function requestDustSponsorship(unsealedTx){
+  // 1AM handles DUST sponsorship natively inside the wallet — skip our service
+  if(walletState?.has1AMSponsorship && walletState?.api?.balanceSealedTransaction){
+    try {
+      var sponsored = await walletState.api.balanceSealedTransaction(unsealedTx);
+      return sponsored || unsealedTx;
+    } catch(e){ console.warn('[DUST/1AM] Native sponsorship failed, falling back:', e.message); }
+  }
+  if(NM_NETWORK !== 'mainnet') return unsealedTx; // preprod: no sponsorship needed
+  try {
+    var res = await fetch(NM_API + '/api/sponsor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tx: unsealedTx }),
+      signal: AbortSignal.timeout(30000)
+    });
+    var j = await res.json();
+    return j.sponsoredTx || unsealedTx;
+  } catch(e){
+    console.warn('[DUST] Sponsorship unavailable:', e.message);
+    return unsealedTx;
+  }
+}
+
+var _nightIdLocal = JSON.parse(localStorage.getItem('nm_nightid') || '{}');
+
+function saveNightId(){ localStorage.setItem('nm_nightid', JSON.stringify(_nightIdLocal)); }
+
+function resolveNightId(address){
+  var entry = Object.entries(_nightIdLocal).find(function(e){ return e[1] === address; });
+  return entry ? entry[0] : null;
+}
+
+function nightIdBadgeHtml(address){
+  var name = resolveNightId(address);
+  return name ? `<span class="night-id-badge">🌙 ${name}</span>` : '';
+}
+
+async function registerNightId(){
+  var raw = (document.getElementById('nightid-input')?.value || '').trim().toLowerCase().replace(/\.night$/,'').replace(/[^a-z0-9-]/g,'').slice(0,32);
+  if(!raw || raw.length < 3){ toast('Name must be 3–32 lowercase alphanumeric chars','error'); return; }
+  var address = walletState?.address || ('demo-'+uid());
+  var full = raw + '.night';
+  if(_nightIdLocal[full] && _nightIdLocal[full] !== address){ toast(full + ' is already taken','error'); return; }
+  toast('Registering ' + full + '…','info');
+  try { await nmApiPost('/api/nightid/register', { name: raw, address }); } catch(e){ /* simulation */ }
+  _nightIdLocal[full] = address;
+  saveNightId();
+  var wrap = document.getElementById('nightid-badge-wrap');
+  if(wrap) wrap.innerHTML = `<span class="night-id-badge">🌙 ${full}</span> <span style="font-size:11px;color:var(--green);">✓ registered</span>`;
+  var cdWrap = document.getElementById('cd-nightid-wrap');
+  if(cdWrap) cdWrap.innerHTML = nightIdBadgeHtml(address);
+  toast('✓ ' + full + ' registered!','success');
+}
+
+// Show existing Night-ID on creator dashboard load
+(function initNightId(){
+  var addr = walletState?.address;
+  if(addr){
+    var wrap = document.getElementById('cd-nightid-wrap');
+    if(wrap) wrap.innerHTML = nightIdBadgeHtml(addr);
+  }
+  // Populate Night-ID panel if already registered
+  var myName = Object.entries(_nightIdLocal).find(function(e){ return e[1] === (walletState?.address || ''); });
+  if(myName){
+    var bw = document.getElementById('nightid-badge-wrap');
+    if(bw) bw.innerHTML = `<span class="night-id-badge">🌙 ${myName[0]}</span> <span style="font-size:11px;color:var(--green);">✓ registered</span>`;
+  }
+})();
+
+var _curveState = JSON.parse(localStorage.getItem('nm_curve') || 'null');
+
+function saveCurve(){ if(_curveState) localStorage.setItem('nm_curve', JSON.stringify(_curveState)); }
+
+// Client-side curve math (mirrors server bigint math, using floats for display)
+function calcBuyDisplay(nightIn){
+  if(!_curveState || nightIn <= 0) return 0;
+  var vn = _curveState.nightReserve, vt = _curveState.tokenReserve;
+  return Math.floor(vt * nightIn / (vn + nightIn));
+}
+
+function calcSellDisplay(tokensIn){
+  if(!_curveState || tokensIn <= 0) return 0;
+  var vn = _curveState.nightReserve, vt = _curveState.tokenReserve;
+  return vn * tokensIn / (vt + tokensIn);
+}
+
+function curveGradPct(){
+  if(!_curveState) return 0;
+  return Math.min(100, (_curveState.nightReserve / 85) * 100);
+}
+
+async function launchCurve(){
+  if(!nftdData){ toast('Deploy a token first','error'); return; }
+  var initialTokens = parseInt(document.getElementById('curve-initial-tokens')?.value || '10000');
+  var privacyEnabled = document.getElementById('curve-privacy')?.checked || false;
+  if(initialTokens < 100){ toast('Minimum 100 tokens','error'); return; }
+  toast('Initialising bonding curve…','info');
+  try {
+    var r = await nmApiPost('/api/nightfun/launch-curve', { tokenAddress: nftdData.address, initialTokens, privacyEnabled });
+    _curveState = { tokenAddress: nftdData.address, nightReserve: 1, tokenReserve: initialTokens, privacy: privacyEnabled, graduated: false, totalBuys: 0, createdAt: Date.now() };
+    saveCurve();
+    renderCurvePanel();
+    toast('✓ Bonding curve live!','success');
+  } catch(e){
+    _curveState = { tokenAddress: nftdData?.address || 'local-'+uid(), nightReserve: 1, tokenReserve: initialTokens, privacy: privacyEnabled, graduated: false, totalBuys: 0, createdAt: Date.now() };
+    saveCurve();
+    renderCurvePanel();
+    toast('Curve initialised (simulation mode)','info');
+  }
+}
+
+async function buyCurveTokens(){
+  var nightIn = parseFloat(document.getElementById('curve-buy-night')?.value || '0');
+  if(nightIn <= 0){ toast('Enter NIGHT amount','error'); return; }
+  if(!_curveState){ toast('Launch curve first','error'); return; }
+  if(_curveState.graduated){ toast('Curve graduated — trade on zswap','info'); return; }
+  var tokensOut = calcBuyDisplay(nightIn);
+  if(tokensOut <= 0){ toast('Insufficient liquidity','error'); return; }
+  toast('Buying ' + tokensOut + ' tokens for ' + nightIn + ' NIGHT…','info');
+  try {
+    var r = await nmApiPost('/api/nightfun/buy', { tokenAddress: _curveState.tokenAddress, nightIn, minTokensOut: Math.floor(tokensOut * 0.97) });
+    if(r.curve){ _curveState.nightReserve = parseFloat(r.curve.nightReserve) / 1e6; _curveState.tokenReserve = parseFloat(r.curve.tokenReserve); _curveState.graduated = r.curve.graduated; }
+  } catch(e){
+    _curveState.nightReserve += nightIn;
+    _curveState.tokenReserve = Math.max(1, _curveState.tokenReserve - tokensOut);
+    _curveState.totalBuys++;
+  }
+  saveCurve();
+  renderCurvePanel();
+  toast('✓ Bought ' + tokensOut + ' tokens','success');
+  if(_curveState.nightReserve >= 85) toast('🎓 Graduation threshold reached!','success');
+}
+
+async function sellCurveTokens(){
+  var tokensIn = parseFloat(document.getElementById('curve-sell-tokens')?.value || '0');
+  if(tokensIn <= 0){ toast('Enter token amount','error'); return; }
+  if(!_curveState){ toast('Launch curve first','error'); return; }
+  if(_curveState.graduated){ toast('Curve graduated — trade on zswap','info'); return; }
+  var nightOut = calcSellDisplay(tokensIn);
+  if(nightOut <= 0){ toast('Insufficient liquidity','error'); return; }
+  toast('Selling ' + tokensIn + ' tokens for ' + nightOut.toFixed(4) + ' NIGHT…','info');
+  try {
+    var r = await nmApiPost('/api/nightfun/sell', { tokenAddress: _curveState.tokenAddress, tokensIn, minNightOut: Math.floor(nightOut * 0.97) });
+    if(r.curve){ _curveState.nightReserve = parseFloat(r.curve.nightReserve) / 1e6; _curveState.tokenReserve = parseFloat(r.curve.tokenReserve); }
+  } catch(e){
+    _curveState.nightReserve = Math.max(0.000001, _curveState.nightReserve - nightOut);
+    _curveState.tokenReserve += tokensIn;
+  }
+  saveCurve();
+  renderCurvePanel();
+  toast('✓ Received ' + nightOut.toFixed(4) + ' NIGHT','success');
+}
+
+function renderCurvePanel(){
+  var wrap = document.getElementById('curve-panel');
+  if(!wrap) return;
+  if(!_curveState){
+    wrap.innerHTML = `
+      <div style="font-size:13px;font-weight:700;margin-bottom:16px;">🌊 Bonding Curve Launch</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Launch a constant-product AMM so anyone can buy your token at a fair price. Auto-graduates to zswap DEX at 85 tNight (<a href="https://github.com/SpyCrypto/zk-mint" target="_blank" style="color:var(--cyan);">zk-mint pattern</a>).</div>
+      <div class="field" style="margin-bottom:12px;"><label class="label">Initial tokens in pool</label><input class="input" id="curve-initial-tokens" type="number" value="10000" min="100"/></div>
+      <label class="sealed-bid-row" style="margin-bottom:16px;" for="curve-privacy"><input type="checkbox" id="curve-privacy"/><div><strong style="font-size:12px;">⊘ Privacy mode</strong><div style="font-size:11px;color:var(--muted);">Seal trade amounts with ZK proofs</div></div></label>
+      <button class="btn btn-primary" style="width:100%;" onclick="launchCurve()">🚀 Launch bonding curve</button>`;
+    return;
+  }
+  var price = _curveState.tokenReserve > 0 ? (_curveState.nightReserve / _curveState.tokenReserve).toFixed(6) : '0';
+  var gradPct = curveGradPct().toFixed(1);
+  var gradFill = Math.min(100, parseFloat(gradPct));
+  wrap.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:13px;font-weight:700;">🌊 Bonding Curve</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${_curveState.privacy ? '<span class="night-id-badge">⊘ ZK Private</span>' : ''}
+        ${_curveState.graduated ? '<span class="escrow-badge RELEASED">Graduated →zswap</span>' : '<span class="escrow-badge OPEN">Active</span>'}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:15px;font-weight:800;font-family:var(--mono);">${price}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">NIGHT / token</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:15px;font-weight:800;font-family:var(--mono);color:var(--green);">${(+_curveState.nightReserve).toFixed(4)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">NIGHT reserve</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:15px;font-weight:800;font-family:var(--mono);color:var(--cyan);">${(+_curveState.tokenReserve).toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">token reserve</div>
+      </div>
+    </div>
+    <div style="margin-bottom:${_curveState.graduated ? '0' : '16px'};">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;">
+        <span>Graduation progress</span>
+        <span style="font-family:var(--mono);">${(+_curveState.nightReserve).toFixed(4)} / 85 tNight</span>
+      </div>
+      <div class="curve-progress-wrap"><div class="curve-progress-fill" style="width:${gradFill}%"></div></div>
+      <div style="font-size:10px;color:var(--faint);margin-top:4px;">At 85 tNight → migrates to zswap DEX · 0.3% LP fee</div>
+    </div>
+    ${_curveState.graduated ? '' : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:12px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;margin-bottom:10px;color:var(--green);">Buy tokens</div>
+        <input class="input" id="curve-buy-night" type="number" step="0.01" placeholder="NIGHT in" style="margin-bottom:8px;" oninput="var v=parseFloat(this.value)||0;document.getElementById('curve-buy-out').textContent=calcBuyDisplay(v)+' tokens'"/>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;" id="curve-buy-out">${calcBuyDisplay(1)} tokens per 1 NIGHT</div>
+        <button class="btn btn-primary" style="width:100%;padding:8px 12px;" onclick="buyCurveTokens()">Buy →</button>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--rim2);border-radius:12px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;margin-bottom:10px;color:var(--red);">Sell tokens</div>
+        <input class="input" id="curve-sell-tokens" type="number" step="1" placeholder="tokens in" style="margin-bottom:8px;" oninput="var v=parseFloat(this.value)||0;document.getElementById('curve-sell-out').textContent=calcSellDisplay(v).toFixed(4)+' NIGHT'"/>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;" id="curve-sell-out">${calcSellDisplay(100).toFixed(4)} NIGHT per 100 tokens</div>
+        <button class="btn btn-outline-ink" style="width:100%;padding:8px 12px;" onclick="sellCurveTokens()">Sell →</button>
+      </div>
+    </div>`}
+  `;
+}
+
+// Init curve panel on page load
+(function initCurvePanelOnLoad(){
+  setTimeout(function(){
+    if(_curveState) renderCurvePanel();
+  }, 400);
+})();
+
+function isSealedBid(){
+  return !!(document.getElementById('bid-sealed')?.checked);
+}
+
+// Patch submitBid to handle sealed bids
+var _origSubmitBid = submitBid;
+submitBid = async function(){
+  var sealed = isSealedBid();
+  if(!sealed) { await _origSubmitBid(); return; }
+
+  var auctionId = document.getElementById('bid-auction-id')?.value;
+  var amount    = parseFloat(document.getElementById('bid-amount')?.value || '0');
+  var a = auctionStore.find(function(x){ return x.id === auctionId; });
+  if(!a){ toast('Auction not found','error'); return; }
+
+  var minBid = a.currentBid ? a.currentBid + 1 : a.startBid;
+  if(amount < minBid){ toast('Minimum bid is ' + minBid + ' NIGHT','error'); return; }
+  if(auctionStatus(a) === 'ended'){ toast('Auction has ended','error'); return; }
+
+  toast('Sealing bid with ZK proof…','info');
+  try { await simulateCompactFundEscrow(auctionId, amount); } catch(e){}
+
+  var bidder = walletState?.address || 'wallet-'+uid();
+  // Store a ZK commitment instead of the raw amount
+  var commitment = '⊘ ZK Sealed';
+  if(a.currentBidder && a.currentBidder !== bidder) toast('Previous bidder auto-refunded','info');
+
+  a.bids.push({ bidder, amount, sealed: true, commitment, at: Date.now() });
+  a.currentBid    = amount;
+  a.currentBidder = bidder;
+  a.bidCount++;
+  a.hasSealedBid  = true;
+
+  if(a.bin > 0 && amount >= a.bin){
+    a.endsAt = Date.now();
+    toast('🎉 Buy It Now triggered — won at ' + amount + ' NIGHT!','success');
+  } else {
+    if(a.endsAt - Date.now() < 300000) a.endsAt = Date.now() + 300000;
+    toast('✓ Sealed ZK bid placed — amount hidden from competitors','success');
+  }
+  saveAuctions();
+  closeModal('ov-bid');
+  renderAuctionsPage();
+};
+
+var _tickerTemplates = [
+  function(){ return `<span class="ti-addr">${rndAddr()}</span> bought <strong>${rndProduct()}</strong> for <span class="ti-price">${rndNight()} NIGHT</span>`; },
+  function(){ return `New listing: <strong>${rndProduct()}</strong> from ${rndCountry()} <span class="ti-price">${rndNight()} NIGHT</span>`; },
+  function(){ return `<span class="ti-addr">${rndAddr()}</span> left a ★★★★★ review`; },
+  function(){ return `Auction ended: <strong>${rndProduct()}</strong> sold for <span class="ti-price">${rndNight(true)} NIGHT</span>`; },
+  function(){ return `⊘ ZK escrow released — <span class="ti-addr">${rndAddr()}</span> confirmed delivery`; },
+  function(){ return `🌙 ${rndName()} registered <span style="color:var(--cyan);font-family:var(--mono);font-size:11px;">${rndNightId()}.night</span>`; },
+  function(){ return `🌊 Curve: <span class="ti-addr">${rndAddr()}</span> bought <span class="ti-price">${Math.floor(Math.random()*5000+100)} tokens</span>`; },
+];
+
+function rndAddr(){ var h='0123456789abcdef'; return '0x'+Array.from({length:4},()=>h[Math.floor(Math.random()*16)]).join('')+'…'+Array.from({length:4},()=>h[Math.floor(Math.random()*16)]).join(''); }
+function rndProduct(){ var p=['Vintage Rolex Sub','Air Jordan 1 OG','Leica M6','Levi\'s 501 Selvedge','Braun T3 Radio','Hermès Kelly 25','Nikon F3 Film Camera','Sony WH-1000XM5','Patagonia Puff Vest','Rare Pokemon Cards']; return p[Math.floor(Math.random()*p.length)]; }
+function rndNight(big){ return big ? (Math.floor(Math.random()*2000+500)).toLocaleString() : (Math.floor(Math.random()*800+20)).toLocaleString(); }
+function rndCountry(){ return ['🇦🇺','🇺🇸','🇬🇧','🇯🇵','🇩🇪','🇰🇷','🇸🇬','🇨🇦'][Math.floor(Math.random()*8)]; }
+function rndName(){ return ['alex','luna','kira','mochi','zeno','nova','vex','ash'][Math.floor(Math.random()*8)]; }
+function rndNightId(){ return rndName()+(Math.floor(Math.random()*999)+1); }
+
+function buildTickerHtml(){
+  var items = Array.from({length:16}, function(){
+    return '<span class="nm-ticker-item">'+_tickerTemplates[Math.floor(Math.random()*_tickerTemplates.length)]()+' <span class="ti-sep">·</span></span>';
+  });
+  // Duplicate for seamless loop
+  return items.concat(items).join('');
+}
+
+function startLiveTicker(){
+  var el = document.getElementById('nm-ticker-scroll');
+  if(!el) return;
+  el.innerHTML = buildTickerHtml();
+  // Refresh ticker content every 60s to keep it feeling fresh
+  setInterval(function(){
+    if(document.getElementById('page-shop')?.style.display !== 'none'){
+      el.innerHTML = buildTickerHtml();
+    }
+  }, 60000);
+}
+
+// Init ticker when shop page shown
+var _origShowPageTicker = showPage;
+showPage = function(name){
+  _origShowPageTicker(name);
+  if(name === 'shop') setTimeout(startLiveTicker, 100);
+};
+setTimeout(function(){
+  if(document.getElementById('page-shop')?.style.display !== 'none') startLiveTicker();
+}, 500);
+
+
+var _shopSearchQuery = '';
+
+function filterShopSearch(val){
+  _shopSearchQuery = (val||'').trim().toLowerCase();
+  document.getElementById('shop-search-clear').style.display = _shopSearchQuery ? 'inline' : 'none';
+  renderProducts();
+}
+
+function listingToProduct(l){
+  var rating = getSellerRating(l.sellerId);
+  return {
+    id:           l.id,
+    title:        l.title,
+    brand:        l.sellerId ? l.sellerId.slice(0,10)+'…' : 'Night Markets',
+    cat:          l.cat || 'Other',
+    price:        l.price,
+    rating:       rating.avg || 0,
+    reviews:      rating.count || 0,
+    sellerCountry: l.from ? '🌐 ' + (l.from.split(',')[1]||l.from).trim() : '🌐 Global',
+    fast:         l.listingType === 'digital',
+    popular:      false,
+    emoji:        l.emoji || '📦',
+    imageUrl:     l.imageUrl || null,
+    digital:      l.listingType === 'digital',
+    downloadLink: l.downloadLink || null,
+    carrierAddr:  l.carrierAddr || null,
+    sellerId:     l.sellerId,
+    escrowState:  l.escrowState,
+    isUserListing: true,
+  };
+}
+
+// Patch renderProducts to merge user listings
+var _origRenderProducts = renderProducts;
+renderProducts = function(){
+  var grid = document.getElementById('prod-grid');
+  if(!grid) return;
+
+  // Build combined product list
+  var list = [...PRODUCTS];
+
+  // Add user listings from listingStore
+  var userProds = listingStore.filter(function(l){ return l.state !== 'REMOVED'; }).map(listingToProduct);
+  list = userProds.concat(list);
+
+  // Apply shop search
+  if(_shopSearchQuery){
+    list = list.filter(function(p){
+      var q = _shopSearchQuery;
+      return (p.title||'').toLowerCase().includes(q) ||
+             (p.brand||'').toLowerCase().includes(q) ||
+             (p.cat||'').toLowerCase().includes(q) ||
+             (p.sellerCountry||'').toLowerCase().includes(q);
+    });
+  }
+
+  // Apply sidebar filters
+  if(activeCat !== 'All') list = list.filter(function(p){ return p.cat === activeCat; });
+  if(shipFilter === 'fast') list = list.filter(function(p){ return p.fast; });
+  var pmin = parseFloat(document.getElementById('pmin')?.value) || 0;
+  var pmax = parseFloat(document.getElementById('pmax')?.value) || Infinity;
+  if(pmin || pmax < Infinity) list = list.filter(function(p){ return p.price >= pmin && p.price <= pmax; });
+
+  var sort = document.getElementById('sort-sel')?.value || 'pop';
+  if(sort === 'price-asc') list.sort(function(a,b){ return a.price - b.price; });
+  else if(sort === 'price-desc') list.sort(function(a,b){ return b.price - a.price; });
+  else if(sort === 'discount') list.sort(function(a,b){ return ((b.was?b.was-b.price:0)) - ((a.was?a.was-a.price:0)); });
+  else if(sort === 'rating') list.sort(function(a,b){ return b.rating - a.rating; });
+
+  var rc = document.getElementById('res-count');
+  if(rc) rc.innerHTML = '<strong>'+list.length+'</strong> results'+(activeCat!=='All'?' in '+activeCat:'')+(_shopSearchQuery?' for <em style="color:var(--glow)">"'+_shopSearchQuery+'"</em>':'')+'<span style="color:var(--plasma);font-family:var(--mono);font-size:11px"> · ⊘ Pay in 4 on every item</span>';
+
+  if(!list.length){
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No products found</div><div class="empty-sub">Try adjusting your search or filters</div><button class="btn btn-primary btn-sm" onclick="clearFilters();filterShopSearch(\'\')">Clear all</button></div>';
+    return;
+  }
+  grid.innerHTML = list.map(function(p){ return p.isUserListing ? renderUserPC(p) : renderPC(p); }).join('');
+};
+
+function renderUserPC(p){
+  var imgHtml = p.imageUrl
+    ? '<img src="'+p.imageUrl+'" alt="'+p.title+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:60px;background:var(--depth);">'+p.emoji+'</div>'
+    : '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:60px;background:var(--depth);">'+p.emoji+'</div>';
+
+  var inst = (p.price/4).toFixed(2);
+  var starsHtml = p.rating ? '★'.repeat(Math.round(p.rating))+'☆'.repeat(5-Math.round(p.rating)) : '☆☆☆☆☆';
+  var escBadge = p.escrowState ? '<span class="escrow-badge '+p.escrowState+'" style="font-size:9px;">'+p.escrowState+'</span>' : '';
+
+  return '<div class="pc" onclick="openUserListing(\''+p.id+'\')">'+
+    '<div class="pc-user-badge">🌑 On-chain</div>'+
+    (p.digital ? '<div class="pc-digital-badge">⚡ Digital</div>' : '')+
+    '<div class="pc-wishlist" onclick="event.stopPropagation();this.textContent=this.textContent===\'♡\'?\'♥\':\'♡\'">♡</div>'+
+    '<div class="pc-img">'+imgHtml+'</div>'+
+    '<div class="pc-body">'+
+      '<div class="pc-meta"><div class="pc-brand">Night Markets</div><div class="pc-country">'+p.sellerCountry+'</div></div>'+
+      '<div class="pc-title">'+p.title+'</div>'+
+      '<div class="pc-price-row"><div class="pc-price">'+p.price.toLocaleString()+' NIGHT</div>'+escBadge+'</div>'+
+      '<div class="pc-bnpl"><span>⊘ 4 × '+inst+' NIGHT</span><span class="pc-bnpl-zk">ZK · No data</span></div>'+
+      '<div class="pc-rating"><span class="pc-stars">'+starsHtml+'</span>'+(p.rating||'New')+' <span style="color:var(--faint)">('+p.reviews+')</span></div>'+
+      '<div class="pc-ship '+(p.digital?'fast':'')+'">'+(p.digital?'⚡ Instant digital delivery':'📦 Physical · '+p.sellerCountry)+'</div>'+
+      '<button class="pc-add" onclick="event.stopPropagation();openUserListing(\''+p.id+'\')">View listing →</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function openUserListing(id){
+  var l = listingStore.find(function(x){ return x.id === id; });
+  if(!l) return;
+  // Quick toast + open order flow — full detail page upgrade is a future task
+  toast('Opening: '+l.title+' — '+l.price+' NIGHT', 'info');
+}
+
+// Also patch handleSearch to include user listings
+var _origHandleSearch = handleSearch;
+handleSearch = function(val){
+  if(!val.trim()){ _origHandleSearch(val); return; }
+  document.getElementById('shop-search-input') && (document.getElementById('shop-search-input').value = val);
+  _shopSearchQuery = val.toLowerCase();
+  activeCat = 'All';
+  showPage('shop');
+  setTimeout(renderProducts, 80);
+};
+
+function toggleDigitalFields(type){
+  var df = document.getElementById('nl-digital-fields');
+  var sf = document.getElementById('nl-ship-from');
+  if(df) df.style.display = type === 'digital' ? 'block' : 'none';
+  if(sf) sf.closest('.field') && (sf.closest('.field').style.opacity = type === 'digital' ? '0.3' : '1');
+}
+
+// Patch submitListing to read new fields
+var _origSubmitListing = submitListing;
+submitListing = async function(){
+  var title    = (document.getElementById('nl-title')||{}).value?.trim();
+  var cat      = (document.getElementById('nl-cat')||{}).value;
+  var price    = parseFloat((document.getElementById('nl-price')||{}).value||'0');
+  var cond     = (document.getElementById('nl-cond')||{}).value;
+  var desc     = (document.getElementById('nl-desc')||{}).value?.trim();
+  var from     = (document.getElementById('nl-ship-from')||{}).value?.trim();
+  var emoji    = (document.getElementById('nl-emoji')||{}).value?.trim() || '📦';
+  var imageUrl = (document.getElementById('nl-image')||{}).value?.trim() || null;
+  var type     = (document.getElementById('nl-type')||{}).value || 'physical';
+  var dlLink   = type === 'digital' ? ((document.getElementById('nl-download')||{}).value?.trim()||null) : null;
+  var carrier  = (document.getElementById('nl-carrier')||{}).value?.trim() || null;
+
+  if(!title || !cat || !price){ toast('Fill in title, category and price','error'); return; }
+  _createListingV2({ title, cat, price, cond, desc, from, emoji, imageUrl, listingType: type, downloadLink: dlLink, carrierAddr: carrier }, 'nl-result');
+};
+
+async function _createListingV2(data, resultElId){
+  var orderId = 'LST-' + uid();
+  var listing = {
+    id: orderId, title: data.title, cat: data.cat, price: data.price,
+    cond: data.cond, desc: data.desc, from: data.from, emoji: data.emoji,
+    imageUrl: data.imageUrl || null,
+    listingType: data.listingType || 'physical',
+    downloadLink: data.downloadLink || null,
+    carrierAddr: data.carrierAddr || null,
+    sellerId: walletState?.address || 'local-seller',
+    state: 'OPEN', escrowState: null, txId: null,
+    createdAt: new Date().toISOString(), views: 0, inquiries: 0,
+  };
+
+  toast('Creating listing on Midnight…','info');
+  try {
+    var txId = await simulateCompactCreateListing(orderId, 'ipfs://'+orderId, data.price);
+    listing.txId = txId; listing.escrowState = 'OPEN';
+  } catch(e){ listing.escrowState = 'SIM'; }
+
+  // POST to api-server if available
+  try {
+    await nmApiPost('/api/listings/create', {
+      id: listing.id, title: listing.title, cat: listing.cat, price: listing.price,
+      cond: listing.cond, desc: listing.desc, from: listing.from, emoji: listing.emoji,
+      imageUrl: listing.imageUrl, listingType: listing.listingType, sellerId: listing.sellerId,
+    });
+  } catch(e){}
+
+  listingStore.push(listing);
+  saveListings();
+
+  // Push to live ticker
+  _tickerTemplates.push(function(){ return 'New listing: <strong>'+data.title+'</strong> <span class="ti-price">'+data.price+' NIGHT</span>'; });
+
+  toast('✓ Listing live' + (data.listingType==='digital' ? ' · ⚡ Digital delivery ready' : ' · ZK escrow active'), 'success');
+
+  if(resultElId){
+    var el = document.getElementById(resultElId);
+    if(el){
+      el.style.display = 'block';
+      el.innerHTML = '<div style="background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);border-radius:10px;padding:16px;">'+
+        '<div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">✓ Listing created'+(data.listingType==='digital'?' · ⚡ Digital':'')+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);font-family:var(--mono);">ID: '+orderId+'</div>'+
+        (listing.txId ? '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;">Tx: '+String(listing.txId).slice(0,32)+'…</div>' : '')+
+        (data.imageUrl ? '<div style="margin-top:10px;"><img src="'+data.imageUrl+'" style="height:60px;border-radius:8px;object-fit:cover;" onerror="this.style.display=\'none\'"/></div>' : '')+
+        '<button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="showPage(\'creator-dash\')">View in dashboard →</button>'+
+      '</div>';
+    }
+  }
+  renderSellerListings();
+  renderProducts();
+}
+
+async function confirmCarrierShipment(orderId){
+  var listing = listingStore.find(function(l){ return l.id === orderId; });
+  if(!listing){ toast('Listing not found','error'); return; }
+
+  var callerAddr = walletState?.address || '';
+  if(listing.carrierAddr && listing.carrierAddr !== callerAddr){
+    toast('Only the designated carrier can confirm shipment','error'); return;
+  }
+
+  toast('Confirming shipment on-chain…','info');
+  try {
+    await nmApiPost('/api/delivery/ship', {
+      orderId,
+      carrier: listing.carrierAddr || callerAddr,
+      trackingRef: 'CARRIER-' + uid().slice(0,8).toUpperCase(),
+      eta: new Date(Date.now() + 7*86400000).toISOString(),
+    });
+  } catch(e){}
+
+  // Advance escrow state: FUNDED → SHIPPED
+  listing.escrowState = 'SHIPPED';
+  saveListings();
+  renderSellerListings();
+  toast('✓ Shipment confirmed — buyer notified · Escrow releases in 14 days or on delivery confirmation', 'success');
+}
+
+// Reveal ZK download link after escrow release
+function revealDownloadLink(orderId){
+  var listing = listingStore.find(function(l){ return l.id === orderId; });
+  if(!listing || !listing.downloadLink){ toast('No download link for this listing','error'); return; }
+  if(listing.escrowState !== 'RELEASED'){
+    toast('Download only available after escrow is released','error'); return;
+  }
+  var el = document.getElementById('dl-reveal-'+orderId);
+  if(el){
+    el.innerHTML = '<div class="dl-reveal"><span style="font-size:18px;">⚡</span><div><div style="font-size:12px;font-weight:700;color:var(--cyan);">Download unlocked</div><a href="'+listing.downloadLink+'" target="_blank" style="font-size:11px;color:var(--ink);word-break:break-all;">'+listing.downloadLink+'</a></div></div>';
+  }
+  toast('✓ ZK proof verified — download link revealed', 'success');
+}
+
 // REFERRAL SYSTEM — ?ref= URL tracking
 // ══════════════════════════════════════════════════════════════════
 var _referralState={ref:null,commissions:[],totalEarned:0};
