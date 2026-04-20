@@ -14530,6 +14530,7 @@ function initHomeLive(){
 document.addEventListener('DOMContentLoaded',function(){
   renderHomeFeatured();
   initHomeLive();
+  if(!walletState || !walletState.connected) connectDemo();
 });
 
 // ── Extended stores ─────────────────────────────────────────────
@@ -15712,6 +15713,11 @@ var _origRenderProducts = renderProducts;
 renderProducts = function(){
   var grid = document.getElementById('prod-grid');
   if(!grid) return;
+
+  // Keep sidebar + auction section working
+  if(typeof renderSidebar === 'function') renderSidebar();
+  var showAucs = activeCat==='All'||activeCat==='Collectibles'||activeCat==='Luxury'||activeCat==='Fashion';
+  if(typeof renderAuctions === 'function') renderAuctions(showAucs);
 
   // Build combined product list
   var list = [...PRODUCTS];
