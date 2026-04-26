@@ -2813,45 +2813,43 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 <div class="page active" id="page-home">
   <!-- NEW HERO: consumer-friendly, Stripe/Apple aesthetic -->
   <div class="nm-home-hero">
-    <div class="nm-home-hero-inner z1">
-      <div class="hero-tag" style="margin-bottom:28px;">
+    <div class="nm-home-hero-inner z1" style="text-align:center;">
+      <div class="hero-tag" style="margin-bottom:32px;display:inline-flex;">
         <div class="ht-orb">⊘</div>
-        Midnight Network — Mainnet Live · ZK Privacy by Default
+        Midnight Mainnet · ZK Privacy by Default
       </div>
-      <h1 style="font-family:var(--serif);font-size:clamp(44px,6vw,82px);font-weight:400;line-height:1.0;letter-spacing:-.03em;margin-bottom:20px;color:var(--text);">
-        Shop privately.<br>Pay in 4.<br><em style="color:var(--glow);">Zero data sold.</em>
-      </h1>
-      <p style="font-size:17px;color:var(--text2);line-height:1.75;margin-bottom:36px;font-weight:300;max-width:520px;">
-        The world's first ZK marketplace. Buy anything, pay in four instalments — no credit check, <strong style="color:var(--text);font-weight:600;">no data shared</strong>, no surveillance. Every transaction proven by Midnight zero-knowledge proofs.
-      </p>
-      <div class="hero-btns">
-        <button class="btn btn-primary btn-lg" onclick="showPage('shop')">Browse the market →</button>
-        <button class="btn btn-outline-ink btn-lg" onclick="handleWalletClick()">Connect wallet</button>
-      </div>
-      <!-- Live ZK stats -->
-      <div class="zk-strip" style="max-width:600px;margin-top:40px;">
-        <div class="zk-stat">
-          <div class="zk-stat-val" id="zkp-live">1,284,901</div>
-          <div class="zk-stat-label">ZK proofs today</div>
-        </div>
-        <div class="zk-stat">
-          <div class="zk-stat-val green">6</div>
-          <div class="zk-stat-label">Ecosystem products live</div>
-        </div>
-        <div class="zk-stat">
-          <div class="zk-stat-val green">$0</div>
-          <div class="zk-stat-label">Transfer fees w/ NIGHT stake</div>
-        </div>
-        <div class="zk-stat" style="cursor:pointer" onclick="showPage('privacy')" title="Live price — click for token details">
-          <div style="display:flex;align-items:baseline;gap:6px">
-            <div class="zk-stat-val" id="hero-night-price" style="font-size:16px">$0.0617</div>
-            <div id="hero-night-chg" style="font-size:10px;font-family:var(--mono);color:var(--green)">+3.74%</div>
-          </div>
-          <div class="zk-stat-label">NIGHT · live price · CMC #55</div>
-        </div>
-      </div>
-    </div>
 
+      <h1 style="font-family:var(--serif);font-size:clamp(48px,7vw,96px);font-weight:400;line-height:1.0;letter-spacing:-.04em;margin-bottom:24px;color:var(--text);max-width:900px;margin-left:auto;margin-right:auto;">
+        Your money.<br>Your business.<br><em style="color:var(--glow);">Nobody else's.</em>
+      </h1>
+
+      <p style="font-size:18px;color:var(--text2);line-height:1.75;margin-bottom:44px;font-weight:300;max-width:540px;margin-left:auto;margin-right:auto;">
+        Shop anything. Pay in 4 with no credit check. Your purchases, identity and payment history stay <strong style="color:var(--text);font-weight:600;">completely private</strong> — proven by zero-knowledge cryptography.
+      </p>
+
+      <!-- Hero search bar -->
+      <div style="max-width:600px;margin:0 auto 32px;position:relative;">
+        <div style="display:flex;align-items:center;background:var(--raised);border:1.5px solid var(--rim2);border-radius:16px;padding:6px 6px 6px 20px;gap:12px;transition:border-color .2s;" onfocus="this.style.borderColor='var(--ink)'" onblur="this.style.borderColor='var(--rim2)'" tabindex="-1">
+          <span style="font-size:18px;color:var(--muted);flex-shrink:0;">⌕</span>
+          <input type="text" placeholder="Search products, brands, categories…" oninput="handleSearch(this.value)" onfocus="showPage('shop');setTimeout(()=>document.getElementById('shop-search-input')?.focus(),80)" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:16px;font-family:var(--sans);padding:10px 0;" autocomplete="off"/>
+          <button class="btn btn-primary" onclick="showPage('shop')" style="padding:12px 24px;border-radius:12px;font-size:15px;flex-shrink:0;">Shop now →</button>
+        </div>
+      </div>
+
+      <!-- Secondary CTAs -->
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:48px;">
+        <button class="btn btn-ghost btn-sm" onclick="showPage('auctions');renderAuctionsPage()" style="gap:6px;">🔨 Live auctions</button>
+        <button class="btn btn-ghost btn-sm" onclick="handleWalletClick()" style="gap:6px;">⊘ Connect wallet</button>
+        <button class="btn btn-ghost btn-sm" onclick="showPage('nightfun')" style="gap:6px;">🌙 Launch a token</button>
+      </div>
+
+      <!-- Trust strip -->
+      <div style="display:flex;gap:32px;justify-content:center;flex-wrap:wrap;font-size:12px;color:var(--muted);font-family:var(--mono);">
+        <span>⊘ Zero data sold</span>
+        <span>✦ Pay in 4 · no credit check</span>
+        <span>🌑 Midnight mainnet</span>
+        <span style="cursor:pointer;color:var(--text2);" onclick="showPage('privacy')">ZK privacy →</span>
+      </div>
     </div>
   </div>
 
