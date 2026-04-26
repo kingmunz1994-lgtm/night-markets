@@ -2477,12 +2477,34 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 @media(max-width:768px){.nm-ticker{padding:8px 16px;}}
 .nm-home-hero{position:relative;overflow:hidden;}
 .nm-home-hero-inner{max-width:1200px;margin:0 auto;padding:80px 24px 48px;}
-.nm-feature-card{background:var(--raised);border:1px solid var(--rim2);border-radius:20px;padding:28px;cursor:pointer;transition:border-color .2s,transform .2s;}
-.nm-feature-card:hover{border-color:var(--ink);transform:translateY(-2px);}
-.nm-fc-icon{font-size:28px;margin-bottom:14px;}
+.nm-feature-card{background:var(--raised);border:1px solid var(--rim2);border-radius:20px;padding:28px;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;position:relative;overflow:hidden;}
+.nm-feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.nm-fc-privacy::before{background:linear-gradient(90deg,var(--ink),var(--glow));}
+.nm-fc-bnpl::before{background:linear-gradient(90deg,var(--green),#06b6d4);}
+.nm-fc-auction::before{background:linear-gradient(90deg,var(--orange),var(--gold));}
+.nm-feature-card:hover{border-color:var(--ink);transform:translateY(-3px);box-shadow:0 20px 60px rgba(124,58,237,.12);}
+.nm-fc-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;}
+.nm-fc-privacy .nm-fc-icon{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);}
+.nm-fc-bnpl .nm-fc-icon{background:rgba(0,214,143,.1);border:1px solid rgba(0,214,143,.2);}
+.nm-fc-auction .nm-fc-icon{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);}
 .nm-fc-title{font-size:16px;font-weight:800;margin-bottom:8px;letter-spacing:-.02em;}
 .nm-fc-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;font-weight:300;}
-.nm-fc-cta{font-size:12px;color:var(--ink);font-weight:700;}
+.nm-fc-cta{font-size:12px;font-weight:700;}
+.nm-fc-privacy .nm-fc-cta{color:var(--plasma);}
+.nm-fc-bnpl .nm-fc-cta{color:var(--green);}
+.nm-fc-auction .nm-fc-cta{color:var(--orange);}
+.nm-stats-bar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--rim);border-radius:16px;overflow:hidden;margin-bottom:56px;}
+.nm-stat-cell{padding:22px 16px;text-align:center;border-right:1px solid var(--rim);}
+.nm-stat-cell:last-child{border-right:none;}
+.nm-stat-val{font-size:clamp(20px,2.5vw,28px);font-weight:800;letter-spacing:-.04em;color:var(--text);}
+.nm-stat-label{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:5px;text-transform:uppercase;letter-spacing:1.5px;}
+.nm-steps{display:grid;grid-template-columns:repeat(3,1fr);margin-bottom:56px;background:var(--surface);border:1px solid var(--rim);border-radius:16px;overflow:hidden;}
+.nm-step{padding:28px 24px;border-right:1px solid var(--rim);}
+.nm-step:last-child{border-right:none;}
+.nm-step-num{width:36px;height:36px;border-radius:50%;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:var(--mono);color:var(--plasma);margin-bottom:14px;}
+.nm-step-title{font-size:14px;font-weight:700;margin-bottom:6px;letter-spacing:-.01em;}
+.nm-step-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+@media(max-width:900px){.nm-feature-cards-grid{grid-template-columns:1fr!important;}.nm-stats-bar{grid-template-columns:repeat(2,1fr);}.nm-stat-cell:nth-child(2){border-right:none;}.nm-stat-cell:nth-child(3){border-top:1px solid var(--rim);}.nm-stat-cell:nth-child(4){border-top:1px solid var(--rim);border-right:none;}.nm-steps{grid-template-columns:1fr;}.nm-step{border-right:none;border-bottom:1px solid var(--rim);}.nm-step:last-child{border-bottom:none;}}
 @media(max-width:768px){.nm-home-hero-inner{padding:48px 16px 32px;}.nm-feature-card{padding:20px;}}
 </style>
 </head>
@@ -2864,24 +2886,69 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
   <div class="page-inner" style="padding-top:48px;">
 
     <!-- FEATURE CARDS — the three-pillar value props -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:56px;">
-      <div class="nm-feature-card" onclick="showPage('privacy')">
+    <div class="nm-feature-cards-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:56px;">
+      <div class="nm-feature-card nm-fc-privacy" onclick="showPage('privacy')">
         <div class="nm-fc-icon">⊘</div>
         <div class="nm-fc-title">ZK Privacy</div>
         <div class="nm-fc-desc">Zero-knowledge proofs mean your purchases, identity, and payment data are never stored, shared, or sold. Shop without surveillance.</div>
         <div class="nm-fc-cta">Learn more →</div>
       </div>
-      <div class="nm-feature-card" onclick="showPage('shop')">
+      <div class="nm-feature-card nm-fc-bnpl" onclick="showPage('bnpl')">
         <div class="nm-fc-icon">✦</div>
         <div class="nm-fc-title">Pay in 4</div>
         <div class="nm-fc-desc">Split any purchase into 4 interest-free payments. No credit check. No hard inquiry. Just a ZK proof of eligibility — your score stays private.</div>
         <div class="nm-fc-cta">Browse products →</div>
       </div>
-      <div class="nm-feature-card" onclick="showPage('auctions');renderAuctionsPage()">
+      <div class="nm-feature-card nm-fc-auction" onclick="showPage('auctions');renderAuctionsPage()">
         <div class="nm-fc-icon">🔨</div>
         <div class="nm-fc-title">Live Auctions</div>
         <div class="nm-fc-desc">Bid with NIGHT tokens. Sealed bids hidden by ZK proofs. Auto-settle on Midnight. Losers refunded in one block. No sniping, no gas wars.</div>
         <div class="nm-fc-cta">View auctions →</div>
+      </div>
+    </div>
+
+    <!-- PLATFORM STATS BAR -->
+    <div class="nm-stats-bar" style="margin-bottom:56px;">
+      <div class="nm-stat-cell">
+        <div class="nm-stat-val">12,400+</div>
+        <div class="nm-stat-label">Products listed</div>
+      </div>
+      <div class="nm-stat-cell">
+        <div class="nm-stat-val" style="color:var(--green);">$0 data sold</div>
+        <div class="nm-stat-label">Ever. ZK by default</div>
+      </div>
+      <div class="nm-stat-cell">
+        <div class="nm-stat-val" style="color:var(--plasma);">0%</div>
+        <div class="nm-stat-label">Credit check required</div>
+      </div>
+      <div class="nm-stat-cell">
+        <div class="nm-stat-val">🌑</div>
+        <div class="nm-stat-label">Midnight mainnet live</div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS — 3 steps for newcomers -->
+    <div style="margin-bottom:56px;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div class="eyebrow" style="justify-content:center;margin-bottom:8px;">Simple as 1 · 2 · 3</div>
+        <h2 style="font-size:clamp(18px,2.5vw,24px);font-weight:800;letter-spacing:-.03em;">Start shopping in minutes</h2>
+      </div>
+      <div class="nm-steps">
+        <div class="nm-step">
+          <div class="nm-step-num">01</div>
+          <div class="nm-step-title">Connect your wallet</div>
+          <div class="nm-step-desc">Use Lace Midnight wallet or try the demo. No email. No signup. Your wallet is your identity — fully private.</div>
+        </div>
+        <div class="nm-step">
+          <div class="nm-step-num">02</div>
+          <div class="nm-step-title">Browse and buy</div>
+          <div class="nm-step-desc">Shop thousands of products. Pay with NIGHT tokens or split into 4 with no credit check — your choice, your terms.</div>
+        </div>
+        <div class="nm-step">
+          <div class="nm-step-num">03</div>
+          <div class="nm-step-title">Stay private, always</div>
+          <div class="nm-step-desc">Every transaction is shielded by ZK cryptography. No data sold. No purchase history exposed. Nobody's business but yours.</div>
+        </div>
       </div>
     </div>
 
@@ -2925,10 +2992,12 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
     </div>
   </div>
   <div class="page-inner">
-    <div class="shop-search-bar" style="margin-top:20px;">
-      <span style="color:var(--muted);font-size:16px;">🔍</span>
-      <input type="text" id="shop-search-input" placeholder="Search listings, brands, categories…" oninput="filterShopSearch(this.value)" autocomplete="off" style="flex:1;background:transparent;border:none;outline:none;color:var(--fg);font-size:14px;"/>
-      <span id="shop-search-clear" style="color:var(--muted);cursor:pointer;font-size:14px;display:none;" onclick="document.getElementById('shop-search-input').value='';filterShopSearch('');">✕</span>
+    <div style="margin-top:24px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--rim2);border-radius:14px;padding:6px 6px 6px 18px;gap:10px;transition:border-color .2s;" onfocus="this.style.borderColor='var(--ink)'" onblur="this.style.borderColor='var(--rim2)'" tabindex="-1">
+        <span style="color:var(--muted);font-size:16px;flex-shrink:0;">⌕</span>
+        <input type="text" id="shop-search-input" placeholder="Search listings, brands, categories…" oninput="filterShopSearch(this.value)" autocomplete="off" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:15px;font-family:var(--sans);padding:8px 0;"/>
+        <span id="shop-search-clear" style="color:var(--muted);cursor:pointer;font-size:14px;display:none;padding:8px 12px;" onclick="document.getElementById('shop-search-input').value='';filterShopSearch('');">✕</span>
+      </div>
     </div>
     <div class="shop-layout">
       <div class="sidebar">
