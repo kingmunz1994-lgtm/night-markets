@@ -14,3 +14,4 @@ node_modules/
 # TypeScript
 dist/
 *.js.map
+.repomix-output.xml
