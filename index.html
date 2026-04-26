@@ -1444,7 +1444,31 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .co-card{background:var(--surface);border:1px solid var(--rim2);border-radius:20px;padding:32px;margin-bottom:20px;}
 .co-card-title{font-family:var(--serif);font-size:28px;font-style:italic;margin-bottom:8px;}
 .co-card-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.65;font-weight:300;}
-
+.sell-hero-section{text-align:center;padding:48px 0 0;margin-bottom:56px;}
+.sell-fee-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rim);border:1px solid var(--rim);border-radius:16px;overflow:hidden;max-width:560px;margin:0 auto;}
+.sfs-item{background:var(--surface);padding:18px 12px;text-align:center;}
+.sfs-item.win{background:rgba(0,214,143,.05);}
+.sfs-val{font-size:26px;font-weight:800;letter-spacing:-.04em;font-family:var(--mono);margin-bottom:4px;}
+.sfs-label{font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;}
+.sell-perks-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:56px;}
+.sps-item{background:var(--surface);border:1px solid var(--rim);border-radius:16px;padding:22px 18px;}
+.sps-icon{font-size:22px;margin-bottom:12px;}
+.sps-title{font-size:13px;font-weight:700;margin-bottom:5px;letter-spacing:-.01em;}
+.sps-desc{font-size:12px;color:var(--muted);line-height:1.65;}
+.co-tier-card{background:var(--raised);border:1px solid var(--rim2);border-radius:16px;padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:visible;}
+.co-tier-card:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 12px 32px rgba(124,58,237,.1);}
+.co-tier-card.selected,.co-tier-card.recommended{border-color:var(--ink);background:rgba(124,58,237,.05);}
+.co-tier-rec-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:9px;font-weight:700;font-family:var(--mono);letter-spacing:.5px;padding:3px 14px;border-radius:99px;text-transform:uppercase;white-space:nowrap;}
+.co-tier-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.co-tier-name{font-size:14px;font-weight:700;margin-bottom:3px;}
+.co-tier-stake{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.co-tier-price{font-size:22px;font-weight:800;letter-spacing:-.03em;font-family:var(--mono);color:var(--glow);line-height:1;}
+.co-tier-price-sub{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px;text-align:right;}
+.co-tier-perks{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--rim);padding-top:12px;}
+.co-tier-perks li{font-size:11px;color:var(--text2);display:flex;align-items:flex-start;gap:7px;line-height:1.4;}
+.co-tier-perks li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px;}
+@media(max-width:900px){.sell-fee-strip{grid-template-columns:repeat(2,1fr);}.sell-perks-strip{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.sell-perks-strip{grid-template-columns:1fr;}}
 @media(max-width:768px){
   .cd-stats{grid-template-columns:1fr 1fr;}
   .cd-compare-grid{grid-template-columns:1fr 1fr;}
@@ -3176,59 +3200,122 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 
     <!-- Onboarding (shown if not a creator) -->
     <div id="creator-onboard-wrap">
-      <div class="creator-onboard">
-        <div style="text-align:center;margin-bottom:32px;">
-          <div style="margin-bottom:12px;"><span class="tag tag-green">🎬 Creator Programme</span></div>
-          <h1 style="font-family:var(--serif);font-size:48px;font-style:italic;margin-bottom:12px;">Start earning<br><em>instantly.</em></h1>
-          <p style="font-size:15px;color:var(--text2);line-height:1.8;font-weight:300;max-width:460px;margin:0 auto;">No middleman. No 30-day delays. Smart contract payouts direct to your wallet. Near-zero fees vs TikTok Shop's 6%.</p>
-        </div>
 
-        <!-- Step indicator -->
-        <div class="co-step-indicator">
+      <!-- Seller landing hero -->
+      <div class="sell-hero-section">
+        <div class="hero-tag" style="display:inline-flex;margin-bottom:24px;">
+          <div class="ht-orb">✦</div>
+          Seller Programme · Near-zero fees
+        </div>
+        <h1 style="font-family:var(--serif);font-size:clamp(40px,6vw,72px);font-weight:400;line-height:1.05;letter-spacing:-.04em;margin-bottom:20px;">
+          Keep more of<br><em style="color:var(--glow);">what you earn.</em>
+        </h1>
+        <p style="font-size:17px;color:var(--text2);line-height:1.8;font-weight:300;max-width:500px;margin:0 auto 36px;">
+          No middleman. Smart contract payouts direct to your wallet. The lowest fees in e-commerce — by design.
+        </p>
+        <!-- Fee comparison strip -->
+        <div class="sell-fee-strip">
+          <div class="sfs-item win">
+            <div class="sfs-val" style="color:var(--green);">2.5%</div>
+            <div class="sfs-label">Night Markets</div>
+          </div>
+          <div class="sfs-item">
+            <div class="sfs-val" style="color:var(--red);">6%</div>
+            <div class="sfs-label">TikTok Shop</div>
+          </div>
+          <div class="sfs-item">
+            <div class="sfs-val" style="color:var(--red);">13%</div>
+            <div class="sfs-label">eBay</div>
+          </div>
+          <div class="sfs-item">
+            <div class="sfs-val" style="color:var(--red);">30%</div>
+            <div class="sfs-label">Amazon avg</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="padding:14px 40px;font-size:16px;border-radius:14px;margin-top:36px;" onclick="document.getElementById('seller-form-anchor')?.scrollIntoView({behavior:'smooth'})">Start selling →</button>
+      </div>
+
+      <!-- Seller perks strip -->
+      <div class="sell-perks-strip">
+        <div class="sps-item">
+          <div class="sps-icon">⚡</div>
+          <div class="sps-title">Instant payouts</div>
+          <div class="sps-desc">Smart contract releases NIGHT tokens after buyer confirms. No 30-day holds.</div>
+        </div>
+        <div class="sps-item">
+          <div class="sps-icon">⊘</div>
+          <div class="sps-title">Total privacy</div>
+          <div class="sps-desc">Your sales data, customer list and earnings are never visible on-chain or to third parties.</div>
+        </div>
+        <div class="sps-item">
+          <div class="sps-icon">🌑</div>
+          <div class="sps-title">On Midnight</div>
+          <div class="sps-desc">The only ZK-native L1. Dispute resolution without doxxing either party. Mainnet live now.</div>
+        </div>
+        <div class="sps-item">
+          <div class="sps-icon">✦</div>
+          <div class="sps-title">BNPL boost</div>
+          <div class="sps-desc">Buyers split into 4 with no credit check — you get paid in full immediately.</div>
+        </div>
+      </div>
+
+      <!-- 3-step form -->
+      <div class="creator-onboard" id="seller-form-anchor">
+        <!-- Step indicator with labels -->
+        <div style="text-align:center;margin-bottom:8px;">
+          <div class="eyebrow" style="justify-content:center;">3 steps to your first listing</div>
+        </div>
+        <div class="co-step-indicator" style="margin-bottom:12px;">
           <div class="co-step-dot active" id="co-dot-1">1</div>
           <div class="co-step-line" id="co-line-1"></div>
           <div class="co-step-dot" id="co-dot-2">2</div>
           <div class="co-step-line" id="co-line-2"></div>
           <div class="co-step-dot" id="co-dot-3">3</div>
         </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:32px;padding:0 4px;">
+          <span>Profile</span><span style="padding-right:12px;">Wallet</span><span>Tier</span>
+        </div>
 
         <!-- Step 1 -->
         <div id="co-step-1">
           <div class="co-card">
-            <div class="co-card-title">Tell us about yourself</div>
-            <div class="co-card-sub">This is your public creator profile. Choose a name and category that represents your work.</div>
-            <div class="field" style="margin-bottom:16px;"><label class="label">Creator name</label><input class="input" id="co-name" placeholder="e.g. Zara Kahn" type="text"/></div>
+            <div class="co-card-title">Your seller profile</div>
+            <div class="co-card-sub">This is your public storefront identity. Pick a name and category buyers will recognise.</div>
+            <div class="field" style="margin-bottom:16px;"><label class="label">Display name</label><input class="input" id="co-name" placeholder="e.g. Zara Kahn" type="text"/></div>
             <div class="field" style="margin-bottom:16px;"><label class="label">Handle</label><input class="input" id="co-handle" placeholder="@yourhandle" type="text"/></div>
             <div class="field" style="margin-bottom:16px;"><label class="label">Category</label>
               <select class="select" id="co-category">
                 <option value="">What do you sell?</option>
-                <option>Fashion & Apparel</option><option>Electronics & Tech</option><option>Art & Collectibles</option><option>Handmade & Crafts</option><option>Digital Goods</option><option>Beauty & Health</option><option>Food & Botanicals</option><option>Other</option>
+                <option>Fashion &amp; Apparel</option><option>Electronics &amp; Tech</option><option>Art &amp; Collectibles</option><option>Handmade &amp; Crafts</option><option>Digital Goods</option><option>Beauty &amp; Health</option><option>Food &amp; Botanicals</option><option>Other</option>
               </select>
             </div>
-            <div class="field" style="margin-bottom:0;"><label class="label">Bio</label><textarea class="input" id="co-bio" placeholder="Tell buyers what you create..." style="min-height:80px;resize:vertical;"></textarea></div>
+            <div class="field" style="margin-bottom:0;"><label class="label">Short bio</label><textarea class="input" id="co-bio" placeholder="Tell buyers what you make or sell…" style="min-height:80px;resize:vertical;"></textarea></div>
           </div>
-          <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="creatorOnboardNext(1)">Continue →</button>
+          <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;" onclick="creatorOnboardNext(1)">Continue →</button>
         </div>
 
         <!-- Step 2 (hidden) -->
         <div id="co-step-2" style="display:none;">
           <div class="co-card">
             <div class="co-card-title">Connect your wallet</div>
-            <div class="co-card-sub">Your NIGHT wallet receives smart contract payouts directly. No bank account needed. No payment processor taking a cut.</div>
-            <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:20px;margin-bottom:20px;">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                <div style="font-size:24px;">🌑</div>
-                <div>
-                  <div style="font-size:13px;font-weight:700;">Lace Midnight Wallet</div>
-                  <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">Recommended · ZK-native</div>
+            <div class="co-card-sub">Payouts go directly to your NIGHT wallet — no bank account, no payment processor fee.</div>
+            <div style="background:var(--raised);border:1px solid var(--rim2);border-radius:14px;padding:20px;margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+                <div style="width:44px;height:44px;border-radius:12px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🌑</div>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:700;margin-bottom:2px;">Lace Midnight Wallet</div>
+                  <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">Recommended · ZK-native · Free</div>
                 </div>
-                <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="connectCreatorWallet()">Connect</button>
+                <button class="btn btn-primary btn-sm" onclick="connectCreatorWallet()">Connect</button>
               </div>
-              <div id="co-wallet-status" style="font-size:12px;color:var(--muted);font-family:var(--mono);">No wallet connected</div>
+              <div id="co-wallet-status" style="font-size:11px;color:var(--muted);font-family:var(--mono);padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;">No wallet connected</div>
             </div>
-            <div style="background:rgba(0,214,143,.04);border:1px solid rgba(0,214,143,.15);border-radius:10px;padding:14px;">
-              <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px;">⊘ How payouts work</div>
-              <div style="font-size:12px;color:var(--muted);line-height:1.65;font-weight:300;">Smart contract releases NIGHT tokens to your wallet after buyer confirms delivery. Near-zero fees. No delays. No bank.</div>
+            <div style="background:rgba(0,214,143,.04);border:1px solid rgba(0,214,143,.15);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+              <div style="color:var(--green);font-size:16px;flex-shrink:0;margin-top:1px;">⊘</div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;">How payouts work</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.65;font-weight:300;">After the buyer confirms delivery, the smart contract releases NIGHT tokens to your wallet. Near-zero fee. Instant. No middleman.</div>
+              </div>
             </div>
           </div>
           <div style="display:flex;gap:10px;">
@@ -3240,46 +3327,81 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
         <!-- Step 3 (hidden) -->
         <div id="co-step-3" style="display:none;">
           <div class="co-card">
-            <div class="co-card-title">Choose your NIGHT stake</div>
-            <div class="co-card-sub">Stake NIGHT to unlock your seller tier. Your stake earns rewards while locked — you're not penalised for participating.</div>
-            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;" id="co-tier-options">
-              <div class="co-tier-option" id="co-tier-0" onclick="selectCreatorTier(0)" style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div class="co-card-title">Pick your seller tier</div>
+            <div class="co-card-sub">Stake NIGHT tokens to unlock your tier. Your stake earns staking rewards while locked — you're never penalised for selling.</div>
+            <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px;padding-top:8px;" id="co-tier-options">
+
+              <!-- Starter -->
+              <div class="co-tier-card" id="co-tier-0" onclick="selectCreatorTier(0)">
+                <div class="co-tier-header">
                   <div>
-                    <div style="font-size:13px;font-weight:700;margin-bottom:3px;">Level 0 — Starter</div>
-                    <div style="font-size:11px;color:var(--muted);">1,000 NIGHT stake · Listings up to $50 · 90 day lock</div>
+                    <div class="co-tier-name">Starter</div>
+                    <div class="co-tier-stake">1,000 NIGHT · 90-day lock</div>
                   </div>
-                  <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--glow);">~$50</div>
+                  <div style="text-align:right;">
+                    <div class="co-tier-price">~$50</div>
+                    <div class="co-tier-price-sub">stake value</div>
+                  </div>
                 </div>
+                <ul class="co-tier-perks">
+                  <li>Listings up to $50 each</li>
+                  <li>Basic seller badge</li>
+                  <li>Standard payout window</li>
+                </ul>
               </div>
-              <div class="co-tier-option" id="co-tier-1" onclick="selectCreatorTier(1)" style="background:var(--raised);border:2px solid var(--ink);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;">
-                <div style="font-size:9px;font-weight:700;font-family:var(--mono);color:var(--glow);background:rgba(124,58,237,.15);border-radius:4px;padding:2px 7px;display:inline-block;margin-bottom:6px;">RECOMMENDED</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;">
+
+              <!-- Verified (recommended) -->
+              <div class="co-tier-card recommended" id="co-tier-1" onclick="selectCreatorTier(1)">
+                <div class="co-tier-rec-badge">Recommended</div>
+                <div class="co-tier-header" style="margin-top:8px;">
                   <div>
-                    <div style="font-size:13px;font-weight:700;margin-bottom:3px;">Level 1 — Verified Seller</div>
-                    <div style="font-size:11px;color:var(--muted);">5,000 NIGHT stake · Listings up to $500 · 48h payout window</div>
+                    <div class="co-tier-name">Verified Seller</div>
+                    <div class="co-tier-stake">5,000 NIGHT · 6-month lock</div>
                   </div>
-                  <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--glow);">~$250</div>
+                  <div style="text-align:right;">
+                    <div class="co-tier-price">~$250</div>
+                    <div class="co-tier-price-sub">stake value</div>
+                  </div>
                 </div>
+                <ul class="co-tier-perks">
+                  <li>Listings up to $500 each</li>
+                  <li>Verified seller badge in search</li>
+                  <li>48h payout window</li>
+                  <li>BNPL enabled for your buyers</li>
+                </ul>
               </div>
-              <div class="co-tier-option" id="co-tier-2" onclick="selectCreatorTier(2)" style="background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
+
+              <!-- Pro -->
+              <div class="co-tier-card" id="co-tier-2" onclick="selectCreatorTier(2)">
+                <div class="co-tier-header">
                   <div>
-                    <div style="font-size:13px;font-weight:700;margin-bottom:3px;">Level 2 — Pro Creator</div>
-                    <div style="font-size:11px;color:var(--muted);">50,000 NIGHT stake · Listings up to $5,000 · Featured placement</div>
+                    <div class="co-tier-name">Pro Creator</div>
+                    <div class="co-tier-stake">50,000 NIGHT · 12-month lock</div>
                   </div>
-                  <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--glow);">~$2,500</div>
+                  <div style="text-align:right;">
+                    <div class="co-tier-price">~$2,500</div>
+                    <div class="co-tier-price-sub">stake value</div>
+                  </div>
                 </div>
+                <ul class="co-tier-perks">
+                  <li>Listings up to $5,000 each</li>
+                  <li>Featured placement in search &amp; home</li>
+                  <li>Instant payouts after delivery confirm</li>
+                  <li>Priority dispute resolution</li>
+                  <li>Auction hosting (unlimited)</li>
+                </ul>
               </div>
+
             </div>
-            <div style="font-size:10px;color:var(--faint);font-family:var(--mono);text-align:center;margin-bottom:16px;">Stake earns rewards while locked · Slashed only on fraud adjudication</div>
+            <div style="font-size:10px;color:var(--faint);font-family:var(--mono);text-align:center;">Stake earns rewards while locked · Only slashed on proven fraud</div>
           </div>
           <div style="display:flex;gap:10px;">
             <button class="btn btn-ghost" style="flex:1;padding:14px;" onclick="creatorOnboardBack(3)">← Back</button>
-            <button class="btn btn-primary" style="flex:2;padding:14px;" onclick="completeCreatorOnboard()">🚀 Launch my creator profile</button>
+            <button class="btn btn-primary" style="flex:2;padding:14px;font-size:15px;" onclick="completeCreatorOnboard()">🚀 Launch my seller profile</button>
           </div>
         </div>
       </div>
+
     </div>
 
     <!-- Dashboard (shown after onboarding) -->
