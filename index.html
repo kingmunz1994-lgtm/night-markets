@@ -1206,6 +1206,8 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .mob-tab-label{font-size:10px;font-weight:600;color:var(--muted);font-family:var(--sans);letter-spacing:-.01em;transition:color .15s;}
 .mob-tab.active .mob-tab-label{color:var(--glow);}
 .mob-tab.active .mob-tab-icon{filter:drop-shadow(0 0 6px rgba(124,58,237,.8));}
+.mob-tab-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;}
+.mob-tab-badge{position:absolute;top:-4px;right:-8px;background:#ef4444;color:#fff;font-size:9px;font-weight:800;font-family:var(--mono);min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1;}
 
 /* ── MOBILE ─────────────────────────────────────────────────── */
 @media(max-width:768px){
@@ -2828,7 +2830,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
       <div style="position:relative;">
         <button class="btn btn-primary btn-sm" id="wallet-btn" onclick="handleWalletClick()" style="position:relative;">
           <span id="wallet-dot" style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:6px;"></span>
-          <span id="wallet-label">Connect</span>
+          <span id="wallet-label">Sign in</span>
         </button>
         <!-- Connected wallet panel -->
         <div id="wallet-panel" style="display:none;position:absolute;top:calc(100% + 10px);right:0;background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:18px;min-width:280px;z-index:500;box-shadow:0 20px 60px rgba(0,0,0,.6);">
@@ -2882,8 +2884,12 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
   <button class="mob-tab" id="mobtab-shop" onclick="showPage('shop')">
     <span class="mob-tab-icon">🛍️</span><span class="mob-tab-label">Shop</span>
   </button>
-  <button class="mob-tab" id="mobtab-sell" onclick="showPage('sell')">
-    <span class="mob-tab-icon">✦</span><span class="mob-tab-label">Create</span>
+  <button class="mob-tab" id="mobtab-cart" onclick="showPage('cart')">
+    <div class="mob-tab-wrap">
+      <span class="mob-tab-icon">🛍</span>
+      <div class="mob-tab-badge" id="mob-cart-badge"></div>
+    </div>
+    <span class="mob-tab-label">Cart</span>
   </button>
   <button class="mob-tab" id="mobtab-orders" onclick="showPage('orders')">
     <span class="mob-tab-icon">📦</span><span class="mob-tab-label">Orders</span>
@@ -3217,7 +3223,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
             <div id="did-verified-badge" style="display:none;font-size:10px;background:rgba(0,214,143,.1);color:var(--green);border:1px solid rgba(0,214,143,.25);border-radius:6px;padding:3px 8px;font-weight:700;">✓ DID Verified</div>
           </div>
           <div id="seller-did-body">
-            <div style="font-size:12px;font-family:var(--mono);color:var(--muted);">Loading seller credentials…</div>
+            <div style="font-size:12px;font-family:var(--mono);color:var(--muted);display:flex;align-items:center;gap:8px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);animation:pulse-ring 2s ease-in-out infinite;"></span>Verifying seller identity…</div>
           </div>
         </div>
       </div>
@@ -6199,7 +6205,10 @@ function updateBadge(){
   const n=cart.reduce((s,i)=>s+(i.qty||1),0);
   document.getElementById('cart-badge').textContent=n;
   const h=document.getElementById('cart-hdr-count');
-  if(h)h.textContent=n?`(${n} item${n!==1?'s':''})`:'';}
+  if(h)h.textContent=n?`(${n} item${n!==1?'s':''})` :'';
+  const mb=document.getElementById('mob-cart-badge');
+  if(mb){mb.textContent=n>9?'9+':n||'';mb.style.display=n?'flex':'none';}
+}
 
 // ── LIVE NIGHT PRICE — CoinGecko real fetch + realistic tick simulation ──
 let nightPrice=0.0617;
@@ -6268,7 +6277,7 @@ setInterval(()=>{
 
 
 // ── NAV ──
-var _mobTabMap={home:'home',shop:'shop',detail:'shop',cart:'shop',orders:'shop',auctions:'shop',stores:'shop',feed:'shop',live:'shop',social:'shop',nightfun:'nightfun',sell:'sell','creator-dash':'profile',governance:'profile',loyalty:'profile',bnpl:'profile',chests:'profile',nightid:'profile'};
+var _mobTabMap={home:'home',shop:'shop',detail:'shop',cart:'cart',orders:'orders',auctions:'shop',stores:'shop',feed:'shop',live:'shop',social:'shop',nightfun:'nightfun',sell:'profile','creator-dash':'profile',governance:'profile',loyalty:'profile',bnpl:'profile',chests:'profile',nightid:'profile'};
 var _topNavMap={shop:'nl-marketplace',auctions:'nl-marketplace',detail:'nl-marketplace',cart:'nl-marketplace',orders:'nl-marketplace',stores:'nl-marketplace',nightfun:'nl-nightfun',nightstore:'nl-nightfun',nightsave:'nl-nightfun',sell:'nl-creator','creator-dash':'nl-creator'};
 
 function showPage(name){
@@ -8970,6 +8979,11 @@ document.addEventListener('click',function(e){
         <div style="font-size:11px;color:#6b7280;font-family:monospace;margin-top:2px;">DApp Connector v4 · Midnight Network</div>
       </div>
       <button onclick="closeWalletModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <div style="flex:1;background:rgba(0,214,143,.07);border:1px solid rgba(0,214,143,.18);border-radius:10px;padding:10px 12px;font-size:11px;color:#9ca3af;line-height:1.5;"><span style="color:#00d68f;font-weight:700;">⊘ ZK Checkout</span><br>Pay in 4 · no credit check</div>
+      <div style="flex:1;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.18);border-radius:10px;padding:10px 12px;font-size:11px;color:#9ca3af;line-height:1.5;"><span style="color:#a78bfa;font-weight:700;">🌙 NIGHT Rewards</span><br>Earn tokens on every order</div>
+      <div style="flex:1;background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.18);border-radius:10px;padding:10px 12px;font-size:11px;color:#9ca3af;line-height:1.5;"><span style="color:#06b6d4;font-weight:700;">🔒 Private</span><br>Purchases shielded on-chain</div>
     </div>
     <div id="wallet-modal-body">
       <!-- Populated dynamically by resetWalletModal() on open -->
