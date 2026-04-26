@@ -12568,7 +12568,7 @@ function toggleNavDrop(name, e) {
   if(menu && !isOpen) menu.style.display = 'block';
 }
 function closeAllNavDrops() {
-  ['shop','feed','creator','night','disc'].forEach(function(name) {
+  ['shop','feed','creator','night','disc','more'].forEach(function(name) {
     var menu = document.getElementById(name+'-drop-menu');
     if(menu) menu.style.display = 'none';
   });
