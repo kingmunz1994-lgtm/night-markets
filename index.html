@@ -10322,10 +10322,12 @@ async function connectWalletByKey(key){
     var config = null;
     try { config = await connectedApi.getConfiguration(); } catch(e){}
     var shieldedAddr = null, unshieldedAddr = null, dust = '0', night = '0';
-    try { var sr = await connectedApi.getShieldedAddresses(); shieldedAddr = (sr && sr.shieldedAddress) || null; } catch(e){}
-    try { unshieldedAddr = await connectedApi.getUnshieldedAddress(); } catch(e){}
+    // DApp Connector API v2.0 — handle array/object returns
+    try { var sr = await connectedApi.getShieldedAddresses(); shieldedAddr = Array.isArray(sr) ? (sr[0]?.shieldedAddress||null) : (sr?.shieldedAddress||null); } catch(e){}
+    try { var ur = await connectedApi.getUnshieldedAddress(); unshieldedAddr = ur?.unshieldedAddress || ur || null; } catch(e){}
     try { var db = await connectedApi.getDustBalance(); dust = db != null ? (Number(db)/1e6).toFixed(4) : '0'; } catch(e){}
     try { var ub = await connectedApi.getUnshieldedBalances(); if(ub){ var ks=Object.keys(ub); if(ks.length>0) night=(Number(ub[ks[0]])/1e6).toFixed(4); } } catch(e){}
+    try { var sb = await connectedApi.getShieldedBalances?.(); if(sb){ var sks=Object.keys(sb); if(sks.length>0 && night==='0') night=(Number(sb[sks[0]])/1e6).toFixed(4); } } catch(e){}
     walletState = {
       connected: true,
       address: unshieldedAddr || shieldedAddr || 'mn_addr_unknown',
@@ -10402,22 +10404,28 @@ async function connectLace(){
     var config = null;
     try { config = await connectedApi.getConfiguration(); } catch(e){ console.warn('getConfiguration:', e); }
 
-    // getShieldedAddresses() → { shieldedAddress: string }
-    // getUnshieldedAddress() → string
+    // DApp Connector API v2.0:
+    // getShieldedAddresses() → Array<{shieldedAddress, shieldedCoinPublicKey, ...}> or legacy {shieldedAddress}
+    // getUnshieldedAddress() → {unshieldedAddress: string} or legacy string
+    // getShieldedBalances()  → Record<tokenType, bigint>  (new in v2.0)
     var shieldedAddr   = null;
     var unshieldedAddr = null;
     try {
       var shRes = await connectedApi.getShieldedAddresses();
-      shieldedAddr = (shRes && shRes.shieldedAddress) || null;
+      shieldedAddr = Array.isArray(shRes)
+        ? (shRes[0]?.shieldedAddress || null)
+        : (shRes?.shieldedAddress || null);
     } catch(e){ console.warn('getShieldedAddresses:', e); }
     try {
-      unshieldedAddr = await connectedApi.getUnshieldedAddress();
+      var unshRes = await connectedApi.getUnshieldedAddress();
+      unshieldedAddr = unshRes?.unshieldedAddress || unshRes || null;
     } catch(e){ console.warn('getUnshieldedAddress:', e); }
 
-    var displayAddr = unshieldedAddr || shieldedAddr || 'mn_addr_preview_unknown';
+    var displayAddr = unshieldedAddr || shieldedAddr || 'mn1…unknown';
 
     // getDustBalance() → bigint (6 decimals)
     // getUnshieldedBalances() → Record<tokenType, bigint>
+    // getShieldedBalances()   → Record<tokenType, bigint>  (v2.0)
     var dust  = '0';
     var night = '0';
     try {
@@ -10425,20 +10433,19 @@ async function connectLace(){
       dust = dustBal != null ? (Number(dustBal) / 1e6).toFixed(4) : '0';
     } catch(e){ console.warn('getDustBalance:', e); }
     var susd = '0';
-    try {
-      var unshBal = await connectedApi.getUnshieldedBalances();
-      if(unshBal){
-        var keys = Object.keys(unshBal);
-        keys.forEach(function(k){
-          var kl = k.toLowerCase();
-          var amt = (Number(unshBal[k]) / 1e6).toFixed(4);
-          if(kl.includes('night') || kl.includes('ngt')) night = amt;
-          else if(kl.includes('susd') || kl.includes('usd')) susd = parseFloat(amt).toFixed(2);
-          else if(keys.indexOf(k) === 0 && night === '0') night = amt;
-          else if(keys.indexOf(k) === 1 && susd === '0')  susd  = parseFloat(amt).toFixed(2);
-        });
-      }
-    } catch(e){ console.warn('getUnshieldedBalances:', e); }
+    var parseBalances = function(balMap){
+      if(!balMap) return;
+      Object.keys(balMap).forEach(function(k){
+        var kl = k.toLowerCase();
+        var amt = (Number(balMap[k]) / 1e6).toFixed(4);
+        if(kl.includes('night') || kl.includes('ngt')) night = amt;
+        else if(kl.includes('susd') || kl.includes('usd')) susd = parseFloat(amt).toFixed(2);
+        else if(Object.keys(balMap).indexOf(k) === 0 && night === '0') night = amt;
+        else if(Object.keys(balMap).indexOf(k) === 1 && susd === '0') susd = parseFloat(amt).toFixed(2);
+      });
+    };
+    try { parseBalances(await connectedApi.getUnshieldedBalances()); } catch(e){ console.warn('getUnshieldedBalances:', e); }
+    try { parseBalances(await connectedApi.getShieldedBalances?.()); } catch(e){ /* optional in v2.0 */ }
 
     walletState = {
       connected:   true,
@@ -10548,22 +10555,21 @@ async function refreshWalletBalances(){
       var dustBal = await walletState.api.getDustBalance();
       walletState.dust = dustBal != null ? (Number(dustBal) / 1e6).toFixed(4) : walletState.dust;
     } catch(e){ console.warn('getDustBalance refresh:', e); }
-    // Token balances — NIGHT and sUSD
-    try {
-      var unshBal = await walletState.api.getUnshieldedBalances();
-      if(unshBal){
-        var keys = Object.keys(unshBal);
-        // Map token types: look for known identifiers, fall back to index
-        keys.forEach(function(k){
-          var kl = k.toLowerCase();
-          var amt = (Number(unshBal[k]) / 1e6).toFixed(4);
-          if(kl.includes('night') || kl.includes('ngt'))  walletState.night = amt;
-          else if(kl.includes('susd') || kl.includes('usd')) walletState.susd = parseFloat(amt).toFixed(2);
-          else if(keys.indexOf(k) === 0 && !walletState.night) walletState.night = amt;
-          else if(keys.indexOf(k) === 1 && !walletState.susd)  walletState.susd = parseFloat(amt).toFixed(2);
-        });
-      }
-    } catch(e){ console.warn('getUnshieldedBalances refresh:', e); }
+    // Token balances — NIGHT and sUSD (unshielded + shielded v2.0)
+    var _applyBal = function(balMap){
+      if(!balMap) return;
+      var keys = Object.keys(balMap);
+      keys.forEach(function(k){
+        var kl = k.toLowerCase();
+        var amt = (Number(balMap[k]) / 1e6).toFixed(4);
+        if(kl.includes('night') || kl.includes('ngt'))  walletState.night = amt;
+        else if(kl.includes('susd') || kl.includes('usd')) walletState.susd = parseFloat(amt).toFixed(2);
+        else if(keys.indexOf(k) === 0 && !walletState.night) walletState.night = amt;
+        else if(keys.indexOf(k) === 1 && !walletState.susd)  walletState.susd = parseFloat(amt).toFixed(2);
+      });
+    };
+    try { _applyBal(await walletState.api.getUnshieldedBalances()); } catch(e){ console.warn('getUnshieldedBalances refresh:', e); }
+    try { _applyBal(await walletState.api.getShieldedBalances?.()); } catch(e){ /* optional */ }
     updateWalletPanel();
     updateWalletUI();
     var now = new Date();
