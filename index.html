@@ -681,7 +681,8 @@ h1.hero-title em{font-style:italic;color:var(--glow);}
 .auc-card{background:var(--card);border:1px solid rgba(244,63,94,.25);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .22s;position:relative;}
 .auc-card:hover{border-color:rgba(244,63,94,.5);transform:translateY(-2px);box-shadow:0 8px 32px rgba(244,63,94,.1);}
 .auc-badge{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:5px;background:var(--red);color:#fff;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;font-family:var(--mono);}
-.auc-img{height:160px;background:var(--depth);display:flex;align-items:center;justify-content:center;font-size:64px;}
+.auc-img{height:180px;background:var(--depth);display:flex;align-items:center;justify-content:center;font-size:64px;overflow:hidden;transition:transform .4s var(--ease-out);}
+.auc-card:hover .auc-img img{transform:scale(1.06);}
 .auc-body{padding:16px;}
 .auc-brand{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px;}
 .auc-title{font-size:14px;font-weight:700;margin-bottom:12px;line-height:1.4;}
@@ -5653,24 +5654,58 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 // PRODUCT SVG ILLUSTRATIONS
 // ══════════════════════════════════════════
 const PRODUCT_IMAGES={
-  p1:'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&h=450&q=85',
-  p2:'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=600&h=450&q=85',
-  p3:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&h=450&q=85',
-  p4:'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=600&h=450&q=85',
-  p5:'https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=600&h=450&q=85',
-  p6:'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&h=450&q=85',
-  p7:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&h=450&q=85',
-  p8:'https://images.unsplash.com/photo-1556906781-9a412961a72d?auto=format&fit=crop&w=600&h=450&q=85',
-  p9:'https://images.unsplash.com/photo-1539533018447-63fcce2678e4?auto=format&fit=crop&w=600&h=450&q=85',
-  p10:'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&h=450&q=85',
-  p11:'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=600&h=450&q=85',
-  p12:'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=600&h=450&q=85',
-  p13:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=600&h=450&q=85',
-  p14:'https://images.unsplash.com/photo-1581609219053-5f0b4b86082d?auto=format&fit=crop&w=600&h=450&q=85',
-  p15:'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=600&h=450&q=85',
-  p16:'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=600&h=450&q=85',
-  p17:'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=600&h=450&q=85',
-  p18:'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&h=450&q=85',
+  // Electronics
+  p1:'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=600&h=450&q=85',  // iPhone
+  p2:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&h=450&q=85',  // Sony headphones
+  p3:'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&h=450&q=85',  // MacBook
+  p4:'https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=600&h=450&q=85',  // Samsung TV
+  p5:'https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=600&h=450&q=85',  // DJI drone
+  p6:'https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?auto=format&fit=crop&w=600&h=450&q=85',  // Apple Watch
+  p7:'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&h=450&q=85',  // Dyson vacuum
+  // Sneakers / Fashion
+  p8:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&h=450&q=85',     // Jordan 4
+  p9:'https://images.unsplash.com/photo-1539533018447-63fcce2678e4?auto=format&fit=crop&w=600&h=450&q=85',  // Yeezy 350
+  p10:'https://images.unsplash.com/photo-1600269452121-4f2416e55c28?auto=format&fit=crop&w=600&h=450&q=85', // New Balance 550
+  p11:'https://images.unsplash.com/photo-1556906781-9a412961a72d?auto=format&fit=crop&w=600&h=450&q=85',    // Jordan 1
+  p12:'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=600&h=450&q=85', // Asics
+  // Luxury
+  p13:'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&h=450&q=85',    // LV Neverfull
+  p14:'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=600&h=450&q=85', // Rolex Submariner
+  p15:'https://images.unsplash.com/photo-1590739225338-8b28cde64ba9?auto=format&fit=crop&w=600&h=450&q=85', // Chanel Flap
+  // Collectibles
+  p16:'https://images.unsplash.com/photo-1613771404721-1f92d799e49f?auto=format&fit=crop&w=600&h=450&q=85', // Pokemon card
+  p17:'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=600&h=450&q=85', // LEGO Falcon
+  p18:'https://images.unsplash.com/photo-1569003339405-ea396a5a8a90?auto=format&fit=crop&w=600&h=450&q=85', // MJ rookie card
+  // Streetwear
+  p19:'https://images.unsplash.com/photo-1620799140408-edb6bfaa88b3?auto=format&fit=crop&w=600&h=450&q=85', // Supreme hoodie
+  p20:'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&h=450&q=85', // Stone Island jacket
+  // Home
+  p21:'https://images.unsplash.com/photo-1555041469-bd8f3d23e8c5?auto=format&fit=crop&w=600&h=450&q=85',    // Fritz Hansen chair
+  p22:'https://images.unsplash.com/photo-1567538096630-e03a91f2dacd?auto=format&fit=crop&w=600&h=450&q=85', // Muuto lounge chair
+  // Sports
+  p23:'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=600&h=450&q=85', // Peloton bike
+  p24:'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?auto=format&fit=crop&w=600&h=450&q=85',    // Garmin Fenix
+  p25:'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?auto=format&fit=crop&w=600&h=450&q=85', // Theragun
+  // Art
+  p26:'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?auto=format&fit=crop&w=600&h=450&q=85', // Banksy street art
+  p27:'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&h=450&q=85', // Basquiat art print
+  // Gaming
+  p28:'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?auto=format&fit=crop&w=600&h=450&q=85', // PS5
+  p29:'https://images.unsplash.com/photo-1593640408182-31c228d2b0d0?auto=format&fit=crop&w=600&h=450&q=85', // Samsung Odyssey ultrawide
+  p30:'https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=600&h=450&q=85', // Razer gaming mouse
+  // Watches
+  p31:'https://images.unsplash.com/photo-1547996160-81dfa63595aa?auto=format&fit=crop&w=600&h=450&q=85',    // Omega Speedmaster
+  p32:'https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=600&h=450&q=85', // TAG Heuer Carrera
+  p33:'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=600&h=450&q=85', // Seiko diver
+};
+
+const AUCTION_IMAGES={
+  a1:'https://images.unsplash.com/photo-1556906781-9a412961a72d?auto=format&fit=crop&w=600&h=450&q=85',  // Jordan 1
+  a2:'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=600&h=450&q=85', // Rolex GMT
+  a3:'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?auto=format&fit=crop&w=600&h=450&q=85', // Banksy print
+  a4:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&h=450&q=85',    // Travis Scott Nike
+  a5:'https://images.unsplash.com/photo-1600269452121-4f2416e55c28?auto=format&fit=crop&w=600&h=450&q=85', // Tiffany Nike AF1
+  a6:'https://images.unsplash.com/photo-1547996160-81dfa63595aa?auto=format&fit=crop&w=600&h=450&q=85',    // Patek Nautilus
 };
 
 // ══════════════════════════════════════════
@@ -5861,7 +5896,9 @@ function renderAuctions(showSection){
         +(ended
           ?(iWon?'<div class="auc-badge-won">🏆 YOU WON</div>':'<div class="auc-badge-ended">ENDED</div>')
           :'<div class="auc-badge">🔴 LIVE</div>')
-        +'<div class="auc-img">'+a.emoji+'</div>'
+        +(AUCTION_IMAGES[a.id]
+          ?'<div class="auc-img" style="overflow:hidden;"><img src="'+AUCTION_IMAGES[a.id]+'" alt="'+a.title+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'<span style=&quot;font-size:56px&quot;>'+a.emoji+'</span>\'"/></div>'
+          :'<div class="auc-img">'+a.emoji+'</div>')
         +'<div class="auc-body">'
         +'<div class="auc-brand">'+a.brand+' · '+a.sellerCountry+'</div>'
         +'<div class="auc-title">'+a.title+'</div>'
