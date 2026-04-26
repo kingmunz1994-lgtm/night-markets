@@ -1814,6 +1814,46 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .nf-rs-label{font-size:8px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
 .nf-rs-val{font-size:15px;font-weight:800;font-family:var(--mono);}
 .nf-circuit{background:var(--depth);border:1px solid var(--rim);border-radius:10px;padding:12px;font-family:var(--mono);font-size:10px;line-height:1.9;color:var(--muted);margin-bottom:12px;}
+/* Night Fun — pump.fun style token discovery */
+.nf-tabs-bar{display:flex;gap:4px;background:var(--surface);border:1px solid var(--rim);border-radius:14px;padding:5px;margin-bottom:24px;}
+.nf-tab{flex:1;padding:9px 6px;text-align:center;font-size:11px;font-weight:700;border-radius:10px;cursor:pointer;transition:all .2s;color:var(--muted);font-family:var(--mono);white-space:nowrap;letter-spacing:.3px;}
+.nf-tab:hover{color:var(--text2);background:var(--raised);}
+.nf-tab.active{background:var(--ink);color:#fff;box-shadow:0 4px 12px rgba(124,58,237,.3);}
+.nf-layout{display:grid;grid-template-columns:1fr 240px;gap:18px;align-items:start;}
+.nf-token-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.nftc{background:var(--surface);border:1px solid var(--rim);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;}
+.nftc:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(124,58,237,.12);border-color:rgba(124,58,237,.3);}
+.nftc-img{height:110px;background:var(--depth);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;}
+.nftc-graduating{position:absolute;top:8px;right:8px;background:linear-gradient(90deg,var(--green),#06b6d4);color:#fff;font-size:8px;font-weight:800;font-family:var(--mono);padding:2px 7px;border-radius:99px;animation:pulse-ring 2s infinite;}
+.nftc-new-badge{position:absolute;top:8px;left:8px;background:var(--ink);color:#fff;font-size:8px;font-weight:800;font-family:var(--mono);padding:2px 7px;border-radius:99px;}
+.nftc-body{padding:12px;}
+.nftc-header{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+.nftc-name{font-size:13px;font-weight:800;letter-spacing:-.01em;}
+.nftc-sym{font-size:9px;font-weight:700;font-family:var(--mono);color:var(--cyan);background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);border-radius:4px;padding:1px 5px;}
+.nftc-creator{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:9px;}
+.nftc-prog-wrap{height:4px;background:var(--rim2);border-radius:99px;overflow:hidden;margin-bottom:6px;}
+.nftc-prog-fill{height:100%;border-radius:99px;transition:width .8s var(--ease-out);}
+.nftc-stats{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;}
+.nftc-buy{width:100%;background:var(--raised);border:1px solid var(--rim2);border-radius:8px;padding:7px;font-size:11px;font-weight:700;cursor:pointer;color:var(--glow);font-family:var(--sans);transition:all .18s;}
+.nftc-buy:hover{background:var(--ink);color:#fff;border-color:transparent;}
+.nf-live-panel{background:var(--surface);border:1px solid var(--rim);border-radius:16px;padding:14px;position:sticky;top:80px;max-height:calc(100vh - 120px);overflow-y:auto;}
+.nf-live-head{font-size:9px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.nf-live-dot{width:5px;height:5px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse-ring 1.5s infinite;}
+.nf-live-item{padding:7px 0;border-bottom:1px solid var(--rim);font-size:10px;line-height:1.5;}
+.nf-live-item:last-child{border-bottom:none;}
+.nf-live-buy{color:var(--green);font-weight:700;}
+.nf-live-sell{color:var(--red);font-weight:700;}
+.nf-live-anon{color:var(--plasma);font-family:var(--mono);}
+.nf-live-sym{color:var(--cyan);font-family:var(--mono);font-weight:700;}
+.nf-live-night{color:var(--text2);}
+.nf-live-time{color:var(--faint);font-size:9px;display:block;font-family:var(--mono);}
+.nf-stats-strip{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--rim);border-radius:14px;overflow:hidden;margin-bottom:24px;}
+.nf-stat-cell{padding:14px 10px;text-align:center;border-right:1px solid var(--rim);}
+.nf-stat-cell:last-child{border-right:none;}
+.nf-stat-val{font-size:18px;font-weight:800;letter-spacing:-.03em;font-family:var(--mono);}
+.nf-stat-lbl{font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+@media(max-width:900px){.nf-layout{grid-template-columns:1fr;}.nf-live-panel{display:none;}.nf-stats-strip{grid-template-columns:repeat(2,1fr);}.nf-stat-cell:nth-child(2){border-right:none;}.nf-stat-cell:nth-child(3){border-top:1px solid var(--rim);}.nf-stat-cell:nth-child(4){border-top:1px solid var(--rim);border-right:none;}}
+@media(max-width:600px){.nf-token-grid{grid-template-columns:1fr 1fr;}}
 
 /* ─── NIGHT DATA ZK proof inline ─── */
 .nd-proof-panel{display:none;background:var(--depth);border:1px solid rgba(0,214,143,.15);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:10px;line-height:1.85;color:var(--muted);margin-top:8px;}
@@ -3780,15 +3820,58 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 <!-- ══════════════ NIGHT FUN — v19 ══════════════ -->
 <div class="page" id="page-nightfun">
   <div class="page-inner">
-    <div class="nf-hero">
-      <div style="margin-bottom:12px;"><span class="tag" style="background:rgba(6,182,212,.08);color:var(--cyan);border-color:rgba(6,182,212,.2);">🌙 Night Fun — Token + Merch Launchpad</span></div>
-      <h1 style="font-family:var(--serif);font-size:52px;font-style:italic;margin-bottom:12px;">Launch your token.<br><em>Kill the dump.</em></h1>
-      <p style="font-size:15px;color:var(--text2);max-width:560px;margin:0 auto;line-height:1.8;font-weight:300;">Launch your Midnight token AND merch store simultaneously. In 5 minutes. Holders earn income from every merch sale. Nobody dumps a token that pays them.</p>
+
+    <!-- Hero -->
+    <div class="nf-hero" style="margin-bottom:28px;">
+      <div style="margin-bottom:14px;"><span class="tag" style="background:rgba(6,182,212,.08);color:var(--cyan);border-color:rgba(6,182,212,.2);">🌙 Night Fun · ZK Token Launchpad</span></div>
+      <h1 style="font-family:var(--serif);font-size:clamp(36px,5vw,64px);font-style:italic;margin-bottom:12px;line-height:1.05;">pump.fun, but your buys<br><em style="color:var(--glow);">are invisible.</em></h1>
+      <p style="font-size:15px;color:var(--text2);max-width:520px;margin:0 auto 24px;line-height:1.8;font-weight:300;">Launch a Midnight token + merch store in 5 minutes. Holders earn from every sale. Nobody can see your wallet buying. No front-running. No sniping.</p>
+      <button class="btn btn-primary" style="padding:12px 32px;font-size:15px;" onclick="switchNFTab('create')">🚀 Launch your token →</button>
     </div>
 
-    <!-- Peace vs War -->
-    <div style="margin-bottom:32px;">
-      <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:20px;">First launches on Night Fun</div>
+    <!-- Stats strip -->
+    <div class="nf-stats-strip">
+      <div class="nf-stat-cell">
+        <div class="nf-stat-val" style="color:var(--glow);">847</div>
+        <div class="nf-stat-lbl">Tokens launched</div>
+      </div>
+      <div class="nf-stat-cell">
+        <div class="nf-stat-val" style="color:var(--green);">12,840</div>
+        <div class="nf-stat-lbl">tNIGHT raised</div>
+      </div>
+      <div class="nf-stat-cell">
+        <div class="nf-stat-val" style="color:var(--gold);">23</div>
+        <div class="nf-stat-lbl">Graduating now</div>
+      </div>
+      <div class="nf-stat-cell">
+        <div class="nf-stat-val">⊘</div>
+        <div class="nf-stat-lbl">Buys ZK-shielded</div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="nf-tabs-bar" id="nf-tabs-bar">
+      <div class="nf-tab active" id="nftab-trending" onclick="switchNFTab('trending')">🔥 Trending</div>
+      <div class="nf-tab" id="nftab-new" onclick="switchNFTab('new')">🆕 New</div>
+      <div class="nf-tab" id="nftab-graduating" onclick="switchNFTab('graduating')">🎓 Graduating</div>
+      <div class="nf-tab" id="nftab-king" onclick="switchNFTab('king')">👑 King</div>
+      <div class="nf-tab" id="nftab-create" onclick="switchNFTab('create')">➕ Create</div>
+    </div>
+
+    <!-- Trending / New / Graduating tabs — token grid + live feed -->
+    <div id="nf-discover-view">
+      <div class="nf-layout">
+        <div id="nf-token-grid" class="nf-token-grid"></div>
+        <div class="nf-live-panel">
+          <div class="nf-live-head"><div class="nf-live-dot"></div>Live trades</div>
+          <div id="nf-live-feed"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- King of the Hill tab -->
+    <div id="nf-king-view" style="display:none;">
+      <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:20px;">First launches on Night Fun — two communities, one winner</div>
       <div class="nf-pvw">
         <div class="nf-card peace" onclick="joinNFSide('peace')">
           <div class="nf-card-inner">
@@ -3808,103 +3891,76 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           </div>
         </div>
       </div>
-      <p style="text-align:center;font-size:11px;color:var(--muted);font-family:var(--mono);">Two tokens. One platform. Whichever community sells more merch wins. Real data. May the best community win. 🌙</p>
+      <p style="text-align:center;font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:16px;">Whichever community sells more merch wins. Real data. May the best community win. 🌙</p>
     </div>
 
-    <!-- Launch your own -->
-    <div class="nf-launch-card">
-      <div style="font-size:14px;font-weight:700;margin-bottom:6px;">🚀 Launch your own token + store</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;font-weight:300;">5 minutes. Zero fees. Your Midnight token and merch store live simultaneously.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-        <div class="field"><label class="label">Project name</label><input class="input" id="nf-name" placeholder="e.g. Hosky Token" type="text"/></div>
-        <div class="field"><label class="label">Token symbol</label><input class="input" id="nf-symbol" placeholder="e.g. HOSKY" type="text"/></div>
-        <div class="field"><label class="label">Total supply</label><input class="input" id="nf-supply" placeholder="e.g. 1,000,000,000" type="text"/></div>
-        <div class="field"><label class="label">Your NIGHT wallet</label><input class="input" id="nf-wallet" placeholder="mn_addr_..." type="text"/></div>
-      </div>
-      <div class="field" style="margin-bottom:16px;"><label class="label">Project description</label><textarea class="input" id="nf-desc" placeholder="Tell the community what you're building..." style="min-height:80px;resize:vertical;"></textarea></div>
-      <button class="btn btn-primary" style="width:100%;padding:14px;" id="nf-launch-btn" onclick="launchNightFun()">🌙 Launch token + merch store →</button>
-      <div style="font-size:10px;color:var(--faint);font-family:var(--mono);text-align:center;margin-top:8px;">⊘ ZK private · Midnight mainnet · OpenZeppelin FungibleToken · Holders earn from day one</div>
-      <!-- Deploy circuit + result -->
-      <div class="nf-circuit" id="nf-deploy-circuit" style="display:none;margin-top:16px;"></div>
-      <div id="nf-launch-result">
-        <div style="font-size:14px;font-weight:800;margin-bottom:4px;" id="nf-result-title">🎉 Token deployed!</div>
-        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;" id="nf-result-sub">OpenZeppelin FungibleToken · Midnight Mainnet · MIT License</div>
-        <div style="font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.8px;">Contract address</div>
-        <div class="nf-result-addr" id="nf-result-addr">mn_contract_preprod1...</div>
-        <div class="nf-result-grid">
-          <div class="nf-result-stat"><div class="nf-rs-label">Total supply</div><div class="nf-rs-val" id="nf-rs-supply">—</div></div>
-          <div class="nf-result-stat"><div class="nf-rs-label">Token symbol</div><div class="nf-rs-val" style="color:var(--cyan);" id="nf-rs-symbol">—</div></div>
-          <div class="nf-result-stat"><div class="nf-rs-label">Merch store</div><div class="nf-rs-val" style="color:var(--green);">✓ Live</div></div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          <div style="font-size:9px;font-family:var(--mono);background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:5px;padding:3px 8px;color:var(--cyan);">⊘ OpenZeppelin FungibleToken</div>
-          <div style="font-size:9px;font-family:var(--mono);background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:5px;padding:3px 8px;color:var(--green);">✓ Holders earn from sales</div>
-          <div style="font-size:9px;font-family:var(--mono);background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:5px;padding:3px 8px;color:#a78bfa;">🌙 LunarSwap listed</div>
-        </div>
-      </div>
-    </div>
+    <!-- Create tab -->
+    <div id="nf-create-view" style="display:none;max-width:680px;margin:0 auto;">
 
-    <!-- Bonding curve launcher -->
-    <div class="curve-card" id="curve-panel-wrap">
-      <div id="curve-panel">
-        <div style="font-size:13px;font-weight:700;margin-bottom:16px;">🌊 Bonding Curve Launch</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Launch a constant-product AMM so anyone can buy your token at a fair price. Auto-graduates to zswap DEX at 85 tNight. Privacy mode seals trade amounts with ZK proofs.</div>
-        <div class="field" style="margin-bottom:12px;">
-          <label class="label">Initial tokens in pool</label>
-          <input class="input" id="curve-initial-tokens" type="number" value="10000" min="100" placeholder="e.g. 10000"/>
+      <!-- Launch form -->
+      <div class="nf-launch-card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">🚀 Launch your token + merch store</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:20px;font-weight:300;">5 minutes. Zero fees. Token + bonding curve + merch store — live simultaneously.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div class="field"><label class="label">Project name</label><input class="input" id="nf-name" placeholder="e.g. NightDoge" type="text"/></div>
+          <div class="field"><label class="label">Token symbol</label><input class="input" id="nf-symbol" placeholder="e.g. NDOGE" type="text"/></div>
+          <div class="field"><label class="label">Total supply</label><input class="input" id="nf-supply" placeholder="e.g. 1,000,000,000" type="text"/></div>
+          <div class="field"><label class="label">Your NIGHT wallet</label><input class="input" id="nf-wallet" placeholder="mn1..." type="text"/></div>
         </div>
-        <label class="sealed-bid-row" style="margin-bottom:16px;" for="curve-privacy">
-          <input type="checkbox" id="curve-privacy"/>
-          <div>
-            <div style="font-size:12px;font-weight:700;">⊘ Privacy mode</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Seal trade amounts with ZK proofs — buyers appear as anonymous commitments</div>
+        <div class="field" style="margin-bottom:16px;"><label class="label">Project description</label><textarea class="input" id="nf-desc" placeholder="Tell the community what you're building..." style="min-height:80px;resize:vertical;"></textarea></div>
+        <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;" id="nf-launch-btn" onclick="launchNightFun()">🌙 Deploy token + merch store →</button>
+        <div style="font-size:10px;color:var(--faint);font-family:var(--mono);text-align:center;margin-top:8px;">⊘ ZK private · Midnight mainnet · Holders earn from day one · Graduates to zswap at 85 tNIGHT</div>
+        <div class="nf-circuit" id="nf-deploy-circuit" style="display:none;margin-top:16px;"></div>
+        <div id="nf-launch-result">
+          <div style="font-size:14px;font-weight:800;margin-bottom:4px;" id="nf-result-title">🎉 Token deployed!</div>
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;" id="nf-result-sub">OpenZeppelin FungibleToken · Midnight Mainnet</div>
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.8px;">Contract address</div>
+          <div class="nf-result-addr" id="nf-result-addr">mn_contract_preprod1...</div>
+          <div class="nf-result-grid">
+            <div class="nf-result-stat"><div class="nf-rs-label">Total supply</div><div class="nf-rs-val" id="nf-rs-supply">—</div></div>
+            <div class="nf-result-stat"><div class="nf-rs-label">Symbol</div><div class="nf-rs-val" style="color:var(--cyan);" id="nf-rs-symbol">—</div></div>
+            <div class="nf-result-stat"><div class="nf-rs-label">Merch store</div><div class="nf-rs-val" style="color:var(--green);">✓ Live</div></div>
           </div>
-        </label>
-        <button class="btn btn-primary" style="width:100%;" onclick="launchCurve()">🚀 Launch bonding curve</button>
-      </div>
-    </div>
-
-    <!-- Night-ID name service -->
-    <div class="curve-card" id="nightid-panel-wrap" style="margin-bottom:24px;">
-      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🌙 Night-ID Name Service</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Register a <strong style="color:var(--cyan);font-family:var(--mono);">.night</strong> name for your seller identity. Your name is minted as a unique token coloured <code style="font-size:10px;background:var(--raised);padding:1px 5px;border-radius:4px;">SHA-256(name)</code> on-chain.</div>
-      <div id="nightid-badge-wrap" style="margin-bottom:12px;"></div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <div style="flex:1;position:relative;">
-          <input class="input" id="nightid-input" type="text" placeholder="yourname" maxlength="32" style="padding-right:52px;" oninput="document.getElementById('nightid-suffix').textContent=this.value?'.night':''"/>
-          <span id="nightid-suffix" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;color:var(--muted);pointer-events:none;"></span>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="registerNightId()">Register →</button>
       </div>
-      <div style="margin-top:8px;font-size:10px;color:var(--faint);font-family:var(--mono);">3–32 chars · lowercase alphanumeric + hyphens · unique per address · Night-ID contract: <span style="color:var(--cyan);">09dbe05f…</span></div>
+
+      <!-- Bonding curve -->
+      <div class="curve-card" id="curve-panel-wrap">
+        <div id="curve-panel">
+          <div style="font-size:13px;font-weight:700;margin-bottom:16px;">🌊 Bonding Curve</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Constant-product AMM. Auto-graduates to zswap at 85 tNIGHT. Privacy mode seals trade amounts with ZK proofs — buyers appear as anonymous commitments.</div>
+          <div class="field" style="margin-bottom:12px;">
+            <label class="label">Initial tokens in pool</label>
+            <input class="input" id="curve-initial-tokens" type="number" value="10000" min="100"/>
+          </div>
+          <label class="sealed-bid-row" style="margin-bottom:16px;" for="curve-privacy">
+            <input type="checkbox" id="curve-privacy"/>
+            <div>
+              <div style="font-size:12px;font-weight:700;">⊘ Privacy mode — ZK-sealed trades</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">Buyers appear as anonymous commitments. No front-running possible.</div>
+            </div>
+          </label>
+          <button class="btn btn-primary" style="width:100%;" onclick="launchCurve()">🚀 Launch bonding curve</button>
+        </div>
+      </div>
+
+      <!-- Night-ID -->
+      <div class="curve-card" id="nightid-panel-wrap" style="margin-bottom:24px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🌙 Night-ID — your .night name</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Register a <strong style="color:var(--cyan);font-family:var(--mono);">.night</strong> identity linked to your wallet. Minted on-chain. Shows on your token and seller profile.</div>
+        <div id="nightid-badge-wrap" style="margin-bottom:12px;"></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="flex:1;position:relative;">
+            <input class="input" id="nightid-input" type="text" placeholder="yourname" maxlength="32" style="padding-right:52px;" oninput="document.getElementById('nightid-suffix').textContent=this.value?'.night':''"/>
+            <span id="nightid-suffix" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;color:var(--muted);pointer-events:none;"></span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="registerNightId()">Register →</button>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--faint);font-family:var(--mono);">3–32 chars · lowercase alphanumeric + hyphens · Night-ID contract: <span style="color:var(--cyan);">09dbe05f…</span></div>
+      </div>
+
     </div>
 
-    <!-- How it works -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:32px;">
-      <div style="background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:20px;text-align:center;">
-        <div style="font-size:28px;margin-bottom:8px;">📝</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:4px;">1. Enter details</div>
-        <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.6;">Name, symbol, supply, logo. No KYC. No identity. ZK from the start.</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:20px;text-align:center;">
-        <div style="font-size:28px;margin-bottom:8px;">⚡</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:4px;">2. Simultaneous launch</div>
-        <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.6;">Midnight token deployed AND merch store live. One button. Five minutes.</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:20px;text-align:center;">
-        <div style="font-size:28px;margin-bottom:8px;">💰</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:4px;">3. Community earns</div>
-        <div style="font-size:11px;color:var(--muted);font-weight:300;line-height:1.6;">Every merch sale flows to token holders automatically. Nobody dumps. The flywheel runs forever.</div>
-      </div>
-    </div>
-
-    <!-- Midnight City connection -->
-    <div style="background:linear-gradient(135deg,rgba(6,182,212,.06),rgba(124,58,237,.03));border:1px solid rgba(6,182,212,.15);border-radius:16px;padding:24px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);"></div>
-      <div style="font-size:11px;font-weight:700;font-family:var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">🏙️ Midnight City integration</div>
-      <div style="font-size:14px;font-weight:700;margin-bottom:6px;">AI agent factions launch on Night Fun</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.65;font-weight:300;">Midnight City's autonomous AI agents have personalities, goals, and communities. Night Fun gives those communities tokens and merch from day one. Agent factions compete. Their communities hold tokens that pay them. Nobody dumps. The city has a real economy.</div>
-    </div>
   </div>
 </div>
 
@@ -12628,6 +12684,87 @@ function closeFeatMenu(){ closeAllNavDrops(); }
 
 
 // ── Night Fun ─────────────────────────────────────────────────────────────────
+// ── NIGHT FUN — token discovery feed ──────────────────────────────────
+const NIGHTFUN_TOKENS=[
+  {id:'nt1',name:'NightDoge',sym:'NDOGE',emoji:'🐕',desc:'The privacy doge. Your buys are ZK-shielded. Nobody knows you hold NDOGE.',creator:'degen.night',raised:42.5,target:85,holders:234,buys:891,trending:true,age:'2h ago',vol24h:8400},
+  {id:'nt2',name:'MidnightPepe',sym:'MPEPE',emoji:'🐸',desc:'Pepe found the dark forest. Private forever. Not your keys, not your data.',creator:'pepelord.night',raised:71.2,target:85,holders:892,buys:3241,trending:true,age:'6h ago',vol24h:24100,graduating:true},
+  {id:'nt3',name:'ZKCat',sym:'ZKCAT',emoji:'🐱',desc:"The invisible cat. ZK-shielded buys. Schrödinger's token — nobody knows if you hold it.",creator:'anon.night',raised:10.8,target:85,holders:67,buys:312,trending:false,age:'14m ago',vol24h:1200,isNew:true},
+  {id:'nt4',name:'PrivacyDuck',sym:'PDUCK',emoji:'🦆',desc:"If it quacks privately, it's a PrivacyDuck. All buys shielded on Midnight.",creator:'void.night',raised:31.4,target:85,holders:443,buys:1820,trending:true,age:'4h ago',vol24h:14200},
+  {id:'nt5',name:'GhostToken',sym:'GHOST',emoji:'👻',desc:"You can't catch what you can't see. The most private token on Midnight.",creator:'shadow.night',raised:58.9,target:85,holders:621,buys:2100,trending:true,age:'9h ago',vol24h:19800},
+  {id:'nt6',name:'VoidProtocol',sym:'VOID',emoji:'🌑',desc:'From nothing, everything. ZK proofs for every transaction. Pure darkness.',creator:'creator.night',raised:5.2,target:85,holders:28,buys:89,trending:false,age:'8m ago',vol24h:520,isNew:true},
+  {id:'nt7',name:'MidnightShib',sym:'MSHIB',emoji:'🐕‍🦺',desc:'SHIB found ZK privacy. Never again will your degen wallet be exposed.',creator:'shibarmy.night',raised:82.1,target:85,holders:1240,buys:5890,trending:true,age:'18h ago',vol24h:38000,graduating:true},
+  {id:'nt8',name:'DarkForest',sym:'DARK',emoji:'🌲',desc:'The dark forest is real. Privacy is survival. Be the predator, not the prey.',creator:'hunter.night',raised:19.3,target:85,holders:156,buys:734,trending:false,age:'3h ago',vol24h:7200},
+  {id:'nt9',name:'ShadowFloki',sym:'SFLOKI',emoji:'🐺',desc:'Floki went dark. Invisible entry, invisible exit. ZK from genesis.',creator:'floki.night',raised:47.8,target:85,holders:381,buys:1560,trending:true,age:'11h ago',vol24h:16300,isNew:true},
+  {id:'nt10',name:'PrivateMoon',sym:'PMOON',emoji:'🌕',desc:'Going to the moon without a trace. Your wallet stays in the shadows.',creator:'moon.night',raised:64.3,target:85,holders:729,buys:2840,trending:true,age:'14h ago',vol24h:22400,graduating:true},
+];
+const NF_LIVE_BUYS=[
+  {anon:'degen.night',buy:true,amount:'42,000',sym:'MPEPE',night:'1.82',ago:'4s ago'},
+  {anon:'anon_7f2a',buy:false,amount:'8,400',sym:'NDOGE',night:'0.34',ago:'11s ago'},
+  {anon:'whale.night',buy:true,amount:'200,000',sym:'MSHIB',night:'8.40',ago:'19s ago'},
+  {anon:'anon_3c91',buy:true,amount:'15,000',sym:'GHOST',night:'0.62',ago:'32s ago'},
+  {anon:'hodler.night',buy:true,amount:'90,000',sym:'PMOON',night:'3.77',ago:'45s ago'},
+  {anon:'anon_ab5e',buy:false,amount:'4,200',sym:'PDUCK',night:'0.18',ago:'1m ago'},
+  {anon:'zkape.night',buy:true,amount:'500,000',sym:'NDOGE',night:'20.40',ago:'1m ago'},
+  {anon:'anon_f04c',buy:true,amount:'33,000',sym:'MPEPE',night:'1.34',ago:'2m ago'},
+  {anon:'early.night',buy:true,amount:'1,000,000',sym:'ZKCAT',night:'4.10',ago:'2m ago'},
+  {anon:'anon_d4a7',buy:false,amount:'12,000',sym:'GHOST',night:'0.50',ago:'3m ago'},
+];
+var _nfActiveTab='trending';
+function switchNFTab(tab){
+  _nfActiveTab=tab;
+  ['trending','new','graduating','king','create'].forEach(function(t){
+    var el=document.getElementById('nftab-'+t);
+    if(el)el.classList.toggle('active',t===tab);
+  });
+  var disc=document.getElementById('nf-discover-view');
+  var king=document.getElementById('nf-king-view');
+  var create=document.getElementById('nf-create-view');
+  if(disc)disc.style.display=(tab==='trending'||tab==='new'||tab==='graduating')?'block':'none';
+  if(king)king.style.display=tab==='king'?'block':'none';
+  if(create)create.style.display=tab==='create'?'block':'none';
+  if(tab==='trending'||tab==='new'||tab==='graduating')renderNFGrid(tab);
+}
+function renderNFGrid(tab){
+  var tokens=[...NIGHTFUN_TOKENS];
+  if(tab==='new')tokens=tokens.filter(function(t){return t.isNew;}).concat(tokens.filter(function(t){return !t.isNew;}));
+  else if(tab==='graduating')tokens=tokens.filter(function(t){return t.graduating;}).concat(tokens.filter(function(t){return !t.graduating;}));
+  else tokens.sort(function(a,b){return b.vol24h-a.vol24h;});
+  var grid=document.getElementById('nf-token-grid');
+  if(!grid)return;
+  grid.innerHTML=tokens.map(function(t){
+    var pct=Math.round(t.raised/t.target*100);
+    var progColor=t.graduating?'linear-gradient(90deg,var(--green),#06b6d4)':pct>60?'linear-gradient(90deg,var(--plasma),var(--glow))':'var(--ink)';
+    var mcap=(t.raised*nightPrice*1000).toFixed(0);
+    return '<div class="nftc" onclick="toast(\'Opening '+t.name+' — full trading view coming soon\',\'info\')">'
+      +'<div class="nftc-img">'+t.emoji
+      +(t.graduating?'<div class="nftc-graduating">🎓 GRADUATING</div>':'')
+      +(t.isNew?'<div class="nftc-new-badge">NEW</div>':'')
+      +'</div>'
+      +'<div class="nftc-body">'
+      +'<div class="nftc-header"><div class="nftc-name">'+t.name+'</div><div class="nftc-sym">'+t.sym+'</div></div>'
+      +'<div class="nftc-creator">by '+t.creator+'</div>'
+      +'<div class="nftc-prog-wrap"><div class="nftc-prog-fill" style="width:'+pct+'%;background:'+progColor+'"></div></div>'
+      +'<div class="nftc-stats"><span>'+pct+'% to grad</span><span>'+t.holders.toLocaleString()+' holders</span></div>'
+      +'<div class="nftc-stats" style="margin-bottom:10px;"><span style="color:var(--green);">'+t.raised+' tNIGHT</span><span>'+t.buys.toLocaleString()+' buys</span></div>'
+      +'<button class="nftc-buy" onclick="event.stopPropagation();toast(\'⊘ Opening ZK buy interface for '+t.sym+'...\',\'success\')">⊘ Buy '+t.sym+'</button>'
+      +'</div></div>';
+  }).join('');
+  // Live feed
+  var feed=document.getElementById('nf-live-feed');
+  if(feed)feed.innerHTML=NF_LIVE_BUYS.map(function(b){
+    return '<div class="nf-live-item">'
+      +'<span class="nf-live-anon">'+b.anon+'</span> '
+      +'<span class="'+(b.buy?'nf-live-buy':'nf-live-sell')+'">'+(b.buy?'bought':'sold')+'</span> '
+      +'<span style="color:var(--text2);">'+b.amount+'</span> '
+      +'<span class="nf-live-sym">'+b.sym+'</span><br>'
+      +'<span class="nf-live-night">'+b.night+' tNIGHT</span> '
+      +'<span class="nf-live-time">'+b.ago+'</span>'
+      +'</div>';
+  }).join('');
+}
+document.addEventListener('DOMContentLoaded',function(){
+  renderNFGrid('trending');
+});
 var nfSides = JSON.parse(localStorage.getItem('nf_sides') || '{"peace":0,"war":0}');
 function joinNFSide(side) {
   nfSides[side]++;
