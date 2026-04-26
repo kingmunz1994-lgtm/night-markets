@@ -329,8 +329,8 @@ h1.hero-title em{font-style:italic;color:var(--glow);}
 /* ══════════════════════════════════════════════
    PRODUCT CARDS (shared)
 ══════════════════════════════════════════════ */
-.pc{background:var(--surface);border:1px solid var(--rim);border-radius:20px;overflow:hidden;cursor:pointer;transition:all .3s var(--ease-out);position:relative;}
-.pc::before{content:'';position:absolute;inset:0;border-radius:20px;background:linear-gradient(135deg,rgba(124,58,237,.06) 0%,transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none;z-index:0;}
+.pc{background:var(--surface);border:1px solid var(--rim);border-radius:20px;overflow:hidden;cursor:pointer;transition:transform .25s var(--ease-out),box-shadow .25s var(--ease-out),border-color .25s;position:relative;will-change:transform;}
+.pc:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(124,58,237,.15),0 4px 16px rgba(0,0,0,.3);border-color:rgba(124,58,237,.35);}.pc::before{content:'';position:absolute;inset:0;border-radius:20px;background:linear-gradient(135deg,rgba(124,58,237,.06) 0%,transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none;z-index:0;}
 .pc:hover{border-color:rgba(124,58,237,.45);transform:translateY(-5px);box-shadow:0 28px 70px rgba(0,0,0,.6),0 0 0 1px rgba(124,58,237,.12),0 0 60px rgba(124,58,237,.06);}
 .pc:hover::before{opacity:1;}
 .pc-badges{position:absolute;top:12px;left:12px;z-index:3;display:flex;flex-direction:column;gap:5px;}
@@ -345,20 +345,24 @@ h1.hero-title em{font-style:italic;color:var(--glow);}
 .pc-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
 .pc-brand{font-size:10px;font-weight:700;color:var(--plasma);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);}
 .pc-country{font-size:12px;}
-.pc-title{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:12px;letter-spacing:-.01em;color:var(--text2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color .2s;}
+.pc-title{font-size:13px;font-weight:600;line-height:1.45;margin-bottom:10px;letter-spacing:-.01em;color:var(--text2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color .2s;}
 .pc:hover .pc-title{color:var(--text);}
-.pc-price-row{display:flex;align-items:baseline;gap:7px;margin-bottom:9px;}
-.pc-price{font-size:20px;font-weight:800;font-family:var(--mono);letter-spacing:-.04em;color:var(--text);}
+.pc-price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+.pc-price{font-size:22px;font-weight:800;font-family:var(--mono);letter-spacing:-.04em;color:var(--text);}
 .pc-was{font-size:12px;color:var(--faint);text-decoration:line-through;font-family:var(--mono);}
 .pc-pct{font-size:10px;font-weight:700;color:var(--red);font-family:var(--mono);background:rgba(244,63,94,.1);padding:2px 6px;border-radius:4px;}
-.pc-bnpl{background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.16);border-radius:7px;padding:7px 11px;font-size:11px;color:var(--glow);font-weight:600;margin-bottom:11px;font-family:var(--mono);display:flex;align-items:center;gap:5px;}
-.pc-bnpl-zk{font-size:9px;color:var(--muted);margin-left:auto;letter-spacing:.3px;}
-.pc-rating{font-size:11px;color:var(--muted);margin-bottom:11px;display:flex;align-items:center;gap:5px;}
+.pc-bnpl{font-size:11px;color:var(--plasma);font-weight:600;margin-bottom:10px;font-family:var(--mono);display:flex;align-items:center;gap:6px;}
+.pc-bnpl-zk{font-size:9px;color:var(--faint);letter-spacing:.3px;}
+.pc-condition{display:inline-block;font-size:9px;font-weight:700;font-family:var(--mono);letter-spacing:.5px;padding:2px 7px;border-radius:4px;margin-bottom:8px;text-transform:uppercase;}
+.pc-condition.new{color:var(--green);background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.18);}
+.pc-condition.pre{color:var(--gold);background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);}
+.pc-condition.graded{color:var(--cyan);background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);}
+.pc-rating{font-size:11px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:5px;}
 .pc-stars{color:var(--gold);letter-spacing:-1px;font-size:11px;}
-.pc-ship{font-size:10px;color:var(--muted);margin-bottom:13px;letter-spacing:.2px;}
+.pc-ship{font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.2px;}
 .pc-ship.fast{color:var(--green);}
-.pc-add{width:100%;background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(157,92,246,.08));border:1px solid rgba(124,58,237,.25);border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .22s;color:var(--glow);letter-spacing:.2px;}
-.pc-add:hover{background:linear-gradient(135deg,var(--ink),var(--plasma));border-color:transparent;color:#fff;box-shadow:0 6px 20px rgba(124,58,237,.4);transform:translateY(-1px);}
+.pc-add{width:100%;background:var(--ink);border:none;border-radius:10px;padding:11px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .22s;color:#fff;letter-spacing:.3px;}
+.pc-add:hover{background:var(--plasma);box-shadow:0 6px 20px rgba(124,58,237,.4);transform:translateY(-1px);}
 
 /* ══════════════════════════════════════════════
    SHOP PAGE
@@ -386,7 +390,7 @@ h1.hero-title em{font-style:italic;color:var(--glow);}
 .res-label{font-size:13px;color:var(--muted);flex:1;}
 .res-label strong{color:var(--text);}
 .sort-select{background:var(--surface);border:1px solid var(--rim2);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--text);outline:none;font-family:var(--sans);cursor:pointer;appearance:none;padding-right:28px;}
-.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
 
 /* ══════════════════════════════════════════════
    PRODUCT DETAIL
@@ -6306,28 +6310,28 @@ function renderProductList(list){
 }
 function renderPC(p){
   const inst=(p.price/4).toFixed(2);
-  const isLuxury=['p10','p11','p3'].includes(p.id)||(p.price>800&&!p.small);
-  const isAuth=p.cat==='Collectibles'||p.cat==='Fashion'&&p.price>500||isLuxury;
+  const isAuth=p.cat==='Collectibles'||(p.cat==='Fashion'&&p.price>500)||(p.price>800&&!p.small);
+  const cond=p.condition||'New';
+  const condClass=cond.startsWith('Pre')?'pre':cond.startsWith('Graded')?'graded':'new';
+  const condLabel=cond.startsWith('Pre')?'Pre-owned':cond.startsWith('Graded')?cond.replace('Graded ',''):'New';
   return`<div class="pc" onclick="openDetail('${p.id}')">
     <div class="pc-badges">
-      ${p.sale?'<span class="tag tag-red">SALE</span>':''}
-      ${p.popular?'<span class="tag tag-ink">🔥</span>':''}
-      ${isAuth?'<span class="tag tag-gold" style="font-size:9px">🏆 AUTH</span>':''}
+      ${p.was?`<span class="tag tag-red">−${Math.round((p.was-p.price)/p.was*100)}%</span>`:''}
+      ${isAuth?'<span class="tag tag-gold" style="font-size:9px;">⊘ AUTH</span>':''}
     </div>
     <div class="pc-wishlist" onclick="event.stopPropagation();this.textContent=this.textContent==='♡'?'♥':'♡'">♡</div>
     <div class="pc-img">${getSvg(p.id)}</div>
     <div class="pc-body">
       <div class="pc-meta"><div class="pc-brand">${p.brand}</div><div class="pc-country">${p.sellerCountry}</div></div>
+      <span class="pc-condition ${condClass}">${condLabel}</span>
       <div class="pc-title">${p.title}</div>
       <div class="pc-price-row">
         <div class="pc-price">$${p.price.toLocaleString()}</div>
         ${p.was?`<div class="pc-was">$${p.was.toLocaleString()}</div>`:''}
-        ${p.was?`<div class="pc-pct">−${Math.round((p.was-p.price)/p.was*100)}%</div>`:''}
       </div>
-      <div class="pc-bnpl"><span>⊘ 4 × $${inst}</span><span class="pc-bnpl-zk">ZK · No data</span></div>
-      <div class="pc-rating"><span class="pc-stars">${stars(p.rating)}</span>${p.rating} <span style="color:var(--faint)">(${p.reviews.toLocaleString()})</span></div>
-      <div class="pc-ship ${p.fast?'fast':''}">${p.fast?'⚡ Fast dispatch':'🌐 '+p.sellerCountry+' seller'}</div>
-      <button class="pc-add" onclick="event.stopPropagation();quickAdd('${p.id}')">+ Add to Cart</button>
+      ${p.bnpl?`<div class="pc-bnpl">⊘ 4 × $${inst} <span class="pc-bnpl-zk">· no credit check</span></div>`:''}
+      <div class="pc-rating"><span class="pc-stars">${'★'.repeat(Math.round(p.rating))}</span> ${p.rating} <span style="color:var(--faint)">(${p.reviews.toLocaleString()})</span></div>
+      <button class="pc-add" onclick="event.stopPropagation();quickAdd('${p.id}')">Add to Cart</button>
     </div>
   </div>`;
 }
