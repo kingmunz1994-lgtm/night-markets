@@ -55,7 +55,7 @@ import * as path   from 'node:path';
 import * as fs     from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Buffer }  from 'buffer';
-import { WebSocket } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import * as Rx     from 'rxjs';
 
 import * as ledger    from '@midnight-ntwrk/ledger-v7';
@@ -315,6 +315,63 @@ function calcSell(nightReserve: bigint, tokenReserve: bigint, tokensIn: bigint):
 function normalizeNightName(raw: string): string {
   return raw.toLowerCase().replace(/\.night$/, '').replace(/[^a-z0-9-]/g, '').slice(0, 32);
 }
+
+// ─── Token store (night-fun) ──────────────────────────────────────────────────
+const _tokenStore: Map<string, any> = new Map();
+[
+  { id:'1', name:'NightDoge',    symbol:'NDOGE', emoji:'🌙', desc:'The original Midnight meme. ZK woof.', nr:42_100_000n, tr:957_900_000n, buys:312, sells:87 },
+  { id:'2', name:'ShadowPepe',   symbol:'SPEPE', emoji:'🐸', desc:'Shielded frog. No one knows you hold it.', nr:71_300_000n, tr:928_700_000n, buys:891, sells:201 },
+  { id:'3', name:'ZKitty',       symbol:'ZKIT',  emoji:'🐱', desc:'Private cat. Buys are invisible on-chain.', nr:18_600_000n, tr:981_400_000n, buys:143, sells:34 },
+  { id:'4', name:'MidnightBull', symbol:'MBULL', emoji:'🐂', desc:'Bullish on Midnight. ZK leveraged vibes.', nr:55_400_000n, tr:944_600_000n, buys:567, sells:123 },
+  { id:'5', name:'AnonymousApe', symbol:'ANAPE', emoji:'🦍', desc:'NFT-free ape culture. Totally private buys.', nr:9_200_000n, tr:990_800_000n, buys:78, sells:12 },
+  { id:'6', name:'DustDevil',    symbol:'DDUST', emoji:'🌪️', desc:'Sweeping the DUST floor. ZK yield farming.', nr:33_800_000n, tr:966_200_000n, buys:289, sells:76 },
+  { id:'7', name:'NightShiba',   symbol:'NSHIB', emoji:'🐕', desc:"Shib but you're anonymous. Much privacy.", nr:61_700_000n, tr:938_300_000n, buys:744, sells:189 },
+  { id:'8', name:'VoidCat',      symbol:'VOID',  emoji:'🖤', desc:'Aesthetic nihilism tokenized. ZK dark energy.', nr:4_100_000n, tr:995_900_000n, buys:31, sells:8 },
+  { id:'9', name:'ProofOfDoge',  symbol:'POD',   emoji:'✅', desc:'ZK-provably doge. Verify the doge without seeing it.', nr:28_400_000n, tr:971_600_000n, buys:221, sells:58 },
+].forEach(t => {
+  const address = `token_${t.id}`;
+  _tokenStore.set(t.id, { id:t.id, name:t.name, symbol:t.symbol, emoji:t.emoji, desc:t.desc, address, createdAt: Date.now() - Math.random()*86_400_000*7 });
+  if (!_curveStore.has(address)) {
+    _curveStore.set(address, { tokenAddress:address, nightReserve:t.nr, tokenReserve:t.tr, totalBuys:t.buys, totalSells:t.sells, graduated:t.nr>=85_000_000n, privacy:true, createdAt:Date.now() });
+  }
+});
+
+// ─── Task store (night-work) ──────────────────────────────────────────────────
+const _taskStore: Map<string, any> = new Map([
+  ['t1', { id:'t1', icon:'📸', title:'Photograph Sydney CBD — 10 specific locations', meta:'Street level · Standard quality · 48h deadline', agent:'Midnight City Agent #4471 — Urban Mapper faction', reward:120, category:'photography', state:'open', poster:'agent_4471', bond:10, createdAt:Date.now()-3_600_000 }],
+  ['t2', { id:'t2', icon:'📦', title:'Purchase and ship a physical item to Melbourne', meta:'Item details provided · Reimbursed + fee · 72h deadline', agent:'Midnight City Agent #1829 — Commerce faction', reward:85, category:'logistics', state:'open', poster:'agent_1829', bond:10, createdAt:Date.now()-7_200_000 }],
+  ['t3', { id:'t3', icon:'✅', title:'Verify this business is still operating — Brisbane', meta:'Visit location · Confirm open/closed · Photo required', agent:'Midnight City Agent #7703 — Intelligence faction', reward:40, category:'verification', state:'open', poster:'agent_7703', bond:10, createdAt:Date.now()-1_800_000 }],
+  ['t4', { id:'t4', icon:'🔧', title:'Assemble and test a Raspberry Pi sensor kit', meta:'Kit shipped to you · Full assembly guide · Return after', agent:'Midnight City Agent #2201 — Hardware faction', reward:200, category:'hardware', state:'open', poster:'agent_2201', bond:10, createdAt:Date.now()-10_800_000 }],
+  ['t5', { id:'t5', icon:'🌱', title:'Plant 10 native seedlings at designated GPS coordinates', meta:'Seedlings provided · GPS proof required · 1 week deadline', agent:'Midnight City Agent #9914 — EcoCore faction', reward:55, category:'environment', state:'open', poster:'agent_9914', bond:10, createdAt:Date.now()-900_000 }],
+  ['t6', { id:'t6', icon:'🎤', title:'Record 50 spoken sentences in Australian English', meta:'Audio quality guidelines provided · Submit as WAV files', agent:'Midnight City Agent #3356 — Language faction', reward:75, category:'data', state:'open', poster:'agent_3356', bond:10, createdAt:Date.now()-14_400_000 }],
+  ['t7', { id:'t7', icon:'🚚', title:'Last-mile delivery: pick up and deliver 3 parcels in Perth', meta:'Route optimised · Insurance included · Same day', agent:'Midnight City Agent #6621 — Logistics faction', reward:95, category:'logistics', state:'open', poster:'agent_6621', bond:10, createdAt:Date.now()-5_400_000 }],
+  ['t8', { id:'t8', icon:'🔍', title:'Mystery shop at 4 retail stores and submit report', meta:'Detailed evaluation form · Receipts reimbursed', agent:'Midnight City Agent #8801 — Intelligence faction', reward:110, category:'verification', state:'open', poster:'agent_8801', bond:10, createdAt:Date.now()-21_600_000 }],
+]);
+const _workerState: Map<string, Map<string, any>> = new Map(); // taskId → workerAddr → {state,proof}
+
+// ─── Vault store (night-save) ─────────────────────────────────────────────────
+const _vaultStore: Map<string, any> = new Map(); // address → {collateral,debt,bnpl[]}
+function getVault(address: string) {
+  if (!_vaultStore.has(address)) _vaultStore.set(address, { collateral:0, debt:0, bnpl:[] });
+  return _vaultStore.get(address)!;
+}
+
+// ─── Lend store (night-lend) ──────────────────────────────────────────────────
+const _lendStore: Map<string, any> = new Map(); // address → {deposits,borrows}
+const POOL_PRICES: Record<string,number> = { NIGHT:0.04, sUSD:1.00, tDUST:0.012 };
+const POOLS_APY:   Record<string,number> = { NIGHT:18.4, sUSD:8.2,  tDUST:12.1 };
+const POOLS_BORROW:Record<string,number> = { NIGHT:22.1, sUSD:11.5, tDUST:16.3 };
+const POOLS_TVL:   Record<string,number> = { NIGHT:1_200_000, sUSD:3_800_000, tDUST:620_000 };
+function getLendPos(address: string) {
+  if (!_lendStore.has(address)) _lendStore.set(address, { deposits:{NIGHT:0,sUSD:0,tDUST:0}, borrows:{sUSD:0,NIGHT:0,tDUST:0} });
+  return _lendStore.get(address)!;
+}
+
+// ─── Biz store (night-biz) ────────────────────────────────────────────────────
+const _bizStore: Map<string, any> = new Map(); // creatorAddress → deployed token
+
+// ─── Poker rooms (night-poker WS) ────────────────────────────────────────────
+const _pokerRooms: Map<string, { players: Set<any>, state: any }> = new Map();
 
 const server = http.createServer(async (req, res) => {
   const url    = req.url ?? '/';
@@ -612,6 +669,224 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // ── GET /health ───────────────────────────────────────────────────────────────
+  if (url === '/health' || url === '/api/health') {
+    return json(res, 200, { ok: true, ready: appState.ready });
+  }
+
+  // ── GET /api/tokens ───────────────────────────────────────────────────────────
+  if (method === 'GET' && url === '/api/tokens') {
+    const tokens = [..._tokenStore.values()].map(t => {
+      const c = _curveStore.get(t.address);
+      const nr = c ? Number(c.nightReserve) / 1_000_000 : 0;
+      return { ...t, night: nr.toFixed(1), pct: Math.min(100, Math.round(nr / 85 * 100)), buys: c?.totalBuys ?? 0, graduated: c?.graduated ?? false };
+    }).sort((a, b) => Number(b.night) - Number(a.night));
+    return json(res, 200, { tokens });
+  }
+
+  // ── POST /api/tokens/create ───────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/tokens/create') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { name, symbol, emoji = '🌙', desc = '', creator } = body;
+    if (!name || !symbol) return json(res, 400, { error: 'name and symbol required' });
+    const id = `tk_${Date.now()}`;
+    const address = `token_${id}`;
+    const token = { id, name, symbol: symbol.toUpperCase().slice(0, 6), emoji, desc, address, creator, createdAt: Date.now() };
+    _tokenStore.set(id, token);
+    _curveStore.set(address, { tokenAddress:address, nightReserve:1n, tokenReserve:1_000_000_000n, totalBuys:0, totalSells:0, graduated:false, privacy:true, createdAt:Date.now() });
+    console.log(`\n  [token/create] ${name} $${symbol} → ${address}`);
+    return json(res, 200, { ok: true, token });
+  }
+
+  // ── GET /api/tokens/:id ───────────────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/tokens/')) {
+    const id = decodeURIComponent(url.replace('/api/tokens/', '').split('?')[0]);
+    const token = _tokenStore.get(id);
+    if (!token) return json(res, 404, { error: 'token not found' });
+    const c = _curveStore.get(token.address);
+    const nr = c ? Number(c.nightReserve) / 1_000_000 : 0;
+    return json(res, 200, { ...token, night: nr.toFixed(1), pct: Math.min(100, Math.round(nr / 85 * 100)), buys: c?.totalBuys ?? 0, curve: c ? { ...c, nightReserve: c.nightReserve.toString(), tokenReserve: c.tokenReserve.toString() } : null });
+  }
+
+  // ── GET /api/tasks ────────────────────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/tasks')) {
+    const category = new URL('http://x' + url).searchParams.get('category');
+    let tasks = [..._taskStore.values()];
+    if (category && category !== 'all') tasks = tasks.filter(t => t.category === category);
+    return json(res, 200, { tasks: tasks.sort((a, b) => b.createdAt - a.createdAt) });
+  }
+
+  // ── POST /api/nightwork/post ──────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightwork/post') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { title, desc = '', reward, deadline = '48', bond = 10, poster, category = 'general', icon = '📋' } = body;
+    if (!title || !reward) return json(res, 400, { error: 'title and reward required' });
+    if (Number(reward) < 1) return json(res, 400, { error: 'minimum reward is 1 NIGHT' });
+    const id = `t${Date.now()}`;
+    const task = { id, icon, title, meta:`${category} · ${deadline}h deadline`, desc, agent:`${(poster ?? 'Anonymous').slice(0,20)}…`, reward:Number(reward), category, state:'open', poster:poster ?? 'anon', bond:Number(bond), createdAt:Date.now() };
+    _taskStore.set(id, task);
+    console.log(`\n  [nightwork/post] "${title}" reward=${reward} NIGHT`);
+    return json(res, 200, { ok: true, task });
+  }
+
+  // ── POST /api/nightwork/accept ────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightwork/accept') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { taskId, worker } = body;
+    if (!taskId || !worker) return json(res, 400, { error: 'taskId and worker required' });
+    if (!_taskStore.has(taskId)) return json(res, 404, { error: 'task not found' });
+    if (!_workerState.has(taskId)) _workerState.set(taskId, new Map());
+    _workerState.get(taskId)!.set(worker, { state:'accepted', acceptedAt:Date.now() });
+    return json(res, 200, { ok: true, taskId, state:'accepted' });
+  }
+
+  // ── POST /api/nightwork/submit ────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightwork/submit') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { taskId, proof, worker } = body;
+    if (!taskId || !proof) return json(res, 400, { error: 'taskId and proof required' });
+    if (!_workerState.has(taskId)) _workerState.set(taskId, new Map());
+    _workerState.get(taskId)!.set(worker ?? 'anon', { state:'submitted', proof, submittedAt:Date.now() });
+    console.log(`\n  [nightwork/submit] task=${taskId} worker=${(worker ?? 'anon').slice(0,20)}…`);
+    return json(res, 200, { ok: true, taskId, state:'submitted' });
+  }
+
+  // ── GET /api/nightwork/my-tasks/:address ──────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/nightwork/my-tasks/')) {
+    const address = decodeURIComponent(url.replace('/api/nightwork/my-tasks/', ''));
+    const myTasks: any[] = [];
+    for (const [taskId, workers] of _workerState) {
+      const wd = workers.get(address);
+      if (wd) {
+        const task = _taskStore.get(taskId);
+        if (task) myTasks.push({ ...task, workerState: wd.state, proof: wd.proof });
+      }
+    }
+    return json(res, 200, { tasks: myTasks });
+  }
+
+  // ── /api/nightsave/* ──────────────────────────────────────────────────────────
+  if (url.startsWith('/api/nightsave/')) {
+    let body: any = {};
+    if (method === 'POST') { try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); } }
+    const action = url.replace('/api/nightsave/', '').split('?')[0];
+    const NIGHT_PRICE = 0.04;
+
+    if (method === 'GET' && action.startsWith('state/')) {
+      return json(res, 200, getVault(decodeURIComponent(action.replace('state/', ''))));
+    }
+    const { address, amount = 0 } = body;
+    if (!address) return json(res, 400, { error: 'address required' });
+    const v = getVault(address);
+    if (action === 'deposit') {
+      v.collateral += Number(amount);
+      return json(res, 200, { ok: true, ...v });
+    }
+    if (action === 'mint') {
+      const maxMint = v.collateral * NIGHT_PRICE * 0.80;
+      if (Number(amount) > maxMint) return json(res, 400, { error: `max mint is ${maxMint.toFixed(2)} sUSD (80% LTV)` });
+      v.debt += Number(amount);
+      return json(res, 200, { ok: true, ...v });
+    }
+    if (action === 'repay') {
+      v.debt = Math.max(0, v.debt - (Number(amount) || v.debt));
+      return json(res, 200, { ok: true, ...v });
+    }
+    if (action === 'redeem') {
+      if (v.debt > 0) return json(res, 400, { error: 'repay sUSD debt before redeeming collateral' });
+      v.collateral = Math.max(0, v.collateral - (Number(amount) || v.collateral));
+      return json(res, 200, { ok: true, ...v });
+    }
+    if (action === 'bnpl') {
+      const months = Number(body.months ?? 4);
+      const instalment = Number(body.totalAmount ?? amount) / months;
+      v.bnpl.push({ totalAmount: Number(body.totalAmount ?? amount), months, instalment, paid: 0, createdAt: Date.now() });
+      return json(res, 200, { ok: true, ...v });
+    }
+    return json(res, 404, { error: `Unknown nightsave action: ${action}` });
+  }
+
+  // ── /api/nightlend/* ──────────────────────────────────────────────────────────
+  if (url.startsWith('/api/nightlend/')) {
+    let body: any = {};
+    if (method === 'POST') { try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); } }
+    const action = url.replace('/api/nightlend/', '').split('?')[0];
+
+    if (method === 'GET' && action === 'pools') {
+      return json(res, 200, { pools: Object.entries(POOLS_APY).map(([asset, apy]) => ({ asset, apy, borrowRate: POOLS_BORROW[asset], tvl: POOLS_TVL[asset], price: POOL_PRICES[asset] })) });
+    }
+    if (method === 'GET' && action.startsWith('state/')) {
+      const pos = getLendPos(decodeURIComponent(action.replace('state/', '')));
+      const totalDepUSD = Object.entries(pos.deposits).reduce((s: number, [a, v]) => s + (v as number) * (POOL_PRICES[a] ?? 0), 0);
+      const totalBorUSD = Object.entries(pos.borrows).reduce((s: number, [a, v]) => s + (v as number) * (POOL_PRICES[a] ?? 0), 0);
+      return json(res, 200, { ...pos, totalDepUSD, totalBorUSD, healthFactor: totalBorUSD > 0 ? (totalDepUSD * 0.8) / totalBorUSD : null });
+    }
+    const { address, asset, amount } = body;
+    if (!address) return json(res, 400, { error: 'address required' });
+    const pos = getLendPos(address);
+    if (action === 'deposit') {
+      if (!asset || !amount) return json(res, 400, { error: 'asset and amount required' });
+      pos.deposits[asset] = (pos.deposits[asset] ?? 0) + Number(amount);
+      console.log(`\n  [nightlend/deposit] ${amount} ${asset} from ${address.slice(0,20)}…`);
+      return json(res, 200, { ok: true, position: getLendPos(address) });
+    }
+    if (action === 'borrow') {
+      if (!asset || !amount) return json(res, 400, { error: 'asset and amount required' });
+      const totalDepUSD = Object.entries(pos.deposits).reduce((s: number, [a, v]) => s + (v as number) * (POOL_PRICES[a] ?? 0), 0);
+      const totalBorUSD = Object.entries(pos.borrows).reduce((s: number, [a, v]) => s + (v as number) * (POOL_PRICES[a] ?? 0), 0);
+      const usdVal = Number(amount) * (POOL_PRICES[asset] ?? 0);
+      if (totalBorUSD + usdVal > totalDepUSD * 0.75) return json(res, 400, { error: `exceeds 75% LTV — max $${(totalDepUSD * 0.75 - totalBorUSD).toFixed(2)}` });
+      pos.borrows[asset] = (pos.borrows[asset] ?? 0) + Number(amount);
+      return json(res, 200, { ok: true, position: getLendPos(address) });
+    }
+    if (action === 'repay') {
+      pos.borrows = { sUSD:0, NIGHT:0, tDUST:0 };
+      return json(res, 200, { ok: true, position: getLendPos(address) });
+    }
+    if (action === 'withdraw') {
+      if (!asset || !amount) return json(res, 400, { error: 'asset and amount required' });
+      const totalBorUSD = Object.entries(pos.borrows).reduce((s: number, [a, v]) => s + (v as number) * (POOL_PRICES[a] ?? 0), 0);
+      if (totalBorUSD > 0) return json(res, 400, { error: 'repay borrows before withdrawing' });
+      pos.deposits[asset] = Math.max(0, (pos.deposits[asset] ?? 0) - Number(amount));
+      return json(res, 200, { ok: true, position: getLendPos(address) });
+    }
+    return json(res, 404, { error: `Unknown nightlend action: ${action}` });
+  }
+
+  // ── /api/nightbiz/* ───────────────────────────────────────────────────────────
+  if (url.startsWith('/api/nightbiz/')) {
+    let body: any = {};
+    if (method === 'POST') { try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); } }
+    const action = url.replace('/api/nightbiz/', '').split('?')[0];
+
+    if (action === 'deploy') {
+      const { address, name, symbol, supply = '10,000,000', bronze = 100, silver = 500, gold = 2000, platinum = 10000, holderBps = 5000, licenseRequired = false } = body;
+      if (!address || !name || !symbol) return json(res, 400, { error: 'address, name, symbol required' });
+      const token = { address:`biz_${Date.now()}`, creator:address, name, symbol:symbol.toUpperCase(), supply, tiers:{bronze,silver,gold,platinum}, holderBps, licenseRequired, deployedAt:Date.now() };
+      _bizStore.set(address, token);
+      console.log(`\n  [nightbiz/deploy] ${name} $${symbol} by ${address.slice(0,20)}…`);
+      return json(res, 200, { ok: true, token });
+    }
+    if (method === 'GET' && action.startsWith('state/')) {
+      const addr = decodeURIComponent(action.replace('state/', ''));
+      const token = _bizStore.get(addr);
+      return json(res, token ? 200 : 404, token ?? { error: 'no token deployed for this address' });
+    }
+    if (action === 'tier') {
+      const { address, balance } = body;
+      const token = _bizStore.get(address) ?? { tiers:{ bronze:100, silver:500, gold:2000, platinum:10000 } };
+      const bal = Number(balance ?? 0);
+      const t = token.tiers;
+      const tier = bal >= t.platinum ? 'Platinum' : bal >= t.gold ? 'Gold' : bal >= t.silver ? 'Silver' : bal >= t.bronze ? 'Bronze' : 'None';
+      return json(res, 200, { tier, balance: bal, tiers: t });
+    }
+    return json(res, 404, { error: `Unknown nightbiz action: ${action}` });
+  }
+
   json(res, 404, { error: 'Not found' });
 });
 
@@ -621,7 +896,57 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`\n🌙 Night Markets API Server`);
   console.log(`   http://127.0.0.1:${PORT}/api/status`);
   console.log(`   Contract: ${CONTRACT_ADDRESS}`);
-  console.log(`   Network:  Midnight preprod\n`);
+  console.log(`   Network:  Midnight preprod`);
+  console.log(`   Poker WS: ws://127.0.0.1:${PORT}/ws/poker/:roomId\n`);
+});
+
+// ─── WebSocket — Night Poker rooms ────────────────────────────────────────────
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (request, socket, head) => {
+  if (request.url?.startsWith('/ws/poker/')) {
+    wss.handleUpgrade(request, socket, head, ws => wss.emit('connection', ws, request));
+  } else {
+    socket.destroy();
+  }
+});
+
+wss.on('connection', (ws, req) => {
+  const roomId = (req.url ?? '').replace('/ws/poker/', '').split('?')[0] || 'default';
+  if (!_pokerRooms.has(roomId)) _pokerRooms.set(roomId, { players: new Set(), state: { phase:'waiting', players:[], pot:0, community:[] } });
+  const room = _pokerRooms.get(roomId)!;
+  room.players.add(ws);
+  const seat = room.players.size - 1;
+  console.log(`\n  [poker/${roomId}] player joined (seat ${seat}, ${room.players.size} total)`);
+
+  const broadcast = (data: any, exclude?: any) => {
+    const msg = JSON.stringify(data);
+    for (const p of room.players) if (p !== exclude && p.readyState === 1) p.send(msg);
+  };
+
+  ws.send(JSON.stringify({ type:'room_state', roomId, seat, state: room.state, playerCount: room.players.size }));
+  broadcast({ type:'player_joined', seat, playerCount: room.players.size }, ws);
+
+  ws.on('message', raw => {
+    try {
+      const msg = JSON.parse(raw.toString());
+      if (msg.type === 'action') {
+        broadcast({ type:'action', seat: msg.seat ?? seat, action: msg.action, amount: msg.amount }, ws);
+      } else if (msg.type === 'state_update') {
+        room.state = { ...room.state, ...msg.state };
+        broadcast({ type:'state_update', state: room.state });
+      } else if (msg.type === 'chat') {
+        broadcast({ type:'chat', seat: msg.seat ?? seat, text: msg.text });
+      }
+    } catch { /* ignore malformed messages */ }
+  });
+
+  ws.on('close', () => {
+    room.players.delete(ws);
+    if (room.players.size === 0) { _pokerRooms.delete(roomId); return; }
+    broadcast({ type:'player_left', seat, playerCount: room.players.size });
+    console.log(`  [poker/${roomId}] player left (${room.players.size} remaining)`);
+  });
 });
 
 await init();
