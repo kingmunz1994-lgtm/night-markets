@@ -2801,6 +2801,7 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="ndm-item" onclick="showPage('ecosystem-vision');closeAllNavDrops()">🌐 Ecosystem Vision</div>
           <div class="ndm-item" onclick="showPage('nightid');closeAllNavDrops()" style="color:#a78bfa;">🪪 Night ID</div>
           <div class="ndm-item" onclick="showPage('chests');closeAllNavDrops()" style="color:#00e676;">🏴‍☠️ Community Chests</div>
+          <div class="ndm-item" onclick="showPage('listings');closeAllNavDrops()" style="color:var(--green);">🌐 P2P Listings — Escrow Marketplace</div>
           <div class="ndm-item" onclick="showPage('vault');closeAllNavDrops()" style="color:#7c3aed;">🎮 Night Vault — Poker Cosmetics</div>
           <div class="ndm-item" onclick="showPage('nightsave');closeAllNavDrops()">💎 Night Save</div>
           <div class="ndm-item" onclick="showPage('lend');closeAllNavDrops()">🏦 Night Lend</div>
@@ -6313,6 +6314,7 @@ function showPage(name){
   if(name==='cart')renderCart();
   if(name==='orders')renderOrders();
   if(name==='vault')renderVaultItems('All');
+  if(name==='listings')renderListings();
 }
 
 function handleSearch(val){
@@ -10054,6 +10056,105 @@ document.addEventListener('click',function(e){
     </div>
   </div>
 </div>
+
+<!-- ══════════════ P2P LISTINGS ══════════════ -->
+<div class="page" id="page-listings">
+  <div class="page-inner" style="max-width:1100px;margin:0 auto;padding:60px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px;">
+      <div>
+        <h1 style="font-size:32px;font-weight:800;margin-bottom:6px;">🌐 P2P Listings</h1>
+        <div style="color:var(--muted);font-family:var(--mono);font-size:13px;">ZK-escrow marketplace · Midnight Network · funds locked until delivery confirmed</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span id="nm-api-status" style="font-size:11px;font-family:var(--mono);color:var(--muted);">Checking API…</span>
+        <button class="btn btn-primary btn-sm" onclick="showPage('create-listing')">+ Create listing</button>
+      </div>
+    </div>
+    <div id="nm-listings-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;"></div>
+  </div>
+</div>
+
+<!-- ══════════════ CREATE LISTING ══════════════ -->
+<div class="page" id="page-create-listing">
+  <div class="page-inner" style="max-width:600px;margin:0 auto;padding:60px 24px;">
+    <button onclick="showPage('listings')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;margin-bottom:24px;">← Back to listings</button>
+    <h1 style="font-size:28px;font-weight:800;margin-bottom:8px;">Create a Listing</h1>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:32px;">Your listing is backed by a ZK escrow on Midnight — buyers' funds are held until you confirm delivery.</p>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:12px;">
+        <div style="flex:0 0 80px;">
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">EMOJI</label>
+          <input id="nl-emoji" type="text" value="📦" maxlength="2" style="width:100%;padding:12px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:24px;text-align:center;" />
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">TITLE *</label>
+          <input id="nl-title" type="text" placeholder="What are you selling?" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">PRICE (NIGHT) *</label>
+          <input id="nl-price" type="number" min="1" placeholder="e.g. 500" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">CATEGORY</label>
+          <select id="nl-cat" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;">
+            <option>Electronics</option><option>Fashion</option><option>Beauty</option><option>Home</option><option>Sports</option><option>Collectibles</option><option>General</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">CONDITION</label>
+          <select id="nl-cond" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;">
+            <option>New</option><option>Like New</option><option>Good</option><option>Fair</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">DESCRIPTION</label>
+        <textarea id="nl-desc" rows="3" placeholder="Describe the item, condition, included accessories…" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:14px;resize:vertical;font-family:var(--sans);"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">SHIPS FROM</label>
+        <input id="nl-from" type="text" placeholder="City, Country" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;" />
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rim2);border-radius:12px;padding:16px;font-size:13px;color:var(--muted);">
+        <div style="font-weight:700;color:var(--text);margin-bottom:6px;">⊘ ZK Escrow Protection</div>
+        Buyer funds are locked in the NightMarketsEscrow contract on Midnight Preprod until you confirm shipment and the buyer confirms receipt. Neither party can claim funds without the other's action.
+      </div>
+      <button id="nl-create-btn" class="btn btn-primary" onclick="createListing()" style="padding:16px;font-size:16px;font-weight:700;">⊘ List with escrow →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CHECKOUT MODAL ══════════════ -->
+<div class="modal-overlay" id="ov-checkout" onclick="if(event.target===this)closeModal('ov-checkout')">
+  <div class="modal-box" style="max-width:400px;">
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px;" id="co-listing-title">Checkout</div>
+    <div style="font-family:var(--mono);font-size:24px;font-weight:700;color:var(--green);margin-bottom:8px;" id="co-listing-price"></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;" id="co-listing-info">Funds locked in ZK escrow until delivery confirmed</div>
+    <div style="background:var(--surface);border:1px solid var(--rim2);border-radius:10px;padding:14px;font-size:12px;color:var(--muted);margin-bottom:20px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:4px;">How ZK escrow works:</div>
+      1. Your NIGHT tokens are locked in the contract<br>
+      2. Seller ships, records tracking on-chain<br>
+      3. You confirm delivery → funds released to seller<br>
+      4. Dispute? Governance votes to resolve
+    </div>
+    <button id="co-confirm-btn" class="btn btn-primary" onclick="confirmCheckout()" style="width:100%;padding:14px;font-size:15px;font-weight:700;margin-bottom:10px;">Lock funds in escrow →</button>
+    <button class="btn btn-ghost" onclick="closeModal('ov-checkout')" style="width:100%;padding:12px;">Cancel</button>
+  </div>
+</div>
+
+<style>
+.nm-listing-card{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s;}
+.nm-listing-card:hover{border-color:var(--ink);}
+.nm-listing-emoji{font-size:40px;text-align:center;}
+.nm-listing-title{font-size:16px;font-weight:700;color:var(--text);}
+.nm-listing-meta{font-size:12px;color:var(--muted);font-family:var(--mono);}
+.nm-listing-desc{font-size:13px;color:var(--text2);line-height:1.5;}
+.nm-listing-footer{display:flex;justify-content:space-between;align-items:center;margin-top:auto;}
+.nm-listing-price{font-family:var(--mono);font-weight:700;color:var(--green);font-size:15px;}
+.nm-listing-actions{display:flex;gap:8px;}
+</style>
 
 <!-- ══════════════ NIGHT VAULT ══════════════ -->
 <div class="page" id="page-vault">
@@ -16173,6 +16274,114 @@ function setVaultFilter(el, type) {
   el.classList.add('active');
   el.id = 'vault-filter-active';
   renderVaultItems(type);
+}
+
+// ── Marketplace Listings (API-backed P2P escrow) ─────────────
+var NM_API = 'http://127.0.0.1:3001';
+var _listings = [];
+var _checkoutListing = null;
+
+async function nmApiPost(path, body) {
+  var r = await fetch(NM_API + path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), signal:AbortSignal.timeout(10000) });
+  var j = await r.json();
+  if (!r.ok) throw new Error(j.error || 'API error');
+  return j;
+}
+async function nmApiGet(path) {
+  var r = await fetch(NM_API + path, { signal: AbortSignal.timeout(6000) });
+  var j = await r.json();
+  if (!r.ok) throw new Error(j.error || 'API error');
+  return j;
+}
+
+async function renderListings() {
+  var grid = document.getElementById('nm-listings-grid');
+  var status = document.getElementById('nm-api-status');
+  if (!grid) return;
+  grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-family:var(--mono);">Loading listings…</div>';
+  try {
+    var data = await nmApiGet('/api/listings');
+    _listings = data.listings || [];
+    if (status) status.textContent = '🟢 API online — ' + _listings.length + ' listing' + (_listings.length !== 1 ? 's' : '');
+  } catch {
+    _listings = [];
+    if (status) status.textContent = '🔴 API offline — start api-server to see live listings';
+  }
+  if (!_listings.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono);">No listings yet — be the first to create one.</div>';
+    return;
+  }
+  grid.innerHTML = _listings.map(function(l) {
+    var stateColor = l.state === 'OPEN' ? 'var(--green)' : l.state === 'FUNDED' ? 'var(--gold)' : 'var(--muted)';
+    return '<div class="nm-listing-card">'
+      + '<div class="nm-listing-emoji">' + (l.emoji || '📦') + '</div>'
+      + '<div class="nm-listing-title">' + l.title + '</div>'
+      + '<div class="nm-listing-meta">' + (l.cat || 'General') + ' · ' + (l.cond || 'New') + (l.shipFrom ? ' · Ships from ' + l.shipFrom : '') + '</div>'
+      + (l.desc ? '<div class="nm-listing-desc">' + l.desc + '</div>' : '')
+      + '<div class="nm-listing-footer">'
+        + '<span class="nm-listing-price">⭐ ' + (l.price || 0) + ' NIGHT</span>'
+        + '<span style="font-size:11px;font-family:var(--mono);color:' + stateColor + ';">' + (l.state || 'OPEN') + '</span>'
+      + '</div>'
+      + '<div class="nm-listing-actions">'
+        + (l.state === 'OPEN' ? '<button class="btn btn-primary btn-sm" onclick="openCheckout(\'' + l.id + '\')">Buy with escrow →</button>' : '<button class="btn btn-ghost btn-sm" disabled>Sold</button>')
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function openCheckout(id) {
+  if (!walletState || !walletState.connected) { openWalletModal(); return; }
+  var l = _listings.find(function(x){ return x.id === id; });
+  if (!l) return;
+  _checkoutListing = l;
+  document.getElementById('co-listing-title') && (document.getElementById('co-listing-title').textContent = l.title);
+  document.getElementById('co-listing-price') && (document.getElementById('co-listing-price').textContent = l.price + ' NIGHT');
+  document.getElementById('co-listing-info')  && (document.getElementById('co-listing-info').textContent  = 'Escrow protects your funds until delivery is confirmed');
+  openModal('ov-checkout');
+}
+
+async function confirmCheckout() {
+  if (!_checkoutListing || !walletState || !walletState.connected) return;
+  var btn = document.getElementById('co-confirm-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating escrow…'; }
+  try {
+    var result = await nmApiPost('/api/escrow/fund', { orderId: _checkoutListing.id, amountNight: Math.round(_checkoutListing.price * 1_000_000) });
+    closeModal('ov-checkout');
+    toast('✓ Funds locked in escrow — seller has been notified', 'success');
+    setTimeout(function(){ toast('📦 Confirm delivery when it arrives to release funds', 'info'); }, 2000);
+    renderListings();
+  } catch (err) {
+    toast('Escrow: ' + err.message, 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Lock funds in escrow →'; }
+}
+
+async function createListing() {
+  if (!walletState || !walletState.connected) { openWalletModal(); return; }
+  var title = (document.getElementById('nl-title')?.value || '').trim();
+  var price = parseFloat(document.getElementById('nl-price')?.value || '0');
+  var cat   = document.getElementById('nl-cat')?.value   || 'General';
+  var cond  = document.getElementById('nl-cond')?.value  || 'New';
+  var desc  = (document.getElementById('nl-desc')?.value  || '').trim();
+  var from  = (document.getElementById('nl-from')?.value  || '').trim();
+  var emoji = (document.getElementById('nl-emoji')?.value || '📦').trim() || '📦';
+  if (!title)      { toast('Enter a title', 'error'); return; }
+  if (price <= 0)  { toast('Enter a price in NIGHT', 'error'); return; }
+  var btn = document.getElementById('nl-create-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
+  try {
+    var id = 'lst_' + Date.now();
+    await nmApiPost('/api/listings/create', { id, title, cat, price, cond, desc, from, emoji, sellerId: walletState.address });
+    await nmApiPost('/api/escrow/create', { orderId: id, amountNight: Math.round(price * 1_000_000) });
+    toast('✓ Listing live — escrow contract created on Midnight', 'success');
+    document.getElementById('nl-title') && (document.getElementById('nl-title').value = '');
+    document.getElementById('nl-price') && (document.getElementById('nl-price').value = '');
+    document.getElementById('nl-desc')  && (document.getElementById('nl-desc').value  = '');
+    showPage('listings');
+  } catch (err) {
+    toast('Create listing: ' + err.message, 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '⊘ List with escrow →'; }
 }
 </script>
 
