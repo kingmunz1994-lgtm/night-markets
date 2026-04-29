@@ -20,7 +20,6 @@
   "dependencies": {
     "@midnight-ntwrk/compact-js": "2.4.0",
     "@midnight-ntwrk/compact-runtime": "0.14.0",
-    "@midnight-ntwrk/dapp-connector-proof-provider": "4.0.4",
     "@midnight-ntwrk/ledger": "^4.0.0",
     "@midnight-ntwrk/ledger-v7": "7.0.2",
     "@midnight-ntwrk/midnight-js-contracts": "4.0.4",
@@ -30,10 +29,10 @@
     "@midnight-ntwrk/midnight-js-network-id": "4.0.4",
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.0.4",
     "@midnight-ntwrk/midnight-js-types": "4.0.4",
-    "@midnight-ntwrk/wallet-sdk-address-format": "4.0.4",
+    "@midnight-ntwrk/wallet-sdk-address-format": "3.1.1",
     "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
-    "@midnight-ntwrk/wallet-sdk-hd": "4.0.4",
+    "@midnight-ntwrk/wallet-sdk-hd": "3.0.2",
     "@midnight-ntwrk/wallet-sdk-shielded": "1.0.0",
     "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "1.0.0",
     "ws": "^8.19.0"
