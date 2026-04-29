@@ -51,11 +51,11 @@ export ledger holder_balance: Map<Bytes<32>, Uint<64>>;
 export ledger total_holders:  Counter;
 
 // ── Revenue epoch mechanism ──────────────────────────────────────
-// Each epoch: Night Markets deposits holder_share NIGHT to contract
-// revenue_per_token_epoch[n] = cumulative NIGHT per token at end of epoch n
-// holders claim by proving balance at epoch snapshot
-export ledger current_epoch:           Counter;
-export ledger epoch_rev_per_token:     Map<Bytes<32>, Uint<64>>; // epoch# → NIGHT per token (×1000 fixed point)
+// epoch_number["en"]  = current epoch count (manual counter, avoids Counter.value issues)
+// epoch_rev_per_token["rpt"]  = current epoch accumulated RPT (×1000 fixed point)
+// epoch_rev_per_token["frpt"] = last finalized epoch RPT (for claiming)
+export ledger epoch_number:            Map<Bytes<32>, Uint<64>>; // key "en"
+export ledger epoch_rev_per_token:     Map<Bytes<32>, Uint<64>>; // keys "rpt" / "frpt"
 export ledger holder_last_claimed_ep:  Map<Bytes<32>, Uint<64>>; // holderCommit → last claimed epoch
 
 // ── Merch sale log (public stats — no buyer info) ───────────────
@@ -73,7 +73,11 @@ export ledger has_license:      Map<Bytes<32>, Boolean>;    // holderCommit → 
 // ── Witnesses (private inputs provided by caller's wallet) ───────
 witness localSecretKey(): Bytes<32>;
 witness holderTokenBalance(): Uint<64>;
-witness callerEpochSnapshot(): Uint<64>; // balance at snapshot epoch for claim
+witness callerEpochSnapshot(): Uint<64>;
+witness computedHolderAmt(): Uint<64>;
+witness computedCreatorAmt(): Uint<64>;
+witness computedRptIncrease(): Uint<64>;
+witness computedEarned(): Uint<64>; // balance at snapshot epoch for claim
 
 // ══════════════════════════════════════════════════════════════════
 //  HELPER CIRCUITS
@@ -134,15 +138,15 @@ export circuit initialize(
   const hBps   = disclose(holderRevBps);
   const platBps = 500 as Uint<16>; // Night Markets 5% fixed fee
   assert(hBps <= (9500 as Uint<16>), "holder share too high");
-  const cBps = (9500 as Uint<16> - hBps) as Uint<16>;
+  const cBps = (9500 - hBps) as Uint<16>;
 
   // Mint all tokens to creator's commitment
   const creatorCom = creatorCommitment();
   const cCom = disclose(creatorCom);
   const sup = disclose(supply);
 
-  token_name.insert(pad(32, "name"), name);
-  token_symbol.insert(pad(32, "sym"), symbol);
+  token_name.insert(pad(32, "name"), disclose(name));
+  token_symbol.insert(pad(32, "sym"), disclose(symbol));
   total_supply.insert(pad(32, "supply"), sup);
   creator_commit.insert(pad(32, "creator"), cCom);
   is_paused.insert(pad(32, "paused"), false);
@@ -182,10 +186,10 @@ export circuit transfer(
   const rCom = disclose(recipientCommitment);
   const amt  = disclose(amount);
 
-  // Prove balance (private witness)
-  const senderBal = holderTokenBalance();
+  // Prove balance (private witness — disclosed so it can be written to ledger)
+  const senderBal = disclose(holderTokenBalance());
   assert(senderBal >= amt, "insufficient balance");
-  assert(disclose(senderBal) == holder_balance.lookup(sCom), "balance witness mismatch");
+  assert(senderBal == holder_balance.lookup(sCom), "balance witness mismatch");
 
   // License gate — if enterprise requires it, recipient must be licensed
   const licReq = license_required.lookup(pad(32, "lic"));
@@ -195,8 +199,7 @@ export circuit transfer(
   }
 
   // Deduct sender
-  const newSenderBal = (senderBal - amt) as Uint<64>;
-  holder_balance.insert(sCom, newSenderBal);
+  holder_balance.insert(sCom, (senderBal - amt) as Uint<64>);
 
   // Credit recipient — if new holder, increment counter
   const recipientBal = holder_balance.member(rCom)
@@ -209,7 +212,7 @@ export circuit transfer(
 
   // Seed recipient's claim epoch to current so they don't claim past revenue
   if (holder_last_claimed_ep.member(rCom) == false) {
-    holder_last_claimed_ep.insert(rCom, current_epoch.value);
+    holder_last_claimed_ep.insert(rCom, epoch_number.member(pad(32, "en")) ? epoch_number.lookup(pad(32, "en")) : (0 as Uint<64>));
   }
 
   return true;
@@ -238,18 +241,18 @@ export circuit recordMerchSale(saleAmountNight: Uint<64>): Boolean {
   const hBps   = holder_bps.lookup(pad(32, "hbps"));
   const cBps   = creator_bps.lookup(pad(32, "cbps"));
 
-  const holderAmt  = (amt * (hBps as Uint<64>)) / (10000 as Uint<64>);
-  const creatorAmt = (amt * (cBps as Uint<64>)) / (10000 as Uint<64>);
+  const holderAmt  = computedHolderAmt();
+  const creatorAmt = disclose(computedCreatorAmt());
+  assert(holderAmt * 10000 <= amt * (hBps as Uint<64>), "holderAmt exceeds share");
+  assert(creatorAmt * 10000 <= amt * (cBps as Uint<64>), "creatorAmt exceeds share");
 
-  // Accumulate epoch revenue per token (×1000 fixed point for precision)
-  // This is the current epoch's running total
-  const ep    = current_epoch.value;
-  const epKey = pad(32, ep as Uint<64>); // epoch number as key
-  const prevRpt = epoch_rev_per_token.member(epKey)
-    ? epoch_rev_per_token.lookup(epKey)
+  // Accumulate epoch revenue per token into "rpt" (current epoch running total)
+  const prevRpt = epoch_rev_per_token.member(pad(32, "rpt"))
+    ? epoch_rev_per_token.lookup(pad(32, "rpt"))
     : (0 as Uint<64>);
-  const rptIncrease = (holderAmt * (1000 as Uint<64>)) / sup;
-  epoch_rev_per_token.insert(epKey, (prevRpt + rptIncrease) as Uint<64>);
+  const rptIncrease = disclose(computedRptIncrease());
+  assert(rptIncrease * sup <= holderAmt * 1000, "rptIncrease exceeds bound");
+  epoch_rev_per_token.insert(pad(32, "rpt"), (prevRpt + rptIncrease) as Uint<64>);
 
   // Creator pending
   const prevCreatorPending = creator_pending.lookup(pad(32, "cpend"));
@@ -271,9 +274,12 @@ export circuit recordMerchSale(saleAmountNight: Uint<64>): Boolean {
 
 export circuit closeEpoch(): Uint<64> {
   assertCreator();
-  const closedEp = current_epoch.value;
-  current_epoch.increment(1);
-  return closedEp;
+  const ep  = epoch_number.member(pad(32, "en")) ? epoch_number.lookup(pad(32, "en")) : (0 as Uint<64>);
+  const rpt = epoch_rev_per_token.member(pad(32, "rpt")) ? epoch_rev_per_token.lookup(pad(32, "rpt")) : (0 as Uint<64>);
+  epoch_rev_per_token.insert(pad(32, "frpt"), rpt);
+  epoch_rev_per_token.insert(pad(32, "rpt"),  0 as Uint<64>);
+  epoch_number.insert(pad(32, "en"), (ep + 1) as Uint<64>);
+  return ep;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -294,35 +300,22 @@ export circuit claimRevenue(epochsToClaim: Uint<8>): Uint<64> {
 
   assert(holder_balance.member(hCom), "not a holder");
 
-  const balance  = holderTokenBalance();
+  const balance = disclose(holderTokenBalance());
   assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
   assert(balance > (0 as Uint<64>), "zero balance");
 
-  const lastEp = holder_last_claimed_ep.member(hCom)
-    ? holder_last_claimed_ep.lookup(hCom)
-    : (0 as Uint<64>);
-  const curEp  = current_epoch.value;
+  const curEp  = epoch_number.member(pad(32, "en")) ? epoch_number.lookup(pad(32, "en")) : (0 as Uint<64>);
+  const lastEp = holder_last_claimed_ep.member(hCom) ? holder_last_claimed_ep.lookup(hCom) : (0 as Uint<64>);
+  assert(curEp > lastEp, "no epochs to claim");
 
-  assert(lastEp < curEp, "no epochs to claim");
-
-  // Claim up to epochsToClaim epochs (gas limit protection)
-  // For large gaps, holder calls this multiple times
-  const maxEps = epochsToClaim as Uint<64>;
-  const endEp  = lastEp + maxEps < curEp ? lastEp + maxEps : curEp;
-
-  // Sum revenue across claimed epochs
-  // Note: in a production contract this would be a loop;
-  // for Compact we unroll or use a single epoch pattern.
-  // Here we claim one epoch at a time for circuit simplicity.
-  const epKey = pad(32, lastEp);
-  const rpt   = epoch_rev_per_token.member(epKey)
-    ? epoch_rev_per_token.lookup(epKey)
+  const rpt = epoch_rev_per_token.member(pad(32, "frpt"))
+    ? epoch_rev_per_token.lookup(pad(32, "frpt"))
     : (0 as Uint<64>);
 
-  const earned = (rpt * balance) / (1000 as Uint<64>);
+  const earned = computedEarned();
+  assert(earned * 1000 <= rpt * balance, "earned exceeds bound");
 
-  // Advance claim pointer
-  holder_last_claimed_ep.insert(hCom, lastEp + (1 as Uint<64>));
+  holder_last_claimed_ep.insert(hCom, curEp);
 
   return disclose(earned);
 }
@@ -352,7 +345,7 @@ export circuit getHolderTier(): Uint<8> {
   const hCom = disclose(holderCom);
 
   assert(holder_balance.member(hCom), "not a holder");
-  const balance = holderTokenBalance();
+  const balance = disclose(holderTokenBalance());
   assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
 
   const tp = tier_platinum.lookup(pad(32, "tp"));
@@ -385,7 +378,7 @@ export circuit proveHolder(): Boolean {
   const holderCom = callerCommitment();
   const hCom = disclose(holderCom);
   assert(holder_balance.member(hCom), "not a holder");
-  const balance = holderTokenBalance();
+  const balance = disclose(holderTokenBalance());
   assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
   assert(balance > (0 as Uint<64>), "zero balance");
   return true;
@@ -517,7 +510,7 @@ export circuit transferFrom(
   }
   holder_balance.insert(rCom, (recipientBal + amt) as Uint<64>);
   if (holder_last_claimed_ep.member(rCom) == false) {
-    holder_last_claimed_ep.insert(rCom, current_epoch.value);
+    holder_last_claimed_ep.insert(rCom, epoch_number.member(pad(32, "en")) ? epoch_number.lookup(pad(32, "en")) : (0 as Uint<64>));
   }
 
   return true;
@@ -534,7 +527,7 @@ export circuit burn(amount: Uint<64>): Boolean {
   const amt       = disclose(amount);
 
   assert(holder_balance.member(hCom), "not a holder");
-  const balance = holderTokenBalance();
+  const balance = disclose(holderTokenBalance());
   assert(disclose(balance) == holder_balance.lookup(hCom), "balance witness mismatch");
   assert(balance >= amt, "insufficient balance to burn");
 
@@ -588,7 +581,7 @@ export circuit mint(recipientCommitment: Bytes<32>, amount: Uint<64>): Boolean {
   }
   holder_balance.insert(rCom, (recipientBal + amt) as Uint<64>);
   if (holder_last_claimed_ep.member(rCom) == false) {
-    holder_last_claimed_ep.insert(rCom, current_epoch.value);
+    holder_last_claimed_ep.insert(rCom, epoch_number.member(pad(32, "en")) ? epoch_number.lookup(pad(32, "en")) : (0 as Uint<64>));
   }
 
   return true;
@@ -634,9 +627,6 @@ export ledger curve_token_reserve: Map<Bytes<32>, Uint<64>>;  // key "cvt"
 export ledger curve_graduated:     Map<Bytes<32>, Boolean>;   // key "cgrad"
 export ledger curve_privacy_on:    Map<Bytes<32>, Boolean>;   // key "cpriv"
 export ledger curve_total_buys:    Counter;
-
-// 85 tNight = 85_000_000 µNIGHT graduation threshold (matches zk-mint)
-const GRADUATION_THRESHOLD: Uint<64> = 85000000 as Uint<64>;
 
 // Off-chain witnesses: buyers/sellers compute output amounts, circuit verifies
 witness curveTokensOutWitness(): Uint<64>;
@@ -707,7 +697,7 @@ export circuit buyCurve(nightIn: Uint<64>, minTokensOut: Uint<64>): Uint<64> {
   if (prevBal == (0 as Uint<64>)) { total_holders.increment(1); }
   holder_balance.insert(bCom, (prevBal + tOut) as Uint<64>);
   if (holder_last_claimed_ep.member(bCom) == false) {
-    holder_last_claimed_ep.insert(bCom, current_epoch.value);
+    holder_last_claimed_ep.insert(bCom, epoch_number.member(pad(32, "en")) ? epoch_number.lookup(pad(32, "en")) : (0 as Uint<64>));
   }
 
   releaseReentrancyGuard();
@@ -730,7 +720,7 @@ export circuit sellCurve(tokensIn: Uint<64>, minNightOut: Uint<64>): Uint<64> {
   const tIn       = disclose(tokensIn);
   const minNOut   = disclose(minNightOut);
 
-  const sellerBal = holderTokenBalance();
+  const sellerBal = disclose(holderTokenBalance());
   assert(disclose(sellerBal) == holder_balance.lookup(sCom), "balance witness mismatch");
   assert(sellerBal >= tIn, "insufficient tokens to sell");
 
@@ -758,7 +748,7 @@ export circuit graduateCurve(): Boolean {
   assert(curve_night_reserve.member(pad(32, "cvn")), "curve not initialized");
   assert(curve_graduated.lookup(pad(32, "cgrad")) == false, "already graduated");
   const vn = curve_night_reserve.lookup(pad(32, "cvn"));
-  assert(vn >= GRADUATION_THRESHOLD, "graduation threshold not yet reached");
+  assert(vn >= 85000000, "graduation threshold not yet reached");
   curve_graduated.insert(pad(32, "cgrad"), true);
   return true;
 }
