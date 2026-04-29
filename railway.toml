@@ -1,0 +1,14 @@
+[build]
+builder = "nixpacks"
+buildCommand = "npm install"
+
+[deploy]
+startCommand = "node --env-file=.env --import tsx scripts/api-server.ts"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[environments.production.variables]
+NODE_ENV = "production"
+PORT = "3000"
