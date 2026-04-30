@@ -31,11 +31,11 @@
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.0.4",
     "@midnight-ntwrk/midnight-js-types": "4.0.4",
     "@midnight-ntwrk/wallet-sdk-address-format": "3.1.1",
-    "@midnight-ntwrk/wallet-sdk-dust-wallet": "1.0.0",
-    "@midnight-ntwrk/wallet-sdk-facade": "1.0.0",
+    "@midnight-ntwrk/wallet-sdk-dust-wallet": "4.0.0",
+    "@midnight-ntwrk/wallet-sdk-facade": "4.0.0",
     "@midnight-ntwrk/wallet-sdk-hd": "3.0.2",
-    "@midnight-ntwrk/wallet-sdk-shielded": "1.0.0",
-    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "1.0.0",
+    "@midnight-ntwrk/wallet-sdk-shielded": "3.0.0",
+    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "3.0.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {
