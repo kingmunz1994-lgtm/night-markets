@@ -299,10 +299,10 @@ async function main() {
     publicDataProvider:  indexerPublicDataProvider(CONFIG.indexer, CONFIG.indexerWS),
     proofProvider:       httpClientProofProvider(CONFIG.proofServer, zkConfigProvider),
     zkConfigProvider,
-    // ← Simplified levelPrivateStateProvider — no accountId/password needed in 3.x SDK
     privateStateProvider: levelPrivateStateProvider({
       privateStateStoreName: 'night-markets-state',
       walletProvider: walletAndMidnightProvider,
+      privateStoragePasswordProvider: () => 'night-markets-deploy-secret-key-2024',
     }),
   };
 
