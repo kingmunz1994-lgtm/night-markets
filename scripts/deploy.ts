@@ -53,10 +53,16 @@ import { HDWallet, Roles } from '@midnight-ntwrk/wallet-sdk-hd';
 import { ShieldedWallet } from '@midnight-ntwrk/wallet-sdk-shielded';
 import {
   createKeystore,
-  InMemoryTransactionHistoryStorage,
   PublicKey,
   UnshieldedWallet,
 } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
+
+const noOpTxHistory = {
+  create: async () => {},
+  delete: async () => undefined as any,
+  getAll: async function* () {},
+  get: async () => undefined as any,
+};
 
 // Required for GraphQL subscriptions (wallet sync) to work in Node.js
 // @ts-expect-error: globalThis.WebSocket is needed for Apollo WS transport
@@ -119,7 +125,7 @@ const buildWallet = async (seed: string) => {
   const unshieldedWallet = UnshieldedWallet({
     networkId,
     indexerClientConnection: baseConfig.indexerClientConnection,
-    txHistoryStorage: new InMemoryTransactionHistoryStorage(),
+    txHistoryStorage: noOpTxHistory,
   }).startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
 
   const dustWallet = DustWallet({
