@@ -275,21 +275,16 @@ async function main() {
     const synced = s.isSynced ? '✓ synced' : `syncing… (${syncTick * 10}s)`;
     console.log(`  [sync] ${synced} | dust: ${dust}`);
   });
+  // Proceed once fully synced OR once dust is available (shielded sync can take very long)
   const state = await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
-      Rx.throttleTime(5_000),
-      Rx.filter((s: any) => s.isSynced),
+      Rx.filter((s: any) => s.isSynced || (s.dust?.walletBalance?.(new Date()) ?? 0n) > 0n),
     ),
   );
   syncSub.unsubscribe();
-  const tNightBal = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
-  console.log(`  ✓ Synced  |  tNight: ${tNightBal.toLocaleString()}`);
+  const tNightBal = state.unshielded?.balances?.[unshieldedToken().raw] ?? 0n;
+  console.log(`  ✓ Ready   |  tNight: ${tNightBal.toLocaleString()}  |  dust: ${state.dust?.walletBalance?.(new Date())?.toLocaleString() ?? '?'}`);
 
-  if (tNightBal === 0n) {
-    console.error('\n  ❌ No tNight balance. Get tokens from: https://faucet.preprod.midnight.network/');
-    console.error(`     Send to: ${ctx.unshieldedKeystore.getBech32Address()}`);
-    process.exit(1);
-  }
 
   // 3. Ensure DUST (fee token) is available
   await registerForDustGeneration(ctx);
