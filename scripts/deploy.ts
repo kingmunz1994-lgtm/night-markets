@@ -59,6 +59,7 @@ import {
 
 const noOpTxHistory = {
   create: async () => {},
+  upsert: async () => {},
   delete: async () => undefined as any,
   getAll: async function* () {},
   get: async () => undefined as any,
@@ -197,10 +198,6 @@ const createWalletAndMidnightProvider = async (ctx: Awaited<ReturnType<typeof bu
         { shieldedSecretKeys: ctx.shieldedSecretKeys, dustSecretKey: ctx.dustSecretKey },
         { ttl: ttl ?? new Date(Date.now() + 30 * 60 * 1000) },
       );
-      signTransactionIntents(recipe.baseTransaction, signFn, 'proof');
-      if (recipe.balancingTransaction) {
-        signTransactionIntents(recipe.balancingTransaction, signFn, 'pre-proof');
-      }
       return ctx.wallet.finalizeRecipe(recipe);
     },
     submitTx(tx: any) {
