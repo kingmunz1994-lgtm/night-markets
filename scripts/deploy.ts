@@ -267,13 +267,21 @@ async function main() {
   console.log(`  Address: ${ctx.unshieldedKeystore.getBech32Address()}`);
 
   // 2. Wait for sync
-  console.log('  Syncing with network...');
+  console.log('  Syncing with network (this can take 5–10 min on first run)...');
+  let syncTick = 0;
+  const syncSub = ctx.wallet.state().pipe(Rx.throttleTime(10_000)).subscribe((s: any) => {
+    syncTick++;
+    const dust = s.dust?.walletBalance?.(new Date()) ?? '?';
+    const synced = s.isSynced ? '✓ synced' : `syncing… (${syncTick * 10}s)`;
+    console.log(`  [sync] ${synced} | dust: ${dust}`);
+  });
   const state = await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
       Rx.throttleTime(5_000),
       Rx.filter((s: any) => s.isSynced),
     ),
   );
+  syncSub.unsubscribe();
   const tNightBal = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
   console.log(`  ✓ Synced  |  tNight: ${tNightBal.toLocaleString()}`);
 
