@@ -24,7 +24,7 @@ process.on('unhandledRejection', (reason: unknown) => {
 /**
  * deploy.ts — Night Markets Escrow Contract Deployment
  * Modelled on the official example-counter api.ts (proven working on Preprod).
- * SDK stack: midnight-js-contracts@3.0.0 / wallet-sdk-facade@1.0.0 / ledger-v7
+ * SDK stack: midnight-js-contracts@4.0.4 / wallet-sdk-facade@4.0.0 / ledger-v8
  *
  * Run:  npm run deploy
  * Env:  WALLET_SEED=<hex seed>  (set in .env)
@@ -37,9 +37,9 @@ import { Buffer } from 'buffer';
 import { WebSocket } from 'ws';
 import * as Rx from 'rxjs';
 
-// Midnight SDK — 3.x stack (matches compact-runtime 0.14.0 compiled output)
-import * as ledger from '@midnight-ntwrk/ledger-v7';
-import { unshieldedToken } from '@midnight-ntwrk/ledger-v7';
+// Midnight SDK — v8 ledger (matches midnight-js-contracts@4.0.4)
+import * as ledger from '@midnight-ntwrk/ledger-v8';
+import { unshieldedToken } from '@midnight-ntwrk/ledger-v8';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
@@ -53,10 +53,16 @@ import { HDWallet, Roles } from '@midnight-ntwrk/wallet-sdk-hd';
 import { ShieldedWallet } from '@midnight-ntwrk/wallet-sdk-shielded';
 import {
   createKeystore,
-  InMemoryTransactionHistoryStorage,
   PublicKey,
   UnshieldedWallet,
 } from '@midnight-ntwrk/wallet-sdk-unshielded-wallet';
+
+const noOpTxHistory = {
+  create: async () => {},
+  delete: async () => undefined as any,
+  getAll: async function* () {},
+  get: async () => undefined as any,
+};
 
 // Required for GraphQL subscriptions (wallet sync) to work in Node.js
 // @ts-expect-error: globalThis.WebSocket is needed for Apollo WS transport
@@ -68,8 +74,8 @@ const NETWORK = (process.env.MIDNIGHT_NETWORK ?? 'preprod') as any;
 setNetworkId(NETWORK);
 
 const CONFIG = {
-  indexer:     process.env.INDEXER_URI      ?? 'https://indexer.preprod.midnight.network/api/v3/graphql',
-  indexerWS:   process.env.INDEXER_WS_URI   ?? 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
+  indexer:     process.env.INDEXER_URI      ?? 'https://indexer.preprod.midnight.network/api/v4/graphql',
+  indexerWS:   process.env.INDEXER_WS_URI   ?? 'wss://indexer.preprod.midnight.network/api/v4/graphql/ws',
   node:        process.env.NODE_URI         ?? 'https://rpc.preprod.midnight.network',
   proofServer: process.env.PROOF_SERVER_URI ?? 'http://127.0.0.1:6300',
 };
@@ -104,36 +110,33 @@ const buildWallet = async (seed: string) => {
   const dustSecretKey       = ledger.DustSecretKey.fromSeed(keys[Roles.Dust]);
   const unshieldedKeystore  = createKeystore(keys[Roles.NightExternal], networkId);
 
-  const baseConfig = {
-    networkId,
-    indexerClientConnection: {
-      indexerHttpUrl: CONFIG.indexer,
-      indexerWsUrl:   CONFIG.indexerWS,
+  const indexerClientConnection = { indexerHttpUrl: CONFIG.indexer, indexerWsUrl: CONFIG.indexerWS };
+  const costParameters = { additionalFeeOverhead: 300_000_000_000_000n, feeBlocksMargin: 5 };
+
+  const wallet = await (WalletFacade as any).init({
+    configuration: {
+      networkId,
+      indexerClientConnection,
+      relayURL: new URL(CONFIG.node.replace(/^http/, 'ws')),
+      provingServerUrl: new URL(CONFIG.proofServer),
+      costParameters,
+      txHistoryStorage: noOpTxHistory,
     },
-    provingServerUrl: new URL(CONFIG.proofServer),
-    relayURL:         new URL(CONFIG.node.replace(/^http/, 'ws')),
-  };
+    shielded: (config: any) => (ShieldedWallet(config) as any).startWithSecretKeys(shieldedSecretKeys),
+    unshielded: (config: any) => (UnshieldedWallet({
+      networkId: config.networkId,
+      indexerClientConnection: config.indexerClientConnection,
+      txHistoryStorage: noOpTxHistory,
+    }) as any).startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore)),
+    dust: (config: any) => (DustWallet({
+      networkId: config.networkId,
+      costParameters: config.costParameters,
+      indexerClientConnection: config.indexerClientConnection,
+      txHistoryStorage: noOpTxHistory,
+    }) as any).startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust),
+  });
 
-  const shieldedWallet = ShieldedWallet(baseConfig).startWithSecretKeys(shieldedSecretKeys);
-
-  const unshieldedWallet = UnshieldedWallet({
-    networkId,
-    indexerClientConnection: baseConfig.indexerClientConnection,
-    txHistoryStorage: new InMemoryTransactionHistoryStorage(),
-  }).startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
-
-  const dustWallet = DustWallet({
-    ...baseConfig,
-    costParameters: {
-      additionalFeeOverhead: 300_000_000_000_000n,
-      feeBlocksMargin: 5,
-    },
-  }).startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust);
-
-  // ← Official constructor: new WalletFacade(shielded, unshielded, dust)
-  const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
   await wallet.start(shieldedSecretKeys, dustSecretKey);
-
   return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore };
 };
 
@@ -175,8 +178,10 @@ const signTransactionIntents = (
 
 // ─── Provider factory ─────────────────────────────────────────────────────────
 
+const readyFilter = (s: any) => s.isSynced || (s.dust?.balance?.(new Date()) ?? 0n) > 0n;
+
 const createWalletAndMidnightProvider = async (ctx: Awaited<ReturnType<typeof buildWallet>>) => {
-  const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
+  const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
   const signFn = (payload: Uint8Array) => ctx.unshieldedKeystore.signData(payload);
 
   return {
@@ -207,15 +212,14 @@ const createWalletAndMidnightProvider = async (ctx: Awaited<ReturnType<typeof bu
 // ─── DUST registration helper ─────────────────────────────────────────────────
 
 const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWallet>>) => {
-  const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
+  const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
 
-  if (state.dust.availableCoins.length > 0) {
-    const bal = state.dust.walletBalance(new Date());
-    console.log(`  ✓ DUST available: ${bal.toLocaleString()}`);
+  if ((state.dust?.balance?.(new Date()) ?? 0n) > 0n) {
+    console.log(`  ✓ DUST available: ${state.dust.balance(new Date()).toLocaleString()}`);
     return;
   }
 
-  const nightUtxos = state.unshielded.availableCoins.filter(
+  const nightUtxos = (state.unshielded?.availableCoins ?? []).filter(
     (coin: any) => coin.meta?.registeredForDustGeneration !== true,
   );
 
@@ -237,12 +241,11 @@ const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWal
   await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
       Rx.throttleTime(10_000),
-      Rx.filter((s: any) => s.isSynced),
-      Rx.filter((s: any) => s.dust.walletBalance(new Date()) > 0n),
+      Rx.filter((s: any) => (s.dust?.balance?.(new Date()) ?? 0n) > 0n),
     ),
   );
-  const final = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
-  console.log(`  ✓ DUST balance: ${final.dust.walletBalance(new Date()).toLocaleString()}`);
+  const final = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
+  console.log(`  ✓ DUST balance: ${final.dust.balance(new Date()).toLocaleString()}`);
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -267,21 +270,24 @@ async function main() {
   console.log(`  Address: ${ctx.unshieldedKeystore.getBech32Address()}`);
 
   // 2. Wait for sync
-  console.log('  Syncing with network...');
+  console.log('  Syncing with network (this can take 5–10 min on first run)...');
+  let syncTick = 0;
+  const syncSub = ctx.wallet.state().pipe(Rx.throttleTime(10_000)).subscribe((s: any) => {
+    syncTick++;
+    const dust = s.dust?.balance?.(new Date()) ?? '?';
+    const synced = s.isSynced ? '✓ synced' : `syncing… (${syncTick * 10}s)`;
+    console.log(`  [sync] ${synced} | dust: ${dust}`);
+  });
+  // Proceed once fully synced OR once dust is available (shielded sync can take very long)
   const state = await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
-      Rx.throttleTime(5_000),
-      Rx.filter((s: any) => s.isSynced),
+      Rx.filter((s: any) => s.isSynced || (s.dust?.balance?.(new Date()) ?? 0n) > 0n),
     ),
   );
-  const tNightBal = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
-  console.log(`  ✓ Synced  |  tNight: ${tNightBal.toLocaleString()}`);
+  syncSub.unsubscribe();
+  const tNightBal = state.unshielded?.balances?.[unshieldedToken().raw] ?? 0n;
+  console.log(`  ✓ Ready   |  tNight: ${tNightBal.toLocaleString()}  |  dust: ${state.dust?.balance?.(new Date())?.toLocaleString() ?? '?'}`);
 
-  if (tNightBal === 0n) {
-    console.error('\n  ❌ No tNight balance. Get tokens from: https://faucet.preprod.midnight.network/');
-    console.error(`     Send to: ${ctx.unshieldedKeystore.getBech32Address()}`);
-    process.exit(1);
-  }
 
   // 3. Ensure DUST (fee token) is available
   await registerForDustGeneration(ctx);
@@ -296,10 +302,11 @@ async function main() {
     publicDataProvider:  indexerPublicDataProvider(CONFIG.indexer, CONFIG.indexerWS),
     proofProvider:       httpClientProofProvider(CONFIG.proofServer, zkConfigProvider),
     zkConfigProvider,
-    // ← Simplified levelPrivateStateProvider — no accountId/password needed in 3.x SDK
     privateStateProvider: levelPrivateStateProvider({
       privateStateStoreName: 'night-markets-state',
       walletProvider: walletAndMidnightProvider,
+      privateStoragePasswordProvider: () => 'night-markets-deploy-secret-key-2024',
+      accountId: 'night-markets-deployer-account',
     }),
   };
 
