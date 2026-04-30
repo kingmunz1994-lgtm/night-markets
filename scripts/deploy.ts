@@ -175,8 +175,10 @@ const signTransactionIntents = (
 
 // ─── Provider factory ─────────────────────────────────────────────────────────
 
+const readyFilter = (s: any) => s.isSynced || (s.dust?.walletBalance?.(new Date()) ?? 0n) > 0n;
+
 const createWalletAndMidnightProvider = async (ctx: Awaited<ReturnType<typeof buildWallet>>) => {
-  const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
+  const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
   const signFn = (payload: Uint8Array) => ctx.unshieldedKeystore.signData(payload);
 
   return {
@@ -207,15 +209,14 @@ const createWalletAndMidnightProvider = async (ctx: Awaited<ReturnType<typeof bu
 // ─── DUST registration helper ─────────────────────────────────────────────────
 
 const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWallet>>) => {
-  const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
+  const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
 
-  if (state.dust.availableCoins.length > 0) {
-    const bal = state.dust.walletBalance(new Date());
-    console.log(`  ✓ DUST available: ${bal.toLocaleString()}`);
+  if ((state.dust?.walletBalance?.(new Date()) ?? 0n) > 0n) {
+    console.log(`  ✓ DUST available: ${state.dust.walletBalance(new Date()).toLocaleString()}`);
     return;
   }
 
-  const nightUtxos = state.unshielded.availableCoins.filter(
+  const nightUtxos = (state.unshielded?.availableCoins ?? []).filter(
     (coin: any) => coin.meta?.registeredForDustGeneration !== true,
   );
 
@@ -237,11 +238,10 @@ const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWal
   await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
       Rx.throttleTime(10_000),
-      Rx.filter((s: any) => s.isSynced),
-      Rx.filter((s: any) => s.dust.walletBalance(new Date()) > 0n),
+      Rx.filter((s: any) => (s.dust?.walletBalance?.(new Date()) ?? 0n) > 0n),
     ),
   );
-  const final = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
+  const final = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
   console.log(`  ✓ DUST balance: ${final.dust.walletBalance(new Date()).toLocaleString()}`);
 };
 
