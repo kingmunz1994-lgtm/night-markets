@@ -68,8 +68,8 @@ const NETWORK = (process.env.MIDNIGHT_NETWORK ?? 'preprod') as any;
 setNetworkId(NETWORK);
 
 const CONFIG = {
-  indexer:     process.env.INDEXER_URI      ?? 'https://indexer.preprod.midnight.network/api/v3/graphql',
-  indexerWS:   process.env.INDEXER_WS_URI   ?? 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
+  indexer:     process.env.INDEXER_URI      ?? 'https://indexer.preprod.midnight.network/api/v4/graphql',
+  indexerWS:   process.env.INDEXER_WS_URI   ?? 'wss://indexer.preprod.midnight.network/api/v4/graphql/ws',
   node:        process.env.NODE_URI         ?? 'https://rpc.preprod.midnight.network',
   proofServer: process.env.PROOF_SERVER_URI ?? 'http://127.0.0.1:6300',
 };
