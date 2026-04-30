@@ -303,7 +303,7 @@ async function main() {
       privateStateStoreName: 'night-markets-state',
       walletProvider: walletAndMidnightProvider,
       privateStoragePasswordProvider: () => 'night-markets-deploy-secret-key-2024',
-      accountId: String(ctx.unshieldedKeystore.getBech32Address()),
+      accountId: 'night-markets-deployer-account',
     }),
   };
 
