@@ -24,7 +24,7 @@ process.on('unhandledRejection', (reason: unknown) => {
 /**
  * deploy.ts — Night Markets Escrow Contract Deployment
  * Modelled on the official example-counter api.ts (proven working on Preprod).
- * SDK stack: midnight-js-contracts@4.0.4 / wallet-sdk-facade@4.0.0 / ledger-v8
+ * SDK stack: midnight-js-contracts@4.0.4 / wallet-sdk-facade@1.0.0 / ledger-v8
  *
  * Run:  npm run deploy
  * Env:  WALLET_SEED=<hex seed>  (set in .env)
@@ -40,6 +40,9 @@ import * as Rx from 'rxjs';
 // Midnight SDK — v8 ledger (matches midnight-js-contracts@4.0.4)
 import * as ledger from '@midnight-ntwrk/ledger-v8';
 import { unshieldedToken } from '@midnight-ntwrk/ledger-v8';
+// ledger-v7 is used internally by wallet-sdk-* (dust/shielded/facade v1.0.0).
+// We import it only to detect cross-WASM-boundary type mismatches in the bridge patch below.
+import * as ledger7 from '@midnight-ntwrk/ledger-v7';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
@@ -68,6 +71,65 @@ const noOpTxHistory = {
 // Required for GraphQL subscriptions (wallet sync) to work in Node.js
 // @ts-expect-error: globalThis.WebSocket is needed for Apollo WS transport
 globalThis.WebSocket = WebSocket;
+
+// ─── Ledger v7/v8 WASM bridge ────────────────────────────────────────────────
+//
+// wallet-sdk-facade@1.0.0 and its sub-wallets use ledger-v7 internally.
+// midnight-js-contracts@4.0.4 uses ledger-v8. This creates two issues when
+// the wallet SDK processes transactions created by the contracts library:
+//
+//   1. dust.balanceTransactions([v8_tx], ...) calls v8_tx.feesWithMargin(v7_params)
+//      → ledger-v8 _assertClass() throws "expected instance of LedgerParameters"
+//
+//   2. finalizeRecipe() calls v8_boundTx.merge(v7_finalizedDustTx)
+//      → ledger-v8 _assertClass() throws "expected instance of Transaction"
+//
+// The fix: patch ledger-v8's Transaction prototype methods to accept v7 objects
+// by serializing them to bytes and re-deserializing as v8 types.
+// This works because ledger-v7 and ledger-v8 share the same wire format.
+//
+let _bridgeApplied = false;
+function applyLedgerBridge(): void {
+  if (_bridgeApplied) return;
+  _bridgeApplied = true;
+
+  const V7LP   = (ledger7 as any).LedgerParameters;
+  const V7Tx   = (ledger7 as any).Transaction;
+  const V8LP   = ledger.LedgerParameters;
+  const V8Tx   = (ledger.Transaction as any);
+
+  // Patch feesWithMargin: if params is a v7 LedgerParameters, convert to v8 first.
+  const origFWM = V8Tx.prototype.feesWithMargin;
+  V8Tx.prototype.feesWithMargin = function(params: any, n: any) {
+    if (params instanceof V7LP) {
+      try {
+        return origFWM.call(this, V8LP.deserialize(params.serialize()), n);
+      } catch (e: any) {
+        console.error('  [bridge] feesWithMargin conversion failed:', e?.message);
+        throw e;
+      }
+    }
+    return origFWM.call(this, params, n);
+  };
+
+  // Patch merge: if other is a v7 Transaction, convert to v8 via serialize/deserialize.
+  // v7 finalized tx state is (signature, proof, binding) after finalizeTransaction().
+  const origMerge = V8Tx.prototype.merge;
+  V8Tx.prototype.merge = function(other: any) {
+    if (other instanceof V7Tx) {
+      try {
+        const v8Other = V8Tx.deserialize('signature', 'proof', 'binding', other.serialize());
+        return origMerge.call(this, v8Other);
+      } catch (e: any) {
+        console.error('  [bridge] merge conversion failed:', e?.message);
+        throw e;
+      }
+    }
+    return origMerge.call(this, other);
+  };
+
+  console.log('  ✓ Ledger v7/v8 WASM bridge applied');
+}
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -261,12 +323,15 @@ async function main() {
   console.log(`  Node:         ${CONFIG.node}`);
   console.log(`  Proof server: ${CONFIG.proofServer}`);
 
-  // 1. Build wallet
+  // 1. Apply the v7/v8 WASM bridge before any wallet operations
+  applyLedgerBridge();
+
+  // 2. Build wallet
   console.log('\n  Building wallet...');
   const ctx = await buildWallet(seed);
   console.log(`  Address: ${ctx.unshieldedKeystore.getBech32Address()}`);
 
-  // 2. Wait for sync
+  // 3. Wait for sync
   console.log('  Syncing with network (this can take 5–10 min on first run)...');
   let syncTick = 0;
   const syncSub = ctx.wallet.state().pipe(Rx.throttleTime(10_000)).subscribe((s: any) => {
@@ -286,10 +351,10 @@ async function main() {
   console.log(`  ✓ Ready   |  tNight: ${tNightBal.toLocaleString()}  |  dust: ${state.dust?.balance?.(new Date())?.toLocaleString() ?? '?'}`);
 
 
-  // 3. Ensure DUST (fee token) is available
+  // 4. Ensure DUST (fee token) is available
   await registerForDustGeneration(ctx);
 
-  // 4. Wire up providers (exact counter-example pattern)
+  // 5. Wire up providers (exact counter-example pattern)
   const walletAndMidnightProvider = await createWalletAndMidnightProvider(ctx);
 
   const zkConfigProvider = new NodeZkConfigProvider(zkConfigPath);
@@ -307,7 +372,7 @@ async function main() {
     }),
   };
 
-  // 5. Load compiled contract and wire witnesses
+  // 6. Load compiled contract and wire witnesses
   console.log('\n  Loading compiled contract...');
   const NightMarketsEscrow = await import(pathToFileURL(contractPath).href);
 
@@ -324,7 +389,7 @@ async function main() {
       CompiledContract.withCompiledFileAssets(zkConfigPath),
     );
 
-  // 6. Deploy
+  // 7. Deploy
   console.log('  Deploying contract (30–90 s, ZK proof generation)...\n');
   const deployed = await deployContract(providers, {
     compiledContract,
