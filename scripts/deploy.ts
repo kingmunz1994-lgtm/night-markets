@@ -299,10 +299,17 @@ const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWal
     console.log('  ✓ Registered — waiting for DUST to accrue...');
   }
 
-  // Wait for DUST balance > 0
+  // Wait for DUST balance > 0 (generated per-block for registered NIGHT UTXOs)
+  let dustTick = 0;
   await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
       Rx.throttleTime(10_000),
+      Rx.tap((s: any) => {
+        dustTick++;
+        const dProg = s.dust?.state?.progress;
+        const scanned = dProg?.appliedIndex ?? '?';
+        console.log(`  [dust-wait ${dustTick * 10}s] dust-bal:${dustBal(s)} | dust-scan:${scanned}`);
+      }),
       Rx.filter((s: any) => dustBal(s) > 0n),
     ),
   );
