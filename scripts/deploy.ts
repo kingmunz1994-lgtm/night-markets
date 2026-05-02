@@ -300,8 +300,11 @@ const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWal
   }
 
   // Wait for DUST balance > 0 (generated per-block for registered NIGHT UTXOs)
+  // Timeout after 5 min — dust wallet must scan 313k+ blocks on first run before
+  // it can see accumulated DUST. If no DUST appears, print actionable instructions.
+  const DUST_TIMEOUT_MS = 5 * 60 * 1000;
   let dustTick = 0;
-  await Rx.firstValueFrom(
+  const dustFound = await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
       Rx.throttleTime(10_000),
       Rx.tap((s: any) => {
@@ -311,8 +314,29 @@ const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWal
         console.log(`  [dust-wait ${dustTick * 10}s] dust-bal:${dustBal(s)} | dust-scan:${scanned}`);
       }),
       Rx.filter((s: any) => dustBal(s) > 0n),
+      Rx.timeout(DUST_TIMEOUT_MS),
+      Rx.catchError(() => Rx.of(null)),
     ),
   );
+
+  if (!dustFound) {
+    console.error(`
+❌  No DUST available after ${DUST_TIMEOUT_MS / 60000} minutes.
+
+    DUST is the fee token on Midnight. Your NIGHT UTXOs are registered for
+    DUST generation, but the dust wallet needs to scan all 313k+ preprod
+    blocks to find accumulated DUST — which takes ~90 min on first run.
+
+    Options:
+      1. Re-run npm run deploy after waiting ~90 min (dust wallet will have
+         finished scanning and will find your DUST immediately).
+      2. Get preprod DUST from the Midnight Discord faucet channel:
+         https://discord.gg/midnightnetwork  → #preprod-faucet
+         Paste your address: ${ctx.unshieldedKeystore.getBech32Address()}
+    `);
+    await ctx.wallet.stop();
+    process.exit(1);
+  }
   const final = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
   console.log(`  ✓ DUST balance: ${dustBal(final).toLocaleString()}`);
 };
