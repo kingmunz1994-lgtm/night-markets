@@ -237,7 +237,15 @@ const signTransactionIntents = (
 
 // ─── Provider factory ─────────────────────────────────────────────────────────
 
-const readyFilter = (s: any) => s.isSynced || dustBal(s) > 0n;
+// Deployment only needs unshielded + dust sync. Shielded scans all chain history
+// from genesis and can take 30–60+ min; blocking on it is unnecessary for deploy.
+const deployReadyFilter = (s: any): boolean => {
+  const dustSynced       = s.dust?.state?.progress?.isCompleteWithin?.(50n) ?? false;
+  const unshieldedSynced = s.unshielded?.progress?.isCompleteWithin?.(50n) ?? false;
+  return (dustSynced && unshieldedSynced) || dustBal(s) > 0n;
+};
+
+const readyFilter = deployReadyFilter;
 
 const createWalletAndMidnightProvider = async (ctx: Awaited<ReturnType<typeof buildWallet>>) => {
   const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
@@ -332,15 +340,17 @@ async function main() {
   let syncTick = 0;
   const syncSub = ctx.wallet.state().pipe(Rx.throttleTime(10_000)).subscribe((s: any) => {
     syncTick++;
-    const dust = dustBal(s);
-    const synced = s.isSynced ? '✓ synced' : `syncing… (${syncTick * 10}s)`;
-    console.log(`  [sync] ${synced} | dust: ${dust}`);
+    const dust   = dustBal(s);
+    const uProg  = s.unshielded?.progress;
+    const dProg  = s.dust?.state?.progress;
+    const uReady = uProg?.isCompleteWithin?.(50n) ? '✓' : `${uProg?.appliedIndex ?? '?'}/${uProg?.highestRelevantWalletIndex ?? '?'}`;
+    const dReady = dProg?.isCompleteWithin?.(50n) ? '✓' : `${dProg?.appliedIndex ?? '?'}/${dProg?.highestRelevantWalletIndex ?? '?'}`;
+    console.log(`  [sync ${syncTick * 10}s] unshielded:${uReady} dust:${dReady} | dust-bal:${dust}`);
   });
-  // Proceed once fully synced OR once dust is available (shielded sync can take very long)
+  // Proceed once unshielded+dust are synced OR dust balance is available.
+  // Shielded wallet scans all chain history and is not needed for deployment.
   const state = await Rx.firstValueFrom(
-    ctx.wallet.state().pipe(
-      Rx.filter((s: any) => s.isSynced || dustBal(s) > 0n),
-    ),
+    ctx.wallet.state().pipe(Rx.filter(deployReadyFilter)),
   );
   syncSub.unsubscribe();
   const tNightBal = state.unshielded?.balances?.[unshieldedToken().raw] ?? 0n;
