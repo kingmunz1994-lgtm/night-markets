@@ -237,13 +237,12 @@ const signTransactionIntents = (
 
 // ─── Provider factory ─────────────────────────────────────────────────────────
 
-// Deployment only needs unshielded + dust sync. Shielded scans all chain history
-// from genesis and can take 30–60+ min; blocking on it is unnecessary for deploy.
-const deployReadyFilter = (s: any): boolean => {
-  const dustSynced       = s.dust?.state?.progress?.isCompleteWithin?.(50n) ?? false;
-  const unshieldedSynced = s.unshielded?.progress?.isCompleteWithin?.(50n) ?? false;
-  return (dustSynced && unshieldedSynced) || dustBal(s) > 0n;
-};
+// For deployment we only need the unshielded wallet (NIGHT UTXOs for dust registration).
+// Both shielded and dust wallets trial-decrypt every block from genesis on first run —
+// 313k+ blocks on preprod takes 60-90 min. Since a fresh wallet has no prior DUST,
+// skipping that wait is safe: registerForDustGeneration will register our NIGHT UTXOs.
+const deployReadyFilter = (s: any): boolean =>
+  (s.unshielded?.progress?.isCompleteWithin?.(50n) ?? false) || dustBal(s) > 0n;
 
 const readyFilter = deployReadyFilter;
 
