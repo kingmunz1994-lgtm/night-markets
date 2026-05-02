@@ -180,13 +180,18 @@ const buildWallet = async (seed: string) => {
   const indexerClientConnection = { indexerHttpUrl: CONFIG.indexer, indexerWsUrl: CONFIG.indexerWS };
   const costParameters = { additionalFeeOverhead: 300_000_000_000_000n, feeBlocksMargin: 5 };
 
-  const shieldedWallet = (ShieldedWallet({ networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory }) as any)
-    .startWithSecretKeys(shieldedSecretKeys);
+  const relayURL = new URL(CONFIG.node.replace(/^http/, 'ws'));
+  const provingServerUrl = new URL(CONFIG.proofServer);
+
+  const shieldedWallet = (ShieldedWallet({
+    networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory,
+    provingServerUrl, relayURL,
+  }) as any).startWithSecretKeys(shieldedSecretKeys);
 
   const unshieldedWallet = (UnshieldedWallet({ networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory }) as any)
     .startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
 
-  const dustWallet = (DustWallet({ networkId, costParameters, indexerClientConnection, txHistoryStorage: noOpTxHistory }) as any)
+  const dustWallet = (DustWallet({ networkId, costParameters, indexerClientConnection, txHistoryStorage: noOpTxHistory, relayURL }) as any)
     .startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust);
 
   const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
