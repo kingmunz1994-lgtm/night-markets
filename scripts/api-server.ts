@@ -59,6 +59,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import * as Rx     from 'rxjs';
 
 import * as ledger    from '@midnight-ntwrk/ledger-v7';
+import * as ledger8   from '@midnight-ntwrk/ledger-v8';
 import { unshieldedToken } from '@midnight-ntwrk/ledger-v7';
 import { findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { httpClientProofProvider }    from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
@@ -81,6 +82,30 @@ import {
 // @ts-expect-error: Apollo WS transport
 globalThis.WebSocket = WebSocket;
 
+// ─── Ledger v7/v8 WASM bridge ────────────────────────────────────────────────
+// wallet-sdk uses ledger-v7; midnight-js-contracts uses ledger-v8.
+// Patch v8 Transaction to accept v7 objects across the WASM boundary.
+let _bridgeApplied = false;
+function applyLedgerBridge(): void {
+  if (_bridgeApplied) return;
+  _bridgeApplied = true;
+  const V7LP  = (ledger as any).LedgerParameters;
+  const V7Tx  = (ledger as any).Transaction;
+  const V8LP  = ledger8.LedgerParameters;
+  const V8Tx  = (ledger8.Transaction as any);
+  const origFWM = V8Tx.prototype.feesWithMargin;
+  V8Tx.prototype.feesWithMargin = function(params: any, n: any) {
+    if (params instanceof V7LP) return origFWM.call(this, V8LP.deserialize(params.serialize()), n);
+    return origFWM.call(this, params, n);
+  };
+  const origMerge = V8Tx.prototype.merge;
+  V8Tx.prototype.merge = function(other: any) {
+    if (other instanceof V7Tx) return origMerge.call(this, V8Tx.deserialize('signature', 'proof', 'binding', other.serialize()));
+    return origMerge.call(this, other);
+  };
+  console.log('  ✓ Ledger v7/v8 bridge applied');
+}
+
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 setNetworkId('preprod');
@@ -91,8 +116,8 @@ const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS
 const PORT = parseInt(process.env.API_PORT ?? '3001', 10);
 
 const CONFIG = {
-  indexer:     process.env.INDEXER_URI      ?? 'https://indexer.preprod.midnight.network/api/v3/graphql',
-  indexerWS:   process.env.INDEXER_WS_URI   ?? 'wss://indexer.preprod.midnight.network/api/v3/graphql/ws',
+  indexer:     process.env.INDEXER_URI      ?? 'https://indexer.preprod.midnight.network/api/v4/graphql',
+  indexerWS:   process.env.INDEXER_WS_URI   ?? 'wss://indexer.preprod.midnight.network/api/v4/graphql/ws',
   node:        process.env.NODE_URI         ?? 'https://rpc.preprod.midnight.network',
   proofServer: process.env.PROOF_SERVER_URI ?? 'http://127.0.0.1:6300',
 };
@@ -101,7 +126,13 @@ const __dirname    = path.dirname(fileURLToPath(import.meta.url));
 const zkConfigPath = path.resolve(__dirname, '..', 'contracts', 'managed', 'night-markets-escrow');
 const contractPath = path.join(zkConfigPath, 'contract', 'index.js');
 
-// ─── Wallet helpers (shared with deploy.ts / transact.ts) ────────────────────
+// ─── Wallet helpers ───────────────────────────────────────────────────────────
+
+const dustBal = (s: any): bigint =>
+  (s?.dust?.availableCoins ?? []).reduce((sum: bigint, c: any) => sum + (c.value ?? 0n), 0n);
+
+const serverReadyFilter = (s: any): boolean =>
+  (s.unshielded?.progress?.isCompleteWithin?.(50n) ?? false) || dustBal(s) > 0n;
 
 function deriveKeys(seed: string) {
   const hd = HDWallet.fromSeed(Buffer.from(seed, 'hex'));
@@ -164,7 +195,7 @@ function signIntents(tx: { intents?: Map<number, any> }, signFn: (p: Uint8Array)
 }
 
 async function buildProviders(ctx: Awaited<ReturnType<typeof buildWallet>>) {
-  const state  = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
+  const state  = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(serverReadyFilter)));
   const signFn = (p: Uint8Array) => ctx.keystore.signData(p);
   const wmp = {
     getCoinPublicKey()       { return state.shielded.coinPublicKey.toHexString(); },
@@ -230,17 +261,15 @@ async function init() {
 
   try {
     console.log('\n🌙 Night Markets API Server — initialising...');
+    applyLedgerBridge();
 
     const ctx = await buildWallet(seed);
     console.log(`  Wallet: ${ctx.keystore.getBech32Address()}`);
 
     console.log('  Syncing with preprod...');
-    await Rx.firstValueFrom(
-      ctx.wallet.state().pipe(Rx.throttleTime(5_000), Rx.filter((s: any) => s.isSynced)),
-    );
-    const state  = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter((s: any) => s.isSynced)));
-    const night  = state.unshielded.balances[unshieldedToken().raw] ?? 0n;
-    const dust   = state.dust.walletBalance(new Date());
+    const state  = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(serverReadyFilter)));
+    const night  = state.unshielded?.balances?.[unshieldedToken().raw] ?? 0n;
+    const dust   = dustBal(state);
     console.log(`  tNight: ${night.toLocaleString()} · DUST: ${dust.toLocaleString()}`);
 
     const providers = await buildProviders(ctx);
