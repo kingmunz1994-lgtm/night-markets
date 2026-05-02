@@ -191,7 +191,7 @@ const buildWallet = async (seed: string) => {
   const unshieldedWallet = (UnshieldedWallet({ networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory }) as any)
     .startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
 
-  const dustWallet = (DustWallet({ networkId, costParameters, indexerClientConnection, txHistoryStorage: noOpTxHistory, relayURL }) as any)
+  const dustWallet = (DustWallet({ networkId, costParameters, indexerClientConnection, txHistoryStorage: noOpTxHistory, relayURL, provingServerUrl }) as any)
     .startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust);
 
   const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
