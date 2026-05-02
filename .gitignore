@@ -5,6 +5,9 @@
 # Private state LevelDB
 .private-state/
 
+# Wallet sync state cache (speeds up re-runs; delete to force full rescan)
+.wallet-state/
+
 # Compiled contract artifacts (regenerate with: npm run compile)
 contracts/managed/
 

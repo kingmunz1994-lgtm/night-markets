@@ -147,6 +147,10 @@ const __dirname    = path.dirname(fileURLToPath(import.meta.url));
 const zkConfigPath = path.resolve(__dirname, '..', 'contracts', 'managed', 'night-markets-escrow');
 const contractPath = path.join(zkConfigPath, 'contract', 'index.js');
 
+const STATE_DIR           = path.resolve(__dirname, '..', '.wallet-state');
+const DUST_STATE_FILE      = path.join(STATE_DIR, 'dust.json');
+const UNSHIELDED_STATE_FILE = path.join(STATE_DIR, 'unshielded.json');
+
 // ─── Key derivation ───────────────────────────────────────────────────────────
 
 const deriveKeysFromSeed = (seed: string) => {
@@ -169,6 +173,23 @@ const deriveKeysFromSeed = (seed: string) => {
 const dustBal = (s: any): bigint =>
   (s?.dust?.availableCoins ?? []).reduce((sum: bigint, c: any) => sum + (c.value ?? 0n), 0n);
 
+// Persist wallet state so subsequent runs resume from the last synced block
+// instead of rescanning from genesis (313k+ preprod blocks = ~2.5h rescan).
+const saveWalletStates = async (wallet: WalletFacade): Promise<void> => {
+  try {
+    fs.mkdirSync(STATE_DIR, { recursive: true });
+    const [dustState, unshieldedState] = await Promise.all([
+      (wallet as any).dust.serializeState(),
+      (wallet as any).unshielded.serializeState(),
+    ]);
+    fs.writeFileSync(DUST_STATE_FILE, dustState);
+    fs.writeFileSync(UNSHIELDED_STATE_FILE, unshieldedState);
+    console.log('  ✓ Wallet state saved (.wallet-state/)');
+  } catch (e: any) {
+    console.warn('  ⚠ Could not save wallet state:', e.message);
+  }
+};
+
 const buildWallet = async (seed: string) => {
   const keys = deriveKeysFromSeed(seed);
   const networkId = getNetworkId();
@@ -183,16 +204,28 @@ const buildWallet = async (seed: string) => {
   const relayURL = new URL(CONFIG.node.replace(/^http/, 'ws'));
   const provingServerUrl = new URL(CONFIG.proofServer);
 
-  const shieldedWallet = (ShieldedWallet({
-    networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory,
-    provingServerUrl, relayURL,
-  }) as any).startWithSecretKeys(shieldedSecretKeys);
+  const shieldedWalletConfig = { networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory, provingServerUrl, relayURL };
+  const unshieldedWalletConfig = { networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory };
+  const dustWalletConfig = { networkId, costParameters, indexerClientConnection, txHistoryStorage: noOpTxHistory, relayURL, provingServerUrl };
 
-  const unshieldedWallet = (UnshieldedWallet({ networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory }) as any)
-    .startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
+  const ShieldedWalletClass   = ShieldedWallet(shieldedWalletConfig) as any;
+  const UnshieldedWalletClass = UnshieldedWallet(unshieldedWalletConfig) as any;
+  const DustWalletClass       = DustWallet(dustWalletConfig) as any;
 
-  const dustWallet = (DustWallet({ networkId, costParameters, indexerClientConnection, txHistoryStorage: noOpTxHistory, relayURL, provingServerUrl }) as any)
-    .startWithSecretKey(dustSecretKey, (ledger7 as any).LedgerParameters.initialParameters().dust);
+  const hasDustState      = fs.existsSync(DUST_STATE_FILE);
+  const hasUnshieldedState = fs.existsSync(UNSHIELDED_STATE_FILE);
+
+  if (hasDustState || hasUnshieldedState) {
+    console.log('  ✓ Resuming from saved wallet state (.wallet-state/)');
+  }
+
+  const shieldedWallet   = ShieldedWalletClass.startWithSecretKeys(shieldedSecretKeys);
+  const unshieldedWallet = hasUnshieldedState
+    ? UnshieldedWalletClass.restore(fs.readFileSync(UNSHIELDED_STATE_FILE, 'utf8'))
+    : UnshieldedWalletClass.startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
+  const dustWallet = hasDustState
+    ? DustWalletClass.restore(fs.readFileSync(DUST_STATE_FILE, 'utf8'))
+    : DustWalletClass.startWithSecretKey(dustSecretKey, (ledger7 as any).LedgerParameters.initialParameters().dust);
 
   const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
   await wallet.start(shieldedSecretKeys, dustSecretKey);
@@ -320,16 +353,21 @@ const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWal
   );
 
   if (!dustFound) {
+    // Save whatever progress the dust wallet made before exiting
+    await saveWalletStates(ctx.wallet);
     console.error(`
 ❌  No DUST available after ${DUST_TIMEOUT_MS / 60000} minutes.
 
     DUST is the fee token on Midnight. Your NIGHT UTXOs are registered for
     DUST generation, but the dust wallet needs to scan all 313k+ preprod
-    blocks to find accumulated DUST — which takes ~90 min on first run.
+    blocks to find accumulated DUST — which takes ~2.5h on first run.
+
+    Wallet scan progress has been saved to .wallet-state/ — re-running
+    npm run deploy will resume from where it left off.
 
     Options:
-      1. Re-run npm run deploy after waiting ~90 min (dust wallet will have
-         finished scanning and will find your DUST immediately).
+      1. Re-run npm run deploy — it will resume the scan from the saved
+         position and find your DUST much faster.
       2. Get preprod DUST from the Midnight Discord faucet channel:
          https://discord.gg/midnightnetwork  → #preprod-faucet
          Paste your address: ${ctx.unshieldedKeystore.getBech32Address()}
@@ -337,6 +375,7 @@ const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWal
     await ctx.wallet.stop();
     process.exit(1);
   }
+  await saveWalletStates(ctx.wallet);
   const final = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
   console.log(`  ✓ DUST balance: ${dustBal(final).toLocaleString()}`);
 };
