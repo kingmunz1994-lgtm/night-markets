@@ -173,8 +173,8 @@ const buildWallet = async (seed: string) => {
   const keys = deriveKeysFromSeed(seed);
   const networkId = getNetworkId();
 
-  const shieldedSecretKeys  = ledger.ZswapSecretKeys.fromSeed(keys[Roles.Zswap]);
-  const dustSecretKey       = ledger.DustSecretKey.fromSeed(keys[Roles.Dust]);
+  const shieldedSecretKeys  = (ledger7 as any).ZswapSecretKeys.fromSeed(keys[Roles.Zswap]);
+  const dustSecretKey       = (ledger7 as any).DustSecretKey.fromSeed(keys[Roles.Dust]);
   const unshieldedKeystore  = createKeystore(keys[Roles.NightExternal], networkId);
 
   const indexerClientConnection = { indexerHttpUrl: CONFIG.indexer, indexerWsUrl: CONFIG.indexerWS };
