@@ -165,6 +165,10 @@ const deriveKeysFromSeed = (seed: string) => {
 
 // ─── Wallet builder ───────────────────────────────────────────────────────────
 
+// DustWalletState has no balance() method; compute from availableCoins[].value
+const dustBal = (s: any): bigint =>
+  (s?.dust?.availableCoins ?? []).reduce((sum: bigint, c: any) => sum + (c.value ?? 0n), 0n);
+
 const buildWallet = async (seed: string) => {
   const keys = deriveKeysFromSeed(seed);
   const networkId = getNetworkId();
@@ -176,29 +180,16 @@ const buildWallet = async (seed: string) => {
   const indexerClientConnection = { indexerHttpUrl: CONFIG.indexer, indexerWsUrl: CONFIG.indexerWS };
   const costParameters = { additionalFeeOverhead: 300_000_000_000_000n, feeBlocksMargin: 5 };
 
-  const wallet = await (WalletFacade as any).init({
-    configuration: {
-      networkId,
-      indexerClientConnection,
-      relayURL: new URL(CONFIG.node.replace(/^http/, 'ws')),
-      provingServerUrl: new URL(CONFIG.proofServer),
-      costParameters,
-      txHistoryStorage: noOpTxHistory,
-    },
-    shielded: (config: any) => (ShieldedWallet(config) as any).startWithSecretKeys(shieldedSecretKeys),
-    unshielded: (config: any) => (UnshieldedWallet({
-      networkId: config.networkId,
-      indexerClientConnection: config.indexerClientConnection,
-      txHistoryStorage: noOpTxHistory,
-    }) as any).startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore)),
-    dust: (config: any) => (DustWallet({
-      networkId: config.networkId,
-      costParameters: config.costParameters,
-      indexerClientConnection: config.indexerClientConnection,
-      txHistoryStorage: noOpTxHistory,
-    }) as any).startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust),
-  });
+  const shieldedWallet = (ShieldedWallet({ networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory }) as any)
+    .startWithSecretKeys(shieldedSecretKeys);
 
+  const unshieldedWallet = (UnshieldedWallet({ networkId, indexerClientConnection, txHistoryStorage: noOpTxHistory }) as any)
+    .startWithPublicKey(PublicKey.fromKeyStore(unshieldedKeystore));
+
+  const dustWallet = (DustWallet({ networkId, costParameters, indexerClientConnection, txHistoryStorage: noOpTxHistory }) as any)
+    .startWithSecretKey(dustSecretKey, ledger.LedgerParameters.initialParameters().dust);
+
+  const wallet = new WalletFacade(shieldedWallet, unshieldedWallet, dustWallet);
   await wallet.start(shieldedSecretKeys, dustSecretKey);
   return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore };
 };
@@ -241,7 +232,7 @@ const signTransactionIntents = (
 
 // ─── Provider factory ─────────────────────────────────────────────────────────
 
-const readyFilter = (s: any) => s.isSynced || (s.dust?.balance?.(new Date()) ?? 0n) > 0n;
+const readyFilter = (s: any) => s.isSynced || dustBal(s) > 0n;
 
 const createWalletAndMidnightProvider = async (ctx: Awaited<ReturnType<typeof buildWallet>>) => {
   const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
@@ -273,8 +264,8 @@ const createWalletAndMidnightProvider = async (ctx: Awaited<ReturnType<typeof bu
 const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWallet>>) => {
   const state = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
 
-  if ((state.dust?.balance?.(new Date()) ?? 0n) > 0n) {
-    console.log(`  ✓ DUST available: ${state.dust.balance(new Date()).toLocaleString()}`);
+  if (dustBal(state) > 0n) {
+    console.log(`  ✓ DUST available: ${dustBal(state).toLocaleString()}`);
     return;
   }
 
@@ -300,11 +291,11 @@ const registerForDustGeneration = async (ctx: Awaited<ReturnType<typeof buildWal
   await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
       Rx.throttleTime(10_000),
-      Rx.filter((s: any) => (s.dust?.balance?.(new Date()) ?? 0n) > 0n),
+      Rx.filter((s: any) => dustBal(s) > 0n),
     ),
   );
   const final = await Rx.firstValueFrom(ctx.wallet.state().pipe(Rx.filter(readyFilter)));
-  console.log(`  ✓ DUST balance: ${final.dust.balance(new Date()).toLocaleString()}`);
+  console.log(`  ✓ DUST balance: ${dustBal(final).toLocaleString()}`);
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -336,19 +327,19 @@ async function main() {
   let syncTick = 0;
   const syncSub = ctx.wallet.state().pipe(Rx.throttleTime(10_000)).subscribe((s: any) => {
     syncTick++;
-    const dust = s.dust?.balance?.(new Date()) ?? '?';
+    const dust = dustBal(s);
     const synced = s.isSynced ? '✓ synced' : `syncing… (${syncTick * 10}s)`;
     console.log(`  [sync] ${synced} | dust: ${dust}`);
   });
   // Proceed once fully synced OR once dust is available (shielded sync can take very long)
   const state = await Rx.firstValueFrom(
     ctx.wallet.state().pipe(
-      Rx.filter((s: any) => s.isSynced || (s.dust?.balance?.(new Date()) ?? 0n) > 0n),
+      Rx.filter((s: any) => s.isSynced || dustBal(s) > 0n),
     ),
   );
   syncSub.unsubscribe();
   const tNightBal = state.unshielded?.balances?.[unshieldedToken().raw] ?? 0n;
-  console.log(`  ✓ Ready   |  tNight: ${tNightBal.toLocaleString()}  |  dust: ${state.dust?.balance?.(new Date())?.toLocaleString() ?? '?'}`);
+  console.log(`  ✓ Ready   |  tNight: ${tNightBal.toLocaleString()}  |  dust: ${dustBal(state).toLocaleString()}`);
 
 
   // 4. Ensure DUST (fee token) is available
