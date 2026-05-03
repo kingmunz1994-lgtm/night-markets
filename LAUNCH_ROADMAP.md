@@ -28,21 +28,21 @@ except night-markets. The whole ecosystem is invisible to anyone clicking throug
 
 ---
 
-## PHASE 1 — Get Everything Publicly Visible
+## PHASE 1 — Get Everything Publicly Visible ✅ COMPLETE 2026-05-03
 *Goal: All apps live on GitHub Pages. Night Hub is the working front door.*
-*Effort: Low. No contract work needed. Just deploy public/ folders to gh-pages.*
 
-- [ ] **night-hub** — deploy `public/` to gh-pages → becomes the ecosystem homepage
-- [ ] **night-poker** — deploy `public/` to gh-pages → `kingmunz1994-lgtm.github.io/night-poker/`
-- [ ] **night-fun** — deploy `public/` to gh-pages
-- [ ] **night-lend** — deploy `public/` to gh-pages
-- [ ] **night-work** — deploy `public/` to gh-pages
-- [ ] **night-save** — deploy `public/` to gh-pages
-- [ ] **night-biz** — deploy `public/` to gh-pages
-- [ ] **night-id** — deploy `public/` to gh-pages
-- [ ] **night-store** — deploy `public/` to gh-pages
-- [ ] Verify all 8 links in night-hub resolve correctly
-- [ ] Verify night-markets `night-poker/index.html` link points to correct night-poker URL
+- [x] **night-hub** → https://kingmunz1994-lgtm.github.io/night-hub/
+- [x] **night-poker** → https://kingmunz1994-lgtm.github.io/night-poker/
+- [x] **night-fun** → https://kingmunz1994-lgtm.github.io/night-fun/
+- [x] **night-lend** → https://kingmunz1994-lgtm.github.io/night-lend/
+- [x] **night-work** → https://kingmunz1994-lgtm.github.io/night-work/
+- [x] **night-save** → https://kingmunz1994-lgtm.github.io/night-save/
+- [x] **night-biz** → https://kingmunz1994-lgtm.github.io/night-biz/
+- [x] **night-id** → https://kingmunz1994-lgtm.github.io/night-id/
+- [x] **night-store** → https://kingmunz1994-lgtm.github.io/night-store/
+- [x] **night-markets** → https://kingmunz1994-lgtm.github.io/night-markets/
+- [ ] Verify all links in night-hub load correctly (allow 2-3 min for CDN propagation)
+- [ ] Verify night-markets `night-poker/` link points to night-poker repo URL
 
 ---
 
