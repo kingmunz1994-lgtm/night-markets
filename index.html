@@ -6333,12 +6333,14 @@ function handleSearch(val){
 function renderHome(){
   const CATS=[{n:'All',i:'🌐'},{n:'Electronics',i:'📱'},{n:'Fashion',i:'👗'},{n:'Beauty',i:'💄'},{n:'Home',i:'🏠'},{n:'Sports',i:'⚽'},{n:'Collectibles',i:'🏺'}];
   const cc={};PRODUCTS.forEach(p=>{cc[p.cat]=(cc[p.cat]||0)+1;});
-  document.getElementById('home-cats').innerHTML=CATS.map(c=>`
+  const homeCats = document.getElementById('home-cats');
+  const homeProducts = document.getElementById('home-products');
+  if(homeCats) homeCats.innerHTML=CATS.map(c=>`
     <div class="cat-pill ${activeCat===c.n?'active':''}" onclick="activeCat='${c.n}';showPage('shop')">
       <span class="cp-icon">${c.i}</span>${c.n}
       ${c.n!=='All'?`<span class="cp-ct">${cc[c.n]||0}</span>`:''}
     </div>`).join('');
-  document.getElementById('home-products').innerHTML=PRODUCTS.filter(p=>p.popular).slice(0,6).map(renderPC).join('');
+  if(homeProducts) homeProducts.innerHTML=PRODUCTS.filter(p=>p.popular).slice(0,6).map(renderPC).join('');
 }
 
 // ── SHOP ──
@@ -14155,7 +14157,7 @@ function evFilter(cat, el) {
 }
 
 // Populate on page show — hook into showPage
-var _origShowPage = typeof showPage === 'function' ? showPage : null;
+var _origShowPageEco = typeof showPage === 'function' ? showPage : null;
 (function(){
   var _sp = window.showPage;
   window.showPage = function(id){
