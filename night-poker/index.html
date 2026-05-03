@@ -317,6 +317,9 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
             </div>
           </div>
 
+          <div id="dealer-btns" style="display:none;margin-top:8px;">
+            <button class="btn btn-outline btn-sm" style="width:100%;" onclick="advancePhase()">⏭ Advance Phase (Dealer)</button>
+          </div>
           <div id="waiting-msg" style="font-size:13px;color:var(--muted);text-align:center;padding:8px 0;">
             Waiting for players to join…
           </div>
@@ -450,11 +453,14 @@ function showTable() {
 
 // ── Lobby ──────────────────────────────────────────────────────
 function loadRooms() {
-  var list = document.getElementById('room-list');
-  // Try to fetch live rooms; fall back to demo rooms
-  fetch(API_HTTP + '/api/status')
+  fetch(API_HTTP + '/api/poker/rooms')
     .then(function(r){ return r.json(); })
-    .then(function(){ renderRooms(_demoRooms); })
+    .then(function(data){
+      var live = (data.rooms || []).map(function(r){
+        return { id:r.id, name:r.name, players:r.playerCount, maxPlayers:r.maxPlayers, buyin:r.buyin, phase:r.phase||'waiting', sb:r.sb };
+      });
+      renderRooms(live.length ? live : _demoRooms);
+    })
     .catch(function(){ renderRooms(_demoRooms); });
 }
 
@@ -480,12 +486,18 @@ function renderRooms(rooms) {
 }
 
 function createRoom() {
-  var name   = document.getElementById('cr-name').value.trim() || 'Night Table';
-  var buyin  = parseInt(document.getElementById('cr-buyin').value) || 1000;
-  var maxp   = parseInt(document.getElementById('cr-maxp').value) || 6;
-  var sb     = parseInt(document.getElementById('cr-sb').value) || 25;
-  var roomId = 'room-' + Math.random().toString(36).slice(2,8);
-  joinRoom(roomId, name, buyin, sb, maxp);
+  var name  = document.getElementById('cr-name').value.trim() || 'Night Table';
+  var buyin = parseInt(document.getElementById('cr-buyin').value) || 1000;
+  var maxp  = parseInt(document.getElementById('cr-maxp').value) || 6;
+  var sb    = parseInt(document.getElementById('cr-sb').value) || 25;
+  fetch(API_HTTP + '/api/poker/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name:name, buyin:buyin, maxPlayers:maxp, sb:sb })
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ joinRoom(d.roomId||('room-'+Math.random().toString(36).slice(2,8)), d.name||name, d.buyin||buyin, d.sb||sb, d.maxPlayers||maxp); })
+    .catch(function(){ joinRoom('room-'+Math.random().toString(36).slice(2,8), name, buyin, sb, maxp); });
 }
 
 function joinRoom(roomId, name, buyin, sb, maxPlayers) {
@@ -749,15 +761,33 @@ function updatePot() {
 }
 
 function updateActions() {
-  var btns = document.getElementById('action-btns');
-  var betSec = document.getElementById('bet-section');
-  var waitMsg = document.getElementById('waiting-msg');
+  var btns     = document.getElementById('action-btns');
+  var betSec   = document.getElementById('bet-section');
+  var waitMsg  = document.getElementById('waiting-msg');
+  var dealerBtns = document.getElementById('dealer-btns');
   var inBettingRound = ['preflop','flop','turn','river'].indexOf(state.phase) >= 0;
   var me = state.players.find(function(p){ return p.isMe; });
   var canAct = inBettingRound && me && !me.folded;
-  if (btns)   btns.style.display   = canAct ? 'flex' : 'none';
-  if (betSec) betSec.style.display = canAct ? '' : 'none';
-  if (waitMsg) waitMsg.style.display = canAct ? 'none' : '';
+  var isDealer = state.mySeat === 0; // seat 0 = dealer/host
+  var handActive = ['preflop','flop','turn','river','showdown'].indexOf(state.phase) >= 0;
+  if (btns)       btns.style.display       = canAct ? 'flex' : 'none';
+  if (betSec)     betSec.style.display     = canAct ? '' : 'none';
+  if (dealerBtns) dealerBtns.style.display = (isDealer && handActive && state.phase !== 'showdown') ? '' : 'none';
+  if (waitMsg)    waitMsg.style.display    = (canAct || (isDealer && handActive)) ? 'none' : '';
+}
+
+function advancePhase() {
+  if (state.ws && state.ws.readyState === 1) {
+    state.ws.send(JSON.stringify({ type: 'phase_advance' }));
+  }
+  // Optimistic local update
+  var phases = ['waiting','preflop','flop','turn','river','showdown','finished'];
+  var cur = phases.indexOf(state.phase);
+  if (cur >= 0 && cur < phases.length - 1) {
+    state.phase = phases[cur + 1];
+    addHistory('sys', '— Phase advanced to ' + state.phase);
+    updateTableUI();
+  }
 }
 
 function updateInfoPanel() {

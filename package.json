@@ -6,6 +6,7 @@
   "scripts": {
     "compile": "compact compile contracts/NightMarketsEscrow.compact contracts/managed/night-markets-escrow",
     "compile:nightfun": "compact compile contracts/NightFunToken.compact contracts/managed/night-fun-token",
+    "compile:nightpoker": "compact compile contracts/NightPoker.compact contracts/managed/night-poker",
     "compile:nightfun-oz": "compact compile contracts/NightFunToken.compact contracts/managed/night-fun-token-oz",
     "night-fun": "node --env-file=.env --import tsx scripts/night-fun.ts",
     "api-server": "node --env-file=.env --import tsx scripts/api-server.ts",

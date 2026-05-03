@@ -402,7 +402,10 @@ function getLendPos(address: string) {
 const _bizStore: Map<string, any> = new Map(); // creatorAddress → deployed token
 
 // ─── Poker rooms (night-poker WS) ────────────────────────────────────────────
-const _pokerRooms: Map<string, { players: Set<any>, state: any }> = new Map();
+interface PokerMeta { id: string; name: string; buyin: number; sb: number; maxPlayers: number; createdAt: number; }
+interface PokerRoom { seats: Map<any, number>; state: { phase: string; pot: number; community: number[]; [k: string]: any }; }
+const _pokerRoomMeta: Map<string, PokerMeta> = new Map();
+const _pokerRooms:    Map<string, PokerRoom> = new Map();
 
 const server = http.createServer(async (req, res) => {
   const url    = req.url ?? '/';
@@ -918,6 +921,26 @@ const server = http.createServer(async (req, res) => {
     return json(res, 404, { error: `Unknown nightbiz action: ${action}` });
   }
 
+  // ── GET /api/poker/rooms ─────────────────────────────────────────────────────
+  if (method === 'GET' && url === '/api/poker/rooms') {
+    const rooms = [..._pokerRoomMeta.values()].map(r => {
+      const room = _pokerRooms.get(r.id);
+      return { ...r, playerCount: room ? room.seats.size : 0, phase: room?.state.phase ?? 'waiting' };
+    }).filter(r => r.playerCount < r.maxPlayers || r.phase !== 'waiting');
+    return json(res, 200, { rooms });
+  }
+
+  // ── POST /api/poker/create ────────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/poker/create') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { name = 'Night Table', buyin = 1000, sb = 25, maxPlayers = 6 } = body;
+    const id = 'room-' + Math.random().toString(36).slice(2, 8);
+    _pokerRoomMeta.set(id, { id, name: String(name).slice(0, 32), buyin: Number(buyin), sb: Number(sb), maxPlayers: Math.min(9, Math.max(2, Number(maxPlayers))), createdAt: Date.now() });
+    console.log(`\n  [poker/create] "${name}" id=${id} buyin=${buyin} sb=${sb}`);
+    return json(res, 200, { ok: true, roomId: id, name, buyin: Number(buyin), sb: Number(sb), maxPlayers: Number(maxPlayers) });
+  }
+
   json(res, 404, { error: 'Not found' });
 });
 
@@ -942,41 +965,80 @@ server.on('upgrade', (request, socket, head) => {
   }
 });
 
+const POKER_PHASES = ['waiting','preflop','flop','turn','river','showdown','finished'] as const;
+
 wss.on('connection', (ws, req) => {
   const roomId = (req.url ?? '').replace('/ws/poker/', '').split('?')[0] || 'default';
-  if (!_pokerRooms.has(roomId)) _pokerRooms.set(roomId, { players: new Set(), state: { phase:'waiting', players:[], pot:0, community:[] } });
+  if (!_pokerRooms.has(roomId)) {
+    _pokerRooms.set(roomId, { seats: new Map(), state: { phase:'waiting', pot:0, community:[] } });
+  }
   const room = _pokerRooms.get(roomId)!;
-  room.players.add(ws);
-  const seat = room.players.size - 1;
-  console.log(`\n  [poker/${roomId}] player joined (seat ${seat}, ${room.players.size} total)`);
+  const meta = _pokerRoomMeta.get(roomId);
+
+  // Assign lowest available seat
+  const taken = new Set(room.seats.values());
+  let seat = 0;
+  while (taken.has(seat) && seat < 9) seat++;
+  room.seats.set(ws, seat);
+
+  console.log(`\n  [poker/${roomId}] seat ${seat} joined (${room.seats.size} total)`);
 
   const broadcast = (data: any, exclude?: any) => {
     const msg = JSON.stringify(data);
-    for (const p of room.players) if (p !== exclude && p.readyState === 1) p.send(msg);
+    for (const p of room.seats.keys()) {
+      if (p !== exclude && (p as any).readyState === 1) (p as any).send(msg);
+    }
   };
 
-  ws.send(JSON.stringify({ type:'room_state', roomId, seat, state: room.state, playerCount: room.players.size }));
-  broadcast({ type:'player_joined', seat, playerCount: room.players.size }, ws);
+  ws.send(JSON.stringify({
+    type: 'room_state', roomId, seat, meta: meta ?? null,
+    state: { ...room.state, playerCount: room.seats.size },
+    playerCount: room.seats.size,
+  }));
+  broadcast({ type:'player_joined', seat, playerCount: room.seats.size }, ws);
 
   ws.on('message', raw => {
     try {
       const msg = JSON.parse(raw.toString());
+      const mySeat = room.seats.get(ws) ?? seat;
+
       if (msg.type === 'action') {
-        broadcast({ type:'action', seat: msg.seat ?? seat, action: msg.action, amount: msg.amount }, ws);
+        if (msg.action !== 'fold' && msg.amount && Number(msg.amount) > 0) {
+          room.state.pot += Number(msg.amount);
+        }
+        broadcast({ type:'action', seat: mySeat, action: msg.action, amount: msg.amount, pot: room.state.pot });
+
+      } else if (msg.type === 'phase_advance') {
+        const cur = POKER_PHASES.indexOf(room.state.phase as any);
+        if (cur >= 0 && cur < POKER_PHASES.length - 1) {
+          room.state.phase = POKER_PHASES[cur + 1];
+          if (msg.community) room.state.community = msg.community;
+          if (msg.phase === 'showdown') room.state.pot = 0; // winner claimed
+          broadcast({ type:'state_update', state: { ...room.state, playerCount: room.seats.size } });
+          console.log(`  [poker/${roomId}] phase → ${room.state.phase}`);
+        }
+
       } else if (msg.type === 'state_update') {
         room.state = { ...room.state, ...msg.state };
-        broadcast({ type:'state_update', state: room.state });
+        broadcast({ type:'state_update', state: { ...room.state, playerCount: room.seats.size } });
+
       } else if (msg.type === 'chat') {
-        broadcast({ type:'chat', seat: msg.seat ?? seat, text: msg.text });
+        broadcast({ type:'chat', seat: mySeat, text: msg.text });
       }
     } catch { /* ignore malformed messages */ }
   });
 
   ws.on('close', () => {
-    room.players.delete(ws);
-    if (room.players.size === 0) { _pokerRooms.delete(roomId); return; }
-    broadcast({ type:'player_left', seat, playerCount: room.players.size });
-    console.log(`  [poker/${roomId}] player left (${room.players.size} remaining)`);
+    const leavingSeat = room.seats.get(ws) ?? seat;
+    room.seats.delete(ws);
+    if (room.seats.size === 0) {
+      _pokerRooms.delete(roomId);
+      _pokerRoomMeta.delete(roomId);
+      console.log(`  [poker/${roomId}] room closed (empty)`);
+      return;
+    }
+    broadcast({ type:'player_left', seat: leavingSeat, playerCount: room.seats.size });
+    console.log(`  [poker/${roomId}] seat ${leavingSeat} left (${room.seats.size} remaining)`);
   });
 });
 
