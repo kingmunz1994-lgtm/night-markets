@@ -4,19 +4,56 @@ Zero-knowledge privacy marketplace on Midnight Network. Read this at the start o
 
 ---
 
-## Repo at a Glance
+## CRITICAL: Read This Before Writing Any Code
+
+This is ONE repo in a **10-repo ecosystem**. Before building anything, check whether it
+already exists in a standalone repo (list below). The ecosystem repos are **real and live** —
+do not rebuild them inside night-markets. If a task belongs to another repo, say so.
+
+The `midnight-ai-kit` repo (`kingmunz1994-lgtm/midnight-ai-kit`) was built specifically
+to give AI assistants context about this ecosystem. Its `CLAUDE.md` is the Midnight/Compact
+language reference. Its `prompts/` folder has ready-made patterns. Use it.
+
+---
+
+## The Full Night Ecosystem
+
+All repos are under `github.com/kingmunz1994-lgtm/`. All have their own contracts,
+frontends, and deploy scripts. Do NOT duplicate any of these inside night-markets.
+
+| Repo | What it is | Live URL | SDK version |
+|---|---|---|---|
+| **night-markets** | Escrow marketplace + API server ← YOU ARE HERE | `kingmunz1994-lgtm.github.io/night-markets/` | compact-js 2.5.0 / runtime 0.15.0 |
+| **night-hub** | Central landing page for all Night apps | `kingmunz1994-lgtm.github.io/night-hub/` | — |
+| **night-poker** | ZK Texas Hold'em — own `poker.compact`, own frontend, own deploy | `kingmunz1994-lgtm.github.io/night-poker/` | compact-js 2.4.0 / runtime 0.14.0 ⚠️ |
+| **night-fun** | ZK token launchpad (pump.fun but private) | `kingmunz1994-lgtm.github.io/night-fun/` | compact-js 2.4.0 |
+| **night-lend** | ZK lending protocol — private collateral, 75% LTV | standalone | compact-js 2.4.0 |
+| **night-work** | ZK task marketplace — AI agents post bounties, humans earn NIGHT | standalone | compact-js 2.4.0 |
+| **night-save** | ZK vault — deposit NIGHT, mint sUSD, BNPL | standalone | compact-js 2.4.0 |
+| **night-biz** | ZK loyalty tokens — private tier verification | standalone | compact-js 2.4.0 |
+| **night-id** | ZK identity — prove attributes, share nothing | standalone | compact-js 2.4.0 |
+| **night-store** | Merch shop powered by NIGHT tokens | standalone | — |
+| **midnight-ai-kit** | AI developer toolkit — prompts, patterns, examples for Midnight | standalone | pragma >= 0.22.0 |
+
+⚠️ **night-poker** and all other standalone repos except night-markets are on compact-js 2.4.0
+(runtime 0.14.0). They need upgrading to 2.5.0 / 0.15.0 + the SDK fixes documented below.
+
+---
+
+## night-markets Repo at a Glance
 
 ```
 contracts/
   NightMarketsEscrow.compact   ← main escrow + governance contract
-  NightFunToken.compact        ← token launchpad contract
+  NightFunToken.compact        ← token launchpad reference (deployed in night-fun repo)
+  NightPoker.compact           ← poker contract copy (canonical version is in night-poker repo)
   managed/
-    night-markets-escrow/      ← compiled artifacts (committed, gitignored normally)
+    night-markets-escrow/      ← compiled artifacts
     night-fun-token/           ← compiled artifacts
 
 scripts/
   deploy.ts          ← deploy NightMarketsEscrow to preprod
-  api-server.ts      ← HTTP API bridge (port 3001) — connects UI to contract
+  api-server.ts      ← HTTP API bridge (port 3001) — escrow + poker WS + all ecosystem APIs
   transact.ts        ← call individual contract circuits
   full-flow.ts       ← end-to-end test (create → fund → release)
   night-fun.ts       ← NightFunToken operations
@@ -24,9 +61,12 @@ scripts/
   set-contract-address.ts ← update contract address across all files in one shot
   probe.ts           ← inspect contract state
 
-index.html           ← main marketplace UI (single-file, no build step)
+index.html           ← main marketplace UI
 landing.html         ← landing page
 night-identity.html  ← Night-ID (.night name service) UI
+night-poker/
+  index.html         ← poker table UI (also lives in night-poker repo)
+go.html              ← cache-busting redirect
 docs/midnight-sdk-notes.md ← SDK gotchas reference (read before touching SDK code)
 ```
 
@@ -38,6 +78,7 @@ docs/midnight-sdk-notes.md ← SDK gotchas reference (read before touching SDK c
 |---|---|---|
 | NightMarketsEscrow | `7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711` | 127,350 |
 | NightFunToken | not deployed | — |
+| NightPoker | not deployed (canonical: night-poker repo) | — |
 
 After a preprod network reset, run:
 ```
@@ -52,60 +93,75 @@ npm run set-address <new-address>
 ### Contracts
 - [x] `NightMarketsEscrow.compact` — escrow lifecycle + ZK auth + governance voting
 - [x] `NightFunToken.compact` — token launch, transfers, epochs, merch revenue, royalties
-- [x] Both compiled with compact 0.30.0 / runtime 0.15.0
-- [x] NightMarketsEscrow live on preprod at address above
+- [x] `NightPoker.compact` — ZK poker (copy; canonical in night-poker repo)
+- [x] NightMarketsEscrow live on preprod
 
 ### SDK / Deploy infrastructure
 - [x] `deploy.ts` — fully working (all known bugs fixed, see SDK Fixes below)
-- [x] `api-server.ts` — fixed and ready to run
+- [x] `api-server.ts` — HTTP + WebSocket server, poker room management, all ecosystem API routes
 - [x] `set-contract-address.ts` — patches .env + all hardcoded addresses in one command
 - [x] Wallet state persistence (`.wallet-state/`) — avoids 2.5h rescan on every run
 - [x] `docs/midnight-sdk-notes.md` — SDK version matrix, all gotchas documented
 
 ### Frontend
 - [x] `index.html` — full marketplace UI wired to contract address
+- [x] `night-poker/index.html` — poker lobby + table UI with real WS room management
 - [x] Lace + Nocturne wallet connect support
 - [x] DUST sponsorship skeleton (`/api/sponsor` proxied through api-server)
+- [x] `parseDustAmt()` — robust Lace DApp connector balance parser (handles object/bigint/string)
+- [x] Wallet poll backoff — stops spamming APIError when Lace is locked
 
 ---
 
 ## What's Pending 🔲
 
-### Immediate
+### night-markets (this repo)
 - [ ] Run `npm run api-server` and test full UI flow end-to-end in browser
 - [ ] Test wallet connect (Lace) → createListing → fundEscrow → releaseEscrow
-- [ ] Fix any issues surfaced by the above test
+- [ ] Scripts not yet audited for SDK bugs: `full-flow.ts`, `transact.ts`, `night-fun.ts`, `dust-sponsor.ts`
+  (likely have same `s.isSynced` and `dustBal` bugs as deploy.ts had — see SDK Fixes below)
 
-### NightFunToken
-- [ ] Deploy NightFunToken contract to preprod
-- [ ] Wire `night-fun.ts` script to deployed address
-- [ ] Test token launch + transfer flow
+### night-poker (standalone repo — work there, not here)
+- [ ] Upgrade compact-js 2.4.0 → 2.5.0, compact-runtime 0.14.0 → 0.15.0
+- [ ] Apply all SDK fixes from this repo (ledger bridge, dustBal, isSynced, WalletFacade constructor)
+- [ ] Deploy `poker.compact` to preprod
+- [ ] Wire showdown ZK proof (commitHand → claimPot) into WS handler
 
-### Scripts not yet audited for SDK bugs
-- [ ] `full-flow.ts` — likely has same `s.isSynced` and `dustBal` bugs as deploy.ts had
-- [ ] `transact.ts` — same
-- [ ] `night-fun.ts` — same
-- [ ] `dust-sponsor.ts` — same + uses `s.isSynced` wait that will hang forever
-
-### Ecosystem repos (separate repos, not in this directory)
-Per DEPLOY.md these are planned but don't exist yet:
-- [ ] night-work (task marketplace)
-- [ ] night-lend (lending protocol)
-- [ ] night-save (vault + sUSD)
-- [ ] night-biz (loyalty tokens)
-- [ ] night-poker (ZK poker room)
+### All other standalone repos (night-lend, night-work, night-save, night-biz, night-id, night-fun)
+- [ ] Same compact-js 2.4.0 → 2.5.0 upgrade needed in each
+- [ ] Same SDK fixes needed in each deploy script
 
 ### Infrastructure
-- [ ] DUST sponsorship backend — `/api/sponsor` endpoint needs `dust-sponsor.ts` running
-  with a funded sponsor wallet. Blocked until Mōhalu (mid-2026) for mainnet auto-refill.
-- [ ] Compact 0.31.0 / runtime 0.16.0 upgrade — wait for compact-js 2.6.0 on npm,
-  then: upgrade package.json, recompile contracts, redeploy.
+- [ ] DUST sponsorship backend — `/api/sponsor` needs `dust-sponsor.ts` running with funded sponsor wallet
+- [ ] Compact 0.31.0 / runtime 0.16.0 upgrade — wait for compact-js 2.6.0 on npm
+
+---
+
+## midnight-ai-kit Reference
+
+Repo: `kingmunz1994-lgtm/midnight-ai-kit`
+Purpose: Developer toolkit with AI-optimised prompts, patterns, and examples for Midnight.
+**This kit was built to give Claude context** — read it before building any new Midnight contract.
+
+Key files:
+- `CLAUDE.md` — full Compact language reference + privacy rules
+- `prompts/shielded-agent-wallet.md` — shielded token wallet pattern
+- `prompts/escrow-for-agents.md` — escrow pattern (references live NightMarketsEscrow)
+- `prompts/confidential-task-marketplace.md` — task marketplace (Night Work pattern)
+- `prompts/agent-to-agent-payments.md` — private agent payments
+- `prompts/private-credentials.md` — ZK credential system
+- `patterns/` — reusable Compact modules
+- `examples/` — working starters: basic-shielded-agent, confidential-escrow, private-credentials
+
+Note: midnight-ai-kit uses `pragma language_version >= 0.22.0` — this is forward-looking for
+a future compiler version. Current deployed contracts use `>= 0.20`.
 
 ---
 
 ## SDK Fixes Applied (Critical — Don't Revert)
 
 All of these were hard-won. See `docs/midnight-sdk-notes.md` for full explanation.
+**These fixes also need to be applied to every standalone repo's deploy script.**
 
 ### 1. Ledger v7/v8 WASM bridge (deploy.ts, api-server.ts)
 wallet-sdk-* v1.0.0 uses ledger-v7 internally. midnight-js-contracts@4.0.4 uses ledger-v8.
@@ -129,7 +185,6 @@ const readyFilter = (s: any) =>
 ```
 
 ### 5. DustWalletState has no balance() method
-Use:
 ```typescript
 const dustBal = (s: any): bigint =>
   (s?.dust?.availableCoins ?? []).reduce((sum, c) => sum + (c.value ?? 0n), 0n);
