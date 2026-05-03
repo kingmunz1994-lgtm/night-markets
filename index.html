@@ -7670,7 +7670,7 @@ function closeFeatMenu(){
 }
 // Close when clicking anywhere outside
 document.addEventListener('click',function(e){
-  if(!document.getElementById('nav-feat-wrap').contains(e.target)){closeFeatMenu();}
+  var fw=document.getElementById('nav-feat-wrap'); if(fw&&!fw.contains(e.target)){closeFeatMenu();}
 });
 
 </script>
@@ -10560,6 +10560,51 @@ var walletState = {
   walletRdns:  null
 };
 
+// ── parseDustAmt: robust multi-format parser for getDustBalance() ──
+// Lace DApp connector may return bigint, number, string, or a wrapped
+// object ({value:bigint}, {amount:bigint}, {generatedNow:bigint}, etc.)
+// depending on the extension version. This handles all known formats.
+function parseDustAmt(raw) {
+  if (raw == null) return '0';
+  try {
+    var n;
+    if (typeof raw === 'bigint') {
+      n = raw;
+    } else if (typeof raw === 'number') {
+      if (!isFinite(raw) || isNaN(raw)) return '0';
+      n = BigInt(Math.round(raw));
+    } else if (typeof raw === 'string') {
+      var s = raw.trim().split('.')[0];
+      if (!s || s === '' || s === '[object Object]') return '0';
+      n = BigInt(s);
+    } else if (typeof raw === 'object') {
+      // Log so we can finally see the real structure in devtools
+      console.log('[night-markets] getDustBalance raw:', typeof raw, JSON.stringify(raw, function(_k,v){ return typeof v==='bigint'?v.toString():v; }));
+      // Try known wrapper fields in order of likelihood
+      var inner = raw.value ?? raw.amount ?? raw.generatedNow ?? raw.initialValue ?? raw.balance ?? raw.dust;
+      if (inner != null) return parseDustAmt(inner);
+      // Try any numeric/bigint field
+      var keys = Object.keys(raw);
+      for (var ki = 0; ki < keys.length; ki++) {
+        var fv = raw[keys[ki]];
+        if (typeof fv === 'bigint' || typeof fv === 'number' || typeof fv === 'string') {
+          var attempt = parseDustAmt(fv);
+          if (attempt !== '0') return attempt;
+        }
+      }
+      return '0';
+    } else {
+      return '0';
+    }
+    if (n === 0n) return '0.0000';
+    // If value is tiny (<10000) it's probably already in whole DUST, not μDUST
+    return n < 10000n ? n.toString() + '.0000' : (Number(n) / 1e6).toFixed(4);
+  } catch(e) {
+    console.warn('[night-markets] parseDustAmt error:', e, raw);
+    return '0';
+  }
+}
+
 // ── Escrow state (in-memory; replace with on-chain state once
 //    Compact contract is deployed to preprod) ───────────────────
 // escrowStore[orderId] = { state, sellerCommitment, buyerCommitment,
@@ -10791,7 +10836,7 @@ async function connectWalletByKey(key){
     // DApp Connector API v2.0 — handle array/object returns
     try { var sr = await connectedApi.getShieldedAddresses(); shieldedAddr = Array.isArray(sr) ? (sr[0]?.shieldedAddress||null) : (sr?.shieldedAddress||null); } catch(e){}
     try { var ur = await connectedApi.getUnshieldedAddress(); unshieldedAddr = ur?.unshieldedAddress || ur || null; } catch(e){}
-    try { var db = await connectedApi.getDustBalance(); dust = db != null ? (Number(BigInt(String(db).split('.')[0]))/1e6).toFixed(4) : '0'; } catch(e){}
+    try { var db = await connectedApi.getDustBalance(); dust = parseDustAmt(db); } catch(e){ console.warn('getDustBalance:', e); }
     try { var ub = await connectedApi.getUnshieldedBalances(); if(ub){ var ks=Object.keys(ub); if(ks.length>0) night=(Number(ub[ks[0]])/1e6).toFixed(4); } } catch(e){}
     try { var sb = await connectedApi.getShieldedBalances?.(); if(sb){ var sks=Object.keys(sb); if(sks.length>0 && night==='0') night=(Number(sb[sks[0]])/1e6).toFixed(4); } } catch(e){}
     walletState = {
@@ -10896,7 +10941,7 @@ async function connectLace(){
     var night = '0';
     try {
       var dustBal = await connectedApi.getDustBalance();
-      dust = dustBal != null ? (Number(BigInt(String(dustBal).split('.')[0]))/1e6).toFixed(4) : '0';
+      dust = parseDustAmt(dustBal);
     } catch(e){ console.warn('getDustBalance:', e); }
     var susd = '0';
     var parseBalances = function(balMap){
@@ -11019,7 +11064,7 @@ async function refreshWalletBalances(){
     // tDUST balance
     try {
       var dustBal = await walletState.api.getDustBalance();
-      walletState.dust = dustBal != null ? (Number(BigInt(String(dustBal).split('.')[0]))/1e6).toFixed(4) : walletState.dust;
+      walletState.dust = parseDustAmt(dustBal) !== '0' ? parseDustAmt(dustBal) : walletState.dust;
     } catch(e){ console.warn('getDustBalance refresh:', e); }
     // Token balances — NIGHT and sUSD (unshielded + shielded v2.0)
     var _applyBal = function(balMap){
@@ -15548,7 +15593,7 @@ async function connect1AM(){
     } catch(e){ console.warn('[1AM] getUnshieldedAddress:', e); }
 
     var dust = '0', night = '0';
-    try { var db = await api.getDustBalance?.(); dust = db != null ? (Number(BigInt(String(db).split('.')[0]))/1e6).toFixed(4) : '0'; } catch(e){}
+    try { var db = await api.getDustBalance?.(); dust = parseDustAmt(db); } catch(e){ console.warn('[1AM] getDustBalance:', e); }
     try {
       var ub = await api.getUnshieldedBalances?.();
       if(ub){ var ks = Object.keys(ub); if(ks.length) night = (Number(ub[ks[0]])/1e6).toFixed(4); }
