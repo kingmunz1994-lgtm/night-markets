@@ -10791,7 +10791,7 @@ async function connectWalletByKey(key){
     // DApp Connector API v2.0 — handle array/object returns
     try { var sr = await connectedApi.getShieldedAddresses(); shieldedAddr = Array.isArray(sr) ? (sr[0]?.shieldedAddress||null) : (sr?.shieldedAddress||null); } catch(e){}
     try { var ur = await connectedApi.getUnshieldedAddress(); unshieldedAddr = ur?.unshieldedAddress || ur || null; } catch(e){}
-    try { var db = await connectedApi.getDustBalance(); dust = db != null ? (Number(db)/1e6).toFixed(4) : '0'; } catch(e){}
+    try { var db = await connectedApi.getDustBalance(); dust = db != null ? (Number(BigInt(String(db).split('.')[0]))/1e6).toFixed(4) : '0'; } catch(e){}
     try { var ub = await connectedApi.getUnshieldedBalances(); if(ub){ var ks=Object.keys(ub); if(ks.length>0) night=(Number(ub[ks[0]])/1e6).toFixed(4); } } catch(e){}
     try { var sb = await connectedApi.getShieldedBalances?.(); if(sb){ var sks=Object.keys(sb); if(sks.length>0 && night==='0') night=(Number(sb[sks[0]])/1e6).toFixed(4); } } catch(e){}
     walletState = {
@@ -10896,7 +10896,7 @@ async function connectLace(){
     var night = '0';
     try {
       var dustBal = await connectedApi.getDustBalance();
-      dust = dustBal != null ? (Number(dustBal) / 1e6).toFixed(4) : '0';
+      dust = dustBal != null ? (Number(BigInt(String(dustBal).split('.')[0]))/1e6).toFixed(4) : '0';
     } catch(e){ console.warn('getDustBalance:', e); }
     var susd = '0';
     var parseBalances = function(balMap){
@@ -11019,7 +11019,7 @@ async function refreshWalletBalances(){
     // tDUST balance
     try {
       var dustBal = await walletState.api.getDustBalance();
-      walletState.dust = dustBal != null ? (Number(dustBal) / 1e6).toFixed(4) : walletState.dust;
+      walletState.dust = dustBal != null ? (Number(BigInt(String(dustBal).split('.')[0]))/1e6).toFixed(4) : walletState.dust;
     } catch(e){ console.warn('getDustBalance refresh:', e); }
     // Token balances — NIGHT and sUSD (unshielded + shielded v2.0)
     var _applyBal = function(balMap){
@@ -15548,7 +15548,7 @@ async function connect1AM(){
     } catch(e){ console.warn('[1AM] getUnshieldedAddress:', e); }
 
     var dust = '0', night = '0';
-    try { var db = await api.getDustBalance?.(); dust = db != null ? (Number(db)/1e6).toFixed(4) : '0'; } catch(e){}
+    try { var db = await api.getDustBalance?.(); dust = db != null ? (Number(BigInt(String(db).split('.')[0]))/1e6).toFixed(4) : '0'; } catch(e){}
     try {
       var ub = await api.getUnshieldedBalances?.();
       if(ub){ var ks = Object.keys(ub); if(ks.length) night = (Number(ub[ks[0]])/1e6).toFixed(4); }
