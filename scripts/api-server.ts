@@ -222,6 +222,8 @@ async function buildProviders(ctx: Awaited<ReturnType<typeof buildWallet>>) {
     privateStateProvider: levelPrivateStateProvider({
       privateStateStoreName: 'night-markets-api-state',
       walletProvider: wmp,
+      privateStoragePasswordProvider: () => 'night-markets-api-secret-key-2024',
+      accountId: 'night-markets-api-account',
     }),
   };
 }
