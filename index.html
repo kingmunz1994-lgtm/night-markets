@@ -11082,14 +11082,16 @@ async function refreshWalletBalances(){
         else if(keys.indexOf(k) === 1 && !walletState.susd)  walletState.susd = parseFloat(amt).toFixed(2);
       });
     };
-    try { _applyBal(await walletState.api.getUnshieldedBalances()); } catch(e){ console.warn('getUnshieldedBalances refresh:', e); }
+    try { _applyBal(await walletState.api.getUnshieldedBalances()); } catch(e){ console.warn('getUnshieldedBalances refresh:', e); if(e && e.name==='APIError') _walletPollErrors++; }
     try { _applyBal(await walletState.api.getShieldedBalances?.()); } catch(e){ /* optional */ }
+    _walletPollErrors = 0;
     updateWalletPanel();
     updateWalletUI();
     var now = new Date();
     if(ts) ts.textContent = 'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
     toast('💧 Balances refreshed — tDUST: ' + walletState.dust + ' · NIGHT: ' + walletState.night, 'success');
   } catch(err){
+    _walletPollErrors++;
     toast('Balance refresh failed — ' + (err.message || 'unknown error'), 'error');
   } finally {
     if(btn) btn.textContent = '↻ Refresh';
@@ -11107,10 +11109,19 @@ function disconnectWallet(){
 
 // Auto-refresh balances every 30s when a real wallet is connected
 var _walletPollInterval = null;
+var _walletPollErrors = 0;
 function startWalletPolling(){
   if(_walletPollInterval) clearInterval(_walletPollInterval);
+  _walletPollErrors = 0;
   _walletPollInterval = setInterval(function(){
     if(walletState.connected && !walletState.demo && walletState.api){
+      if(_walletPollErrors >= 3){
+        // Wallet is locked or unresponsive — pause polling, retry in 2 min
+        clearInterval(_walletPollInterval);
+        _walletPollInterval = null;
+        setTimeout(function(){ _walletPollErrors = 0; startWalletPolling(); }, 120000);
+        return;
+      }
       refreshWalletBalances();
     } else if(!walletState.connected){
       clearInterval(_walletPollInterval);
