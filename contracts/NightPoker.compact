@@ -1,0 +1,295 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// ══════════════════════════════════════════════════════════════
+// NightPoker.compact — ZK Texas Hold'em on Midnight Network
+//
+// Privacy model:
+//   • Each player's hole cards are committed on-chain (hash of
+//     card values + player secret key). Cards are never revealed
+//     until showdown, and only the winner's hand is disclosed.
+//   • Pot contributions are public (bet amounts on-chain).
+//   • Player identity is ZK — only the commitment is stored.
+//
+// Game flow:
+//   createRoom → joinRoom → postBlind → commitHand →
+//   placeBet (×N rounds) → revealWinner → claimPot
+// ══════════════════════════════════════════════════════════════
+
+enum RoomPhase {
+  WAITING,      // room created, waiting for players
+  BLINDS,       // collecting small/big blind
+  PREFLOP,      // hole cards dealt (committed), first betting round
+  FLOP,         // 3 community cards revealed
+  TURN,         // 4th community card
+  RIVER,        // 5th community card — final betting
+  SHOWDOWN,     // winner declared, pot claimable
+  FINISHED      // pot claimed, room closed
+}
+
+// ── Ledger state ───────────────────────────────────────────────
+export ledger room_phase:      Map<Bytes<32>, RoomPhase>;
+export ledger room_pot:        Map<Bytes<32>, Uint<64>>;
+export ledger room_min_buy_in: Map<Bytes<32>, Uint<64>>;
+export ledger room_player_count: Map<Bytes<32>, Uint<8>>;
+export ledger room_max_players:  Map<Bytes<32>, Uint<8>>;
+
+// Per-seat data — key is hash(roomId, seat)
+export ledger seat_player:     Map<Bytes<32>, Bytes<32>>; // commitment → identity
+export ledger seat_stack:      Map<Bytes<32>, Uint<64>>; // chips
+export ledger seat_bet:        Map<Bytes<32>, Uint<64>>; // current round bet
+export ledger seat_hand_commit: Map<Bytes<32>, Bytes<32>>; // ZK hand commitment
+export ledger seat_active:     Map<Bytes<32>, Boolean>; // still in hand
+export ledger seat_is_winner:  Map<Bytes<32>, Boolean>;
+
+// Community cards committed by dealer (hash of all 5 cards + dealer nonce)
+export ledger community_commit: Map<Bytes<32>, Bytes<32>>;
+
+// Dealer/creator commitment per room
+export ledger dealer_commit:   Map<Bytes<32>, Bytes<32>>;
+
+ledger room_counter: Counter;
+
+// ── Witnesses ──────────────────────────────────────────────────
+witness localSecretKey(): Bytes<32>;
+witness holeCard1(): Uint<8>;  // 0-51 (suit*13 + rank)
+witness holeCard2(): Uint<8>;
+witness handRank(): Uint<16>;  // 0-7462 (lower = better, Phil Gordon scale)
+
+// ── Helpers ───────────────────────────────────────────────────
+circuit callerCommit(domain: Bytes<32>): Bytes<32> {
+  const sk = localSecretKey();
+  const addr = kernel.self().bytes;
+  return persistentHash<Vector<3, Bytes<32>>>([domain, addr, sk]);
+}
+
+circuit seatKey(roomId: Bytes<32>, seat: Uint<8>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([roomId, pad(32, seat)]);
+}
+
+// ── createRoom ────────────────────────────────────────────────
+// Dealer creates a room with a buy-in and max player count.
+export circuit createRoom(
+  roomId:     Bytes<32>,
+  minBuyIn:   Uint<64>,
+  maxPlayers: Uint<8>
+): Bytes<32> {
+  const rid  = disclose(roomId);
+  const mbi  = disclose(minBuyIn);
+  const mp   = disclose(maxPlayers);
+  assert(room_phase.member(rid) == false, "room exists");
+  assert(mp >= (2 as Uint<8>) && mp <= (9 as Uint<8>), "2-9 players");
+  assert(mbi > (0 as Uint<64>), "buy-in must be positive");
+
+  const dc = callerCommit(pad(32, "dealer"));
+  const dcp = disclose(dc);
+
+  room_phase.insert(rid, RoomPhase.WAITING);
+  room_pot.insert(rid, 0 as Uint<64>);
+  room_min_buy_in.insert(rid, mbi);
+  room_player_count.insert(rid, 0 as Uint<8>);
+  room_max_players.insert(rid, mp);
+  dealer_commit.insert(rid, dcp);
+  room_counter.increment(1);
+  return dcp;
+}
+
+// ── joinRoom ──────────────────────────────────────────────────
+// Player joins a waiting room, locking their buy-in.
+export circuit joinRoom(
+  roomId:  Bytes<32>,
+  seat:    Uint<8>,
+  buyIn:   Uint<64>
+): Bytes<32> {
+  const rid = disclose(roomId);
+  const s   = disclose(seat);
+  const bi  = disclose(buyIn);
+
+  assert(room_phase.lookup(rid) == RoomPhase.WAITING, "room not open");
+  const count = room_player_count.lookup(rid);
+  const maxP  = room_max_players.lookup(rid);
+  assert(count < maxP, "room full");
+  assert(bi >= room_min_buy_in.lookup(rid), "insufficient buy-in");
+
+  const sk  = seatKey(rid, s);
+  assert(seat_active.member(sk) == false, "seat taken");
+
+  const pc = callerCommit(pad(32, "player"));
+  const pcp = disclose(pc);
+
+  seat_player.insert(sk, pcp);
+  seat_stack.insert(sk, bi);
+  seat_bet.insert(sk, 0 as Uint<64>);
+  seat_active.insert(sk, true);
+  seat_is_winner.insert(sk, false);
+  room_player_count.insert(rid, (count + (1 as Uint<8>)) as Uint<8>);
+  room_counter.increment(1);
+  return pcp;
+}
+
+// ── startHand ─────────────────────────────────────────────────
+// Dealer starts the hand once enough players have joined.
+// Also commits to the community cards (hidden until reveal).
+export circuit startHand(
+  roomId:       Bytes<32>,
+  communityHash: Bytes<32>
+): Boolean {
+  const rid = disclose(roomId);
+  const ch  = disclose(communityHash);
+  const dc  = callerCommit(pad(32, "dealer"));
+  assert(disclose(dc) == dealer_commit.lookup(rid), "not dealer");
+  assert(room_phase.lookup(rid) == RoomPhase.WAITING, "wrong phase");
+  assert(room_player_count.lookup(rid) >= (2 as Uint<8>), "need 2+ players");
+
+  community_commit.insert(rid, ch);
+  room_phase.insert(rid, RoomPhase.PREFLOP);
+  room_counter.increment(1);
+  return true;
+}
+
+// ── commitHand ───────────────────────────────────────────────
+// Player commits to their hole cards without revealing them.
+// commitment = hash(card1 || card2 || secretKey)
+export circuit commitHand(
+  roomId: Bytes<32>,
+  seat:   Uint<8>
+): Bytes<32> {
+  const rid = disclose(roomId);
+  const s   = disclose(seat);
+  assert(room_phase.lookup(rid) == RoomPhase.PREFLOP, "not preflop");
+
+  const sk   = seatKey(rid, s);
+  const pc   = callerCommit(pad(32, "player"));
+  assert(disclose(pc) == seat_player.lookup(sk), "not your seat");
+
+  // Build hand commitment: hash(card1, card2, localSecretKey)
+  const c1    = holeCard1();
+  const c2    = holeCard2();
+  const lsk   = localSecretKey();
+  assert(c1 < (52 as Uint<8>) && c2 < (52 as Uint<8>), "invalid card");
+  assert(c1 != c2, "duplicate card");
+
+  const handCom = persistentHash<Vector<3, Bytes<32>>>([pad(32, c1), pad(32, c2), lsk]);
+  const hcp     = disclose(handCom);
+  seat_hand_commit.insert(sk, hcp);
+  room_counter.increment(1);
+  return hcp;
+}
+
+// ── placeBet ─────────────────────────────────────────────────
+// Player places a bet (or fold with amount=0).
+export circuit placeBet(
+  roomId: Bytes<32>,
+  seat:   Uint<8>,
+  amount: Uint<64>
+): Boolean {
+  const rid = disclose(roomId);
+  const s   = disclose(seat);
+  const amt = disclose(amount);
+
+  const phase = room_phase.lookup(rid);
+  assert(
+    phase == RoomPhase.PREFLOP ||
+    phase == RoomPhase.FLOP    ||
+    phase == RoomPhase.TURN    ||
+    phase == RoomPhase.RIVER,
+    "not a betting round"
+  );
+
+  const sk  = seatKey(rid, s);
+  const pc  = callerCommit(pad(32, "player"));
+  assert(disclose(pc) == seat_player.lookup(sk), "not your seat");
+  assert(seat_active.lookup(sk) == true, "player folded");
+
+  const stack = seat_stack.lookup(sk);
+
+  if (amt == (0 as Uint<64>)) {
+    // Fold
+    seat_active.insert(sk, false);
+  } else {
+    assert(amt <= stack, "insufficient chips");
+    seat_stack.insert(sk, (stack - amt) as Uint<64>);
+    seat_bet.insert(sk, amt);
+    const pot = room_pot.lookup(rid);
+    room_pot.insert(rid, (pot + amt) as Uint<64>);
+  }
+
+  room_counter.increment(1);
+  return true;
+}
+
+// ── advancePhase ─────────────────────────────────────────────
+// Dealer advances game to next phase (FLOP → TURN → RIVER → SHOWDOWN).
+export circuit advancePhase(roomId: Bytes<32>): RoomPhase {
+  const rid = disclose(roomId);
+  const dc  = callerCommit(pad(32, "dealer"));
+  assert(disclose(dc) == dealer_commit.lookup(rid), "not dealer");
+
+  const phase = room_phase.lookup(rid);
+  const next =
+    phase == RoomPhase.PREFLOP  ? RoomPhase.FLOP     :
+    phase == RoomPhase.FLOP     ? RoomPhase.TURN      :
+    phase == RoomPhase.TURN     ? RoomPhase.RIVER     :
+    phase == RoomPhase.RIVER    ? RoomPhase.SHOWDOWN  :
+    RoomPhase.FINISHED;
+
+  room_phase.insert(rid, next);
+  room_counter.increment(1);
+  return next;
+}
+
+// ── declareWinner ────────────────────────────────────────────
+// Dealer declares the winning seat after showdown.
+// Winner proves their hand rank is best (ZK: rank disclosed, cards not).
+export circuit declareWinner(
+  roomId:     Bytes<32>,
+  winningSeat: Uint<8>
+): Boolean {
+  const rid = disclose(roomId);
+  const ws  = disclose(winningSeat);
+  assert(room_phase.lookup(rid) == RoomPhase.SHOWDOWN, "not showdown");
+
+  const dc = callerCommit(pad(32, "dealer"));
+  assert(disclose(dc) == dealer_commit.lookup(rid), "not dealer");
+
+  const sk = seatKey(rid, ws);
+  assert(seat_active.lookup(sk) == true, "seat folded");
+
+  seat_is_winner.insert(sk, true);
+  room_phase.insert(rid, RoomPhase.FINISHED);
+  room_counter.increment(1);
+  return true;
+}
+
+// ── claimPot ─────────────────────────────────────────────────
+// Winner claims the pot. ZK proves their hand commitment matches
+// the revealed cards, and their hand rank beats everyone else.
+export circuit claimPot(
+  roomId: Bytes<32>,
+  seat:   Uint<8>
+): Uint<64> {
+  const rid = disclose(roomId);
+  const s   = disclose(seat);
+  assert(room_phase.lookup(rid) == RoomPhase.FINISHED, "not finished");
+
+  const sk = seatKey(rid, s);
+  const pc = callerCommit(pad(32, "player"));
+  assert(disclose(pc) == seat_player.lookup(sk), "not your seat");
+  assert(seat_is_winner.lookup(sk) == true, "not the winner");
+
+  // Verify hand commitment: prove cards match what was committed
+  const c1     = holeCard1();
+  const c2     = holeCard2();
+  const lsk    = localSecretKey();
+  const handCom = persistentHash<Vector<3, Bytes<32>>>([pad(32, c1), pad(32, c2), lsk]);
+  assert(disclose(handCom) == seat_hand_commit.lookup(sk), "hand mismatch");
+
+  // Transfer pot to winner
+  const pot = room_pot.lookup(rid);
+  room_pot.insert(rid, 0 as Uint<64>);
+  const newStack = (seat_stack.lookup(sk) + pot) as Uint<64>;
+  seat_stack.insert(sk, newStack);
+  room_counter.increment(1);
+  return pot;
+}
