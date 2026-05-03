@@ -2256,6 +2256,18 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
 .chest-how-num{width:40px;height:40px;border-radius:50%;background:#00e676;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#000;margin:0 auto 14px;}
 .chest-how-title{font-size:13px;font-weight:800;margin-bottom:7px;}
 .chest-how-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+/* Night Vault */
+.vault-filter-btn{background:var(--surface);border:1px solid var(--rim2);border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);transition:all .2s;font-family:var(--sans);}
+.vault-filter-btn:hover,.vault-filter-btn.active{background:var(--ink);color:#fff;border-color:transparent;}
+.vault-item{background:var(--surface);border:1px solid var(--rim);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s;}
+.vault-item:hover{border-color:rgba(124,58,237,.4);}
+.vault-item-emoji{font-size:36px;}
+.vault-item-type{font-size:10px;font-weight:700;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.vault-item-name{font-size:15px;font-weight:800;}
+.vault-item-rarity{font-size:11px;font-weight:700;font-family:var(--mono);}
+.vault-item-desc{font-size:12px;color:var(--muted);line-height:1.6;flex:1;}
+.vault-item-footer{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+.vault-item-price{font-size:13px;font-weight:800;font-family:var(--mono);color:var(--cyan);}
 /* Featured SNEK chest */
 .chest-featured{background:linear-gradient(135deg,rgba(0,230,118,.07),rgba(0,0,254,.04));border:2px solid rgba(0,230,118,.3);border-radius:22px;padding:36px;margin:0 0 40px;}
 .chest-featured-header{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
@@ -2789,6 +2801,8 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
           <div class="ndm-item" onclick="showPage('ecosystem-vision');closeAllNavDrops()">🌐 Ecosystem Vision</div>
           <div class="ndm-item" onclick="showPage('nightid');closeAllNavDrops()" style="color:#a78bfa;">🪪 Night ID</div>
           <div class="ndm-item" onclick="showPage('chests');closeAllNavDrops()" style="color:#00e676;">🏴‍☠️ Community Chests</div>
+          <div class="ndm-item" onclick="showPage('listings');closeAllNavDrops()" style="color:var(--green);">🌐 P2P Listings — Escrow Marketplace</div>
+          <div class="ndm-item" onclick="showPage('vault');closeAllNavDrops()" style="color:#7c3aed;">🎮 Night Vault — Poker Cosmetics</div>
           <div class="ndm-item" onclick="showPage('nightsave');closeAllNavDrops()">💎 Night Save</div>
           <div class="ndm-item" onclick="showPage('lend');closeAllNavDrops()">🏦 Night Lend</div>
           <div class="ndm-item" onclick="showPage('enterprise');closeAllNavDrops()">💼 Enterprise</div>
@@ -6299,6 +6313,8 @@ function showPage(name){
   if(name==='shop')renderProducts();
   if(name==='cart')renderCart();
   if(name==='orders')renderOrders();
+  if(name==='vault')renderVaultItems('All');
+  if(name==='listings')renderListings();
 }
 
 function handleSearch(val){
@@ -6317,12 +6333,14 @@ function handleSearch(val){
 function renderHome(){
   const CATS=[{n:'All',i:'🌐'},{n:'Electronics',i:'📱'},{n:'Fashion',i:'👗'},{n:'Beauty',i:'💄'},{n:'Home',i:'🏠'},{n:'Sports',i:'⚽'},{n:'Collectibles',i:'🏺'}];
   const cc={};PRODUCTS.forEach(p=>{cc[p.cat]=(cc[p.cat]||0)+1;});
-  document.getElementById('home-cats').innerHTML=CATS.map(c=>`
+  const homeCats = document.getElementById('home-cats');
+  const homeProducts = document.getElementById('home-products');
+  if(homeCats) homeCats.innerHTML=CATS.map(c=>`
     <div class="cat-pill ${activeCat===c.n?'active':''}" onclick="activeCat='${c.n}';showPage('shop')">
       <span class="cp-icon">${c.i}</span>${c.n}
       ${c.n!=='All'?`<span class="cp-ct">${cc[c.n]||0}</span>`:''}
     </div>`).join('');
-  document.getElementById('home-products').innerHTML=PRODUCTS.filter(p=>p.popular).slice(0,6).map(renderPC).join('');
+  if(homeProducts) homeProducts.innerHTML=PRODUCTS.filter(p=>p.popular).slice(0,6).map(renderPC).join('');
 }
 
 // ── SHOP ──
@@ -7652,7 +7670,7 @@ function closeFeatMenu(){
 }
 // Close when clicking anywhere outside
 document.addEventListener('click',function(e){
-  if(!document.getElementById('nav-feat-wrap').contains(e.target)){closeFeatMenu();}
+  var fw=document.getElementById('nav-feat-wrap'); if(fw&&!fw.contains(e.target)){closeFeatMenu();}
 });
 
 </script>
@@ -10041,6 +10059,154 @@ document.addEventListener('click',function(e){
   </div>
 </div>
 
+<!-- ══════════════ P2P LISTINGS ══════════════ -->
+<div class="page" id="page-listings">
+  <div class="page-inner" style="max-width:1100px;margin:0 auto;padding:60px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px;">
+      <div>
+        <h1 style="font-size:32px;font-weight:800;margin-bottom:6px;">🌐 P2P Listings</h1>
+        <div style="color:var(--muted);font-family:var(--mono);font-size:13px;">ZK-escrow marketplace · Midnight Network · funds locked until delivery confirmed</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span id="nm-api-status" style="font-size:11px;font-family:var(--mono);color:var(--muted);">Checking API…</span>
+        <button class="btn btn-primary btn-sm" onclick="showPage('create-listing')">+ Create listing</button>
+      </div>
+    </div>
+    <div id="nm-listings-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;"></div>
+  </div>
+</div>
+
+<!-- ══════════════ CREATE LISTING ══════════════ -->
+<div class="page" id="page-create-listing">
+  <div class="page-inner" style="max-width:600px;margin:0 auto;padding:60px 24px;">
+    <button onclick="showPage('listings')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;margin-bottom:24px;">← Back to listings</button>
+    <h1 style="font-size:28px;font-weight:800;margin-bottom:8px;">Create a Listing</h1>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:32px;">Your listing is backed by a ZK escrow on Midnight — buyers' funds are held until you confirm delivery.</p>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:12px;">
+        <div style="flex:0 0 80px;">
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">EMOJI</label>
+          <input id="nl-emoji" type="text" value="📦" maxlength="2" style="width:100%;padding:12px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:24px;text-align:center;" />
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">TITLE *</label>
+          <input id="nl-title" type="text" placeholder="What are you selling?" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">PRICE (NIGHT) *</label>
+          <input id="nl-price" type="number" min="1" placeholder="e.g. 500" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">CATEGORY</label>
+          <select id="nl-cat" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;">
+            <option>Electronics</option><option>Fashion</option><option>Beauty</option><option>Home</option><option>Sports</option><option>Collectibles</option><option>General</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">CONDITION</label>
+          <select id="nl-cond" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;">
+            <option>New</option><option>Like New</option><option>Good</option><option>Fair</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">DESCRIPTION</label>
+        <textarea id="nl-desc" rows="3" placeholder="Describe the item, condition, included accessories…" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:14px;resize:vertical;font-family:var(--sans);"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">SHIPS FROM</label>
+        <input id="nl-from" type="text" placeholder="City, Country" style="width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:10px;color:var(--text);font-size:15px;" />
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rim2);border-radius:12px;padding:16px;font-size:13px;color:var(--muted);">
+        <div style="font-weight:700;color:var(--text);margin-bottom:6px;">⊘ ZK Escrow Protection</div>
+        Buyer funds are locked in the NightMarketsEscrow contract on Midnight Preprod until you confirm shipment and the buyer confirms receipt. Neither party can claim funds without the other's action.
+      </div>
+      <button id="nl-create-btn" class="btn btn-primary" onclick="createListing()" style="padding:16px;font-size:16px;font-weight:700;">⊘ List with escrow →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CHECKOUT MODAL ══════════════ -->
+<div class="modal-overlay" id="ov-checkout" onclick="if(event.target===this)closeModal('ov-checkout')">
+  <div class="modal-box" style="max-width:400px;">
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px;" id="co-listing-title">Checkout</div>
+    <div style="font-family:var(--mono);font-size:24px;font-weight:700;color:var(--green);margin-bottom:8px;" id="co-listing-price"></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;" id="co-listing-info">Funds locked in ZK escrow until delivery confirmed</div>
+    <div style="background:var(--surface);border:1px solid var(--rim2);border-radius:10px;padding:14px;font-size:12px;color:var(--muted);margin-bottom:20px;">
+      <div style="font-weight:700;color:var(--text);margin-bottom:4px;">How ZK escrow works:</div>
+      1. Your NIGHT tokens are locked in the contract<br>
+      2. Seller ships, records tracking on-chain<br>
+      3. You confirm delivery → funds released to seller<br>
+      4. Dispute? Governance votes to resolve
+    </div>
+    <button id="co-confirm-btn" class="btn btn-primary" onclick="confirmCheckout()" style="width:100%;padding:14px;font-size:15px;font-weight:700;margin-bottom:10px;">Lock funds in escrow →</button>
+    <button class="btn btn-ghost" onclick="closeModal('ov-checkout')" style="width:100%;padding:12px;">Cancel</button>
+  </div>
+</div>
+
+<style>
+.nm-listing-card{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s;}
+.nm-listing-card:hover{border-color:var(--ink);}
+.nm-listing-emoji{font-size:40px;text-align:center;}
+.nm-listing-title{font-size:16px;font-weight:700;color:var(--text);}
+.nm-listing-meta{font-size:12px;color:var(--muted);font-family:var(--mono);}
+.nm-listing-desc{font-size:13px;color:var(--text2);line-height:1.5;}
+.nm-listing-footer{display:flex;justify-content:space-between;align-items:center;margin-top:auto;}
+.nm-listing-price{font-family:var(--mono);font-weight:700;color:var(--green);font-size:15px;}
+.nm-listing-actions{display:flex;gap:8px;}
+</style>
+
+<!-- ══════════════ NIGHT VAULT ══════════════ -->
+<div class="page" id="page-vault">
+  <div class="page-inner" style="max-width:1100px;margin:0 auto;padding:60px 24px;">
+
+    <div style="text-align:center;max-width:640px;margin:0 auto 48px;">
+      <div style="display:inline-block;font-size:11px;font-weight:700;font-family:var(--mono);letter-spacing:.8px;color:#a78bfa;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.22);border-radius:20px;padding:5px 14px;margin-bottom:16px;">🎮 NIGHT VAULT · POKER COSMETICS</div>
+      <h1 style="font-family:var(--serif);font-size:clamp(32px,5vw,56px);font-weight:900;line-height:1.1;margin-bottom:16px;">Deck out your <em style="color:#a78bfa;">table.</em></h1>
+      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">Mint poker cosmetics with DUST — the token generated by holding NIGHT. Table skins, player avatars, and card backs. All on-chain. All private. Equip in Night Poker from your profile.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
+        <a href="https://kingmunz1994-lgtm.github.io/night-poker/" target="_blank" class="btn btn-primary">🃏 Open Night Poker →</a>
+        <button class="btn btn-outline-ink" onclick="showPage('nightsave')">Get DUST via Night Save</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">Stake ADA → earn NIGHT → generate DUST → mint here</div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:36px;">
+      <div style="background:var(--surface);border:1px solid var(--rim);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:#a78bfa;">12</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Items available</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rim);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--gold);">4</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Legendary items</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rim);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--green);">DUST</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Mint currency</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rim);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--cyan);">⊘ ZK</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">On-chain private</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+      <button class="vault-filter-btn active" id="vault-filter-active" onclick="setVaultFilter(this,'All')">All</button>
+      <button class="vault-filter-btn" onclick="setVaultFilter(this,'Table')">🎰 Tables</button>
+      <button class="vault-filter-btn" onclick="setVaultFilter(this,'Avatar')">👤 Avatars</button>
+      <button class="vault-filter-btn" onclick="setVaultFilter(this,'Cards')">🃏 Card Backs</button>
+    </div>
+
+    <!-- Grid -->
+    <div id="vault-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;"></div>
+
+  </div>
+</div>
+
 <!-- ══════════════ RATE MODAL ══════════════ -->
 <div class="overlay" id="ov-rate" onclick="if(event.target===this)closeModal('ov-rate')">
   <div class="modal" style="max-width:440px;">
@@ -10394,6 +10560,51 @@ var walletState = {
   walletRdns:  null
 };
 
+// ── parseDustAmt: robust multi-format parser for getDustBalance() ──
+// Lace DApp connector may return bigint, number, string, or a wrapped
+// object ({value:bigint}, {amount:bigint}, {generatedNow:bigint}, etc.)
+// depending on the extension version. This handles all known formats.
+function parseDustAmt(raw) {
+  if (raw == null) return '0';
+  try {
+    var n;
+    if (typeof raw === 'bigint') {
+      n = raw;
+    } else if (typeof raw === 'number') {
+      if (!isFinite(raw) || isNaN(raw)) return '0';
+      n = BigInt(Math.round(raw));
+    } else if (typeof raw === 'string') {
+      var s = raw.trim().split('.')[0];
+      if (!s || s === '' || s === '[object Object]') return '0';
+      n = BigInt(s);
+    } else if (typeof raw === 'object') {
+      // Log so we can finally see the real structure in devtools
+      console.log('[night-markets] getDustBalance raw:', typeof raw, JSON.stringify(raw, function(_k,v){ return typeof v==='bigint'?v.toString():v; }));
+      // Try known wrapper fields in order of likelihood
+      var inner = raw.value ?? raw.amount ?? raw.generatedNow ?? raw.initialValue ?? raw.balance ?? raw.dust;
+      if (inner != null) return parseDustAmt(inner);
+      // Try any numeric/bigint field
+      var keys = Object.keys(raw);
+      for (var ki = 0; ki < keys.length; ki++) {
+        var fv = raw[keys[ki]];
+        if (typeof fv === 'bigint' || typeof fv === 'number' || typeof fv === 'string') {
+          var attempt = parseDustAmt(fv);
+          if (attempt !== '0') return attempt;
+        }
+      }
+      return '0';
+    } else {
+      return '0';
+    }
+    if (n === 0n) return '0.0000';
+    // If value is tiny (<10000) it's probably already in whole DUST, not μDUST
+    return n < 10000n ? n.toString() + '.0000' : (Number(n) / 1e6).toFixed(4);
+  } catch(e) {
+    console.warn('[night-markets] parseDustAmt error:', e, raw);
+    return '0';
+  }
+}
+
 // ── Escrow state (in-memory; replace with on-chain state once
 //    Compact contract is deployed to preprod) ───────────────────
 // escrowStore[orderId] = { state, sellerCommitment, buyerCommitment,
@@ -10625,7 +10836,7 @@ async function connectWalletByKey(key){
     // DApp Connector API v2.0 — handle array/object returns
     try { var sr = await connectedApi.getShieldedAddresses(); shieldedAddr = Array.isArray(sr) ? (sr[0]?.shieldedAddress||null) : (sr?.shieldedAddress||null); } catch(e){}
     try { var ur = await connectedApi.getUnshieldedAddress(); unshieldedAddr = ur?.unshieldedAddress || ur || null; } catch(e){}
-    try { var db = await connectedApi.getDustBalance(); dust = db != null ? (Number(db)/1e6).toFixed(4) : '0'; } catch(e){}
+    try { var db = await connectedApi.getDustBalance(); dust = parseDustAmt(db); } catch(e){ console.warn('getDustBalance:', e); }
     try { var ub = await connectedApi.getUnshieldedBalances(); if(ub){ var ks=Object.keys(ub); if(ks.length>0) night=(Number(ub[ks[0]])/1e6).toFixed(4); } } catch(e){}
     try { var sb = await connectedApi.getShieldedBalances?.(); if(sb){ var sks=Object.keys(sb); if(sks.length>0 && night==='0') night=(Number(sb[sks[0]])/1e6).toFixed(4); } } catch(e){}
     walletState = {
@@ -10730,7 +10941,7 @@ async function connectLace(){
     var night = '0';
     try {
       var dustBal = await connectedApi.getDustBalance();
-      dust = dustBal != null ? (Number(dustBal) / 1e6).toFixed(4) : '0';
+      dust = parseDustAmt(dustBal);
     } catch(e){ console.warn('getDustBalance:', e); }
     var susd = '0';
     var parseBalances = function(balMap){
@@ -10853,7 +11064,7 @@ async function refreshWalletBalances(){
     // tDUST balance
     try {
       var dustBal = await walletState.api.getDustBalance();
-      walletState.dust = dustBal != null ? (Number(dustBal) / 1e6).toFixed(4) : walletState.dust;
+      walletState.dust = parseDustAmt(dustBal) !== '0' ? parseDustAmt(dustBal) : walletState.dust;
     } catch(e){ console.warn('getDustBalance refresh:', e); }
     // Token balances — NIGHT and sUSD (unshielded + shielded v2.0)
     var _applyBal = function(balMap){
@@ -11489,56 +11700,6 @@ function getSessionSecret(){
   return sessionStorage.getItem('nm_sk');
 }
 
-// Simulate createListing circuit — seller posts listing with private metadata
-async function simulateCompactCreateListing(orderId, listingCid, amountNight){
-  var round  = (escrowStore[orderId] && escrowStore[orderId].round) || 0;
-  var sk     = getSessionSecret();
-  var commit = await deriveCommitment('seller', round, sk);
-  escrowStore[orderId] = {
-    state:            'OPEN',
-    sellerCommitment: commit,
-    buyerCommitment:  null,
-    listingRef:       listingCid,   // Opaque<"string"> — IPFS CID
-    amount:           amountNight,
-    round:            round,
-    createdAt:        Date.now()
-  };
-  console.log('[NM Escrow] createListing', orderId, { commit, listingCid, amountNight });
-  return commit;
-}
-
-// Simulate fundEscrow circuit — buyer funds, records commitment
-async function simulateCompactFundEscrow(orderId, amountNight){
-  var entry = escrowStore[orderId];
-  if(!entry) throw new Error('Listing not found: ' + orderId);
-  if(entry.state !== 'OPEN') throw new Error('Escrow not open');
-  var sk     = getSessionSecret();
-  var commit = await deriveCommitment('buyer', entry.round, sk);
-  entry.buyerCommitment = commit;
-  entry.amount          = amountNight;
-  entry.state           = 'FUNDED';
-  console.log('[NM Escrow] fundEscrow', orderId, { commit, amountNight });
-  return commit;
-}
-
-// Simulate releaseEscrow circuit — buyer confirms receipt
-// Compact equivalent: round.increment(1) — Counter type, NOT arithmetic assignment
-// Note: no external escrow reference has been verified; pattern derives from bboard contract
-async function simulateCompactReleaseEscrow(orderId){
-  var entry = escrowStore[orderId];
-  if(!entry) throw new Error('Escrow not found: ' + orderId);
-  if(entry.state !== 'FUNDED') throw new Error('Escrow not funded');
-  // Verify buyer commitment (ZK proof in real contract)
-  var sk       = getSessionSecret();
-  var expected = await deriveCommitment('buyer', entry.round, sk);
-  if(expected !== entry.buyerCommitment) throw new Error('Commitment mismatch — not the buyer');
-  entry.state = 'RELEASED';
-  // Mirrors Compact: round.increment(1) — Counter type uses .increment(), not += 
-  entry.round = (entry.round + 1) & 0xFFFFFFFF;
-  console.log('[NM Escrow] releaseEscrow', orderId, { newRound: entry.round });
-  return true;
-}
-
 // ══════════════════════════════════════════════════════════════
 // NIGHT TOKEN TRANSFER — midnight-js 3.0.0
 // Breaking changes vs 2.x:
@@ -11631,26 +11792,43 @@ function getSessionSecret(){
   return sessionStorage.getItem('nm_sk');
 }
 
-// Simulate createListing circuit — seller posts listing with private metadata
+// ── Escrow circuits — try real Midnight API, fall back to simulation ──
 async function simulateCompactCreateListing(orderId, listingCid, amountNight){
+  if(await nmCheckApi()){
+    try {
+      var result = await nmApiPost('/api/escrow/create', {
+        orderId, amountNight: String(Math.round(amountNight * 1_000_000))
+      });
+      escrowStore[orderId] = { state:'OPEN', txId: result.txId, blockHeight: result.blockHeight,
+        listingRef: listingCid, amount: amountNight, real: true, createdAt: Date.now() };
+      console.log('[NM Escrow] createListing REAL', orderId, result);
+      return result.txId;
+    } catch(e){ console.warn('[NM Escrow] API failed, using simulation:', e.message); nmApiReady = false; }
+  }
   var round  = (escrowStore[orderId] && escrowStore[orderId].round) || 0;
   var sk     = getSessionSecret();
   var commit = await deriveCommitment('seller', round, sk);
   escrowStore[orderId] = {
-    state:            'OPEN',
-    sellerCommitment: commit,
-    buyerCommitment:  null,
-    listingRef:       listingCid,   // Opaque<"string"> — IPFS CID
-    amount:           amountNight,
-    round:            round,
-    createdAt:        Date.now()
+    state:'OPEN', sellerCommitment: commit, buyerCommitment: null,
+    listingRef: listingCid, amount: amountNight, round, createdAt: Date.now()
   };
-  console.log('[NM Escrow] createListing', orderId, { commit, listingCid, amountNight });
+  console.log('[NM Escrow] createListing SIM', orderId, { commit, listingCid, amountNight });
   return commit;
 }
 
-// Simulate fundEscrow circuit — buyer funds, records commitment
 async function simulateCompactFundEscrow(orderId, amountNight){
+  if(await nmCheckApi()){
+    try {
+      var result = await nmApiPost('/api/escrow/fund', {
+        orderId, amountNight: String(Math.round(amountNight * 1_000_000))
+      });
+      var entry = escrowStore[orderId] || {};
+      entry.state = 'FUNDED'; entry.txId = result.txId; entry.real = true;
+      escrowStore[orderId] = entry;
+      console.log('[NM Escrow] fundEscrow REAL', orderId, result);
+      return result.txId;
+    } catch(e){ console.warn('[NM Escrow] API failed, using simulation:', e.message); nmApiReady = false; }
+  }
   var entry = escrowStore[orderId];
   if(!entry) throw new Error('Listing not found: ' + orderId);
   if(entry.state !== 'OPEN') throw new Error('Escrow not open');
@@ -11659,25 +11837,30 @@ async function simulateCompactFundEscrow(orderId, amountNight){
   entry.buyerCommitment = commit;
   entry.amount          = amountNight;
   entry.state           = 'FUNDED';
-  console.log('[NM Escrow] fundEscrow', orderId, { commit, amountNight });
+  console.log('[NM Escrow] fundEscrow SIM', orderId, { commit, amountNight });
   return commit;
 }
 
-// Simulate releaseEscrow circuit — buyer confirms receipt
-// Compact equivalent: round.increment(1) — Counter type, NOT arithmetic assignment
-// Note: no external escrow reference has been verified; pattern derives from bboard contract
 async function simulateCompactReleaseEscrow(orderId){
+  if(await nmCheckApi()){
+    try {
+      var result = await nmApiPost('/api/escrow/release', { orderId });
+      var entry = escrowStore[orderId] || {};
+      entry.state = 'RELEASED'; entry.txId = result.txId; entry.real = true;
+      escrowStore[orderId] = entry;
+      console.log('[NM Escrow] releaseEscrow REAL', orderId, result);
+      return true;
+    } catch(e){ console.warn('[NM Escrow] API failed, using simulation:', e.message); nmApiReady = false; }
+  }
   var entry = escrowStore[orderId];
   if(!entry) throw new Error('Escrow not found: ' + orderId);
   if(entry.state !== 'FUNDED') throw new Error('Escrow not funded');
-  // Verify buyer commitment (ZK proof in real contract)
   var sk       = getSessionSecret();
   var expected = await deriveCommitment('buyer', entry.round, sk);
   if(expected !== entry.buyerCommitment) throw new Error('Commitment mismatch — not the buyer');
   entry.state = 'RELEASED';
-  // Mirrors Compact: round.increment(1) — Counter type uses .increment(), not += 
   entry.round = (entry.round + 1) & 0xFFFFFFFF;
-  console.log('[NM Escrow] releaseEscrow', orderId, { newRound: entry.round });
+  console.log('[NM Escrow] releaseEscrow SIM', orderId, { newRound: entry.round });
   return true;
 }
 
@@ -11688,7 +11871,7 @@ document.addEventListener('click', function(e){
 });
 
 // ── DEMO MODE ────────────────────────────────────────────────────
-var NM_CONTRACT_ADDRESS = null; // Paste contract address here after: npm run deploy
+var NM_CONTRACT_ADDRESS = '7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711'; // Deployed Midnight Preprod
 
 function activateDemoWallet(){
   walletState = {
@@ -14019,7 +14202,7 @@ function evFilter(cat, el) {
 }
 
 // Populate on page show — hook into showPage
-var _origShowPage = typeof showPage === 'function' ? showPage : null;
+var _origShowPageEco = typeof showPage === 'function' ? showPage : null;
 (function(){
   var _sp = window.showPage;
   window.showPage = function(id){
@@ -15410,7 +15593,7 @@ async function connect1AM(){
     } catch(e){ console.warn('[1AM] getUnshieldedAddress:', e); }
 
     var dust = '0', night = '0';
-    try { var db = await api.getDustBalance?.(); dust = db != null ? (Number(db)/1e6).toFixed(4) : '0'; } catch(e){}
+    try { var db = await api.getDustBalance?.(); dust = parseDustAmt(db); } catch(e){ console.warn('[1AM] getDustBalance:', e); }
     try {
       var ub = await api.getUnshieldedBalances?.();
       if(ub){ var ks = Object.keys(ub); if(ks.length) night = (Number(ub[ks[0]])/1e6).toFixed(4); }
@@ -16082,6 +16265,171 @@ var _referralState={ref:null,commissions:[],totalEarned:0};
   }
 })();
 
+
+
+// ── Night Vault ───────────────────────────────────────────────
+var VAULT_ITEMS = [
+  { id:'v1', name:'Midnight Felt',    emoji:'🌑', type:'Table',  price:50,  rarity:'Common',    desc:'Deep black felt with subtle purple glow edges. The default prestige upgrade.' },
+  { id:'v2', name:'Neon Lounge',      emoji:'💜', type:'Table',  price:120, rarity:'Rare',      desc:'Hot purple and cyan neon trim. Animated border pulses on every pot.' },
+  { id:'v3', name:'Ghost Ship',       emoji:'👻', type:'Table',  price:200, rarity:'Epic',      desc:'Spectral green fog drifts across the felt. Folds vanish in a wisp of smoke.' },
+  { id:'v4', name:'Gold Rush',        emoji:'🥇', type:'Table',  price:500, rarity:'Legendary', desc:'24K gold felt. Reserved for Platinum Night Score only. Rake rebate 1%.' },
+  { id:'v5', name:'Shadow Wolf',      emoji:'🐺', type:'Avatar', price:40,  rarity:'Common',    desc:'Dark wolf silhouette. Growls on big wins.' },
+  { id:'v6', name:'ZK Phantom',       emoji:'👤', type:'Avatar', price:90,  rarity:'Rare',      desc:'No face. Just a shimmer. Opponents can\'t read you.' },
+  { id:'v7', name:'Neon Fox',         emoji:'🦊', type:'Avatar', price:160, rarity:'Epic',      desc:'Electric orange fox. Blinks on raises. Fan favourite.' },
+  { id:'v8', name:'Obsidian Dragon',  emoji:'🐉', type:'Avatar', price:450, rarity:'Legendary', desc:'Night\'s most feared avatar. Gold tier required. Shows winstreak flame.' },
+  { id:'v9', name:'Midnight Backs',   emoji:'🃏', type:'Cards',  price:30,  rarity:'Common',    desc:'Deep indigo card backs with subtle Night logo watermark.' },
+  { id:'v10',name:'Plasma Backs',     emoji:'⚡', type:'Cards',  price:80,  rarity:'Rare',      desc:'Electric purple → cyan gradient. Crackles on deal.' },
+  { id:'v11',name:'ZK Foil',          emoji:'✨', type:'Cards',  price:180, rarity:'Epic',      desc:'Holographic foil that shifts with your ZK proof hash colour.' },
+  { id:'v12',name:'Royal Night',      emoji:'👑', type:'Cards',  price:400, rarity:'Legendary', desc:'Solid black with gold pips. Royal Flush triggers a full-screen animation.' },
+];
+var _vaultOwned = JSON.parse(localStorage.getItem('nm_vault_owned') || '[]');
+function renderVaultItems(filter) {
+  var items = filter && filter !== 'All' ? VAULT_ITEMS.filter(i => i.type === filter) : VAULT_ITEMS;
+  var html = items.map(function(item) {
+    var owned = _vaultOwned.includes(item.id);
+    var rarityColor = {Common:'var(--text2)', Rare:'var(--cyan)', Epic:'var(--plasma)', Legendary:'var(--gold)'}[item.rarity] || 'var(--text2)';
+    return '<div class="vault-item">' +
+      '<div class="vault-item-emoji">' + item.emoji + '</div>' +
+      '<div class="vault-item-type">' + item.type + '</div>' +
+      '<div class="vault-item-name">' + item.name + '</div>' +
+      '<div class="vault-item-rarity" style="color:' + rarityColor + '">' + item.rarity + '</div>' +
+      '<div class="vault-item-desc">' + item.desc + '</div>' +
+      '<div class="vault-item-footer">' +
+        '<span class="vault-item-price"><span style="color:var(--muted);font-size:10px;">DUST</span> ' + item.price + '</span>' +
+        (owned
+          ? '<button class="btn btn-ghost btn-sm" disabled style="opacity:.5">✓ Owned</button>'
+          : '<button class="btn btn-primary btn-sm" onclick="mintVaultItem(\'' + item.id + '\')">Mint</button>'
+        ) +
+      '</div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('vault-grid').innerHTML = html || '<div style="color:var(--muted);padding:32px;text-align:center;">No items in this category.</div>';
+}
+function mintVaultItem(id) {
+  var item = VAULT_ITEMS.find(function(i){return i.id===id;});
+  if (!item) return;
+  if (_vaultOwned.includes(id)) { toast('Already owned', 'info'); return; }
+  if (typeof walletState === 'undefined' || !walletState.connected) { openModal('ov-wallet'); return; }
+  _vaultOwned.push(id);
+  localStorage.setItem('nm_vault_owned', JSON.stringify(_vaultOwned));
+  toast('✨ ' + item.name + ' minted to your Night ID!', 'success');
+  setTimeout(function(){ toast('🃏 Equip it in Night Poker from your profile', 'info'); }, 1500);
+  renderVaultItems(document.getElementById('vault-filter-active') ? document.getElementById('vault-filter-active').textContent : 'All');
+}
+function setVaultFilter(el, type) {
+  document.querySelectorAll('.vault-filter-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  el.id = 'vault-filter-active';
+  renderVaultItems(type);
+}
+
+// ── Marketplace Listings (API-backed P2P escrow) ─────────────
+var NM_API = 'http://127.0.0.1:3001';
+var _listings = [];
+var _checkoutListing = null;
+
+async function nmApiPost(path, body) {
+  var r = await fetch(NM_API + path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), signal:AbortSignal.timeout(10000) });
+  var j = await r.json();
+  if (!r.ok) throw new Error(j.error || 'API error');
+  return j;
+}
+async function nmApiGet(path) {
+  var r = await fetch(NM_API + path, { signal: AbortSignal.timeout(6000) });
+  var j = await r.json();
+  if (!r.ok) throw new Error(j.error || 'API error');
+  return j;
+}
+
+async function renderListings() {
+  var grid = document.getElementById('nm-listings-grid');
+  var status = document.getElementById('nm-api-status');
+  if (!grid) return;
+  grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-family:var(--mono);">Loading listings…</div>';
+  try {
+    var data = await nmApiGet('/api/listings');
+    _listings = data.listings || [];
+    if (status) status.textContent = '🟢 API online — ' + _listings.length + ' listing' + (_listings.length !== 1 ? 's' : '');
+  } catch {
+    _listings = [];
+    if (status) status.textContent = '🔴 API offline — start api-server to see live listings';
+  }
+  if (!_listings.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono);">No listings yet — be the first to create one.</div>';
+    return;
+  }
+  grid.innerHTML = _listings.map(function(l) {
+    var stateColor = l.state === 'OPEN' ? 'var(--green)' : l.state === 'FUNDED' ? 'var(--gold)' : 'var(--muted)';
+    return '<div class="nm-listing-card">'
+      + '<div class="nm-listing-emoji">' + (l.emoji || '📦') + '</div>'
+      + '<div class="nm-listing-title">' + l.title + '</div>'
+      + '<div class="nm-listing-meta">' + (l.cat || 'General') + ' · ' + (l.cond || 'New') + (l.shipFrom ? ' · Ships from ' + l.shipFrom : '') + '</div>'
+      + (l.desc ? '<div class="nm-listing-desc">' + l.desc + '</div>' : '')
+      + '<div class="nm-listing-footer">'
+        + '<span class="nm-listing-price">⭐ ' + (l.price || 0) + ' NIGHT</span>'
+        + '<span style="font-size:11px;font-family:var(--mono);color:' + stateColor + ';">' + (l.state || 'OPEN') + '</span>'
+      + '</div>'
+      + '<div class="nm-listing-actions">'
+        + (l.state === 'OPEN' ? '<button class="btn btn-primary btn-sm" onclick="openCheckout(\'' + l.id + '\')">Buy with escrow →</button>' : '<button class="btn btn-ghost btn-sm" disabled>Sold</button>')
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function openCheckout(id) {
+  if (!walletState || !walletState.connected) { openWalletModal(); return; }
+  var l = _listings.find(function(x){ return x.id === id; });
+  if (!l) return;
+  _checkoutListing = l;
+  document.getElementById('co-listing-title') && (document.getElementById('co-listing-title').textContent = l.title);
+  document.getElementById('co-listing-price') && (document.getElementById('co-listing-price').textContent = l.price + ' NIGHT');
+  document.getElementById('co-listing-info')  && (document.getElementById('co-listing-info').textContent  = 'Escrow protects your funds until delivery is confirmed');
+  openModal('ov-checkout');
+}
+
+async function confirmCheckout() {
+  if (!_checkoutListing || !walletState || !walletState.connected) return;
+  var btn = document.getElementById('co-confirm-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating escrow…'; }
+  try {
+    var result = await nmApiPost('/api/escrow/fund', { orderId: _checkoutListing.id, amountNight: Math.round(_checkoutListing.price * 1_000_000) });
+    closeModal('ov-checkout');
+    toast('✓ Funds locked in escrow — seller has been notified', 'success');
+    setTimeout(function(){ toast('📦 Confirm delivery when it arrives to release funds', 'info'); }, 2000);
+    renderListings();
+  } catch (err) {
+    toast('Escrow: ' + err.message, 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Lock funds in escrow →'; }
+}
+
+async function createListing() {
+  if (!walletState || !walletState.connected) { openWalletModal(); return; }
+  var title = (document.getElementById('nl-title')?.value || '').trim();
+  var price = parseFloat(document.getElementById('nl-price')?.value || '0');
+  var cat   = document.getElementById('nl-cat')?.value   || 'General';
+  var cond  = document.getElementById('nl-cond')?.value  || 'New';
+  var desc  = (document.getElementById('nl-desc')?.value  || '').trim();
+  var from  = (document.getElementById('nl-from')?.value  || '').trim();
+  var emoji = (document.getElementById('nl-emoji')?.value || '📦').trim() || '📦';
+  if (!title)      { toast('Enter a title', 'error'); return; }
+  if (price <= 0)  { toast('Enter a price in NIGHT', 'error'); return; }
+  var btn = document.getElementById('nl-create-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
+  try {
+    var id = 'lst_' + Date.now();
+    await nmApiPost('/api/listings/create', { id, title, cat, price, cond, desc, from, emoji, sellerId: walletState.address });
+    await nmApiPost('/api/escrow/create', { orderId: id, amountNight: Math.round(price * 1_000_000) });
+    toast('✓ Listing live — escrow contract created on Midnight', 'success');
+    document.getElementById('nl-title') && (document.getElementById('nl-title').value = '');
+    document.getElementById('nl-price') && (document.getElementById('nl-price').value = '');
+    document.getElementById('nl-desc')  && (document.getElementById('nl-desc').value  = '');
+    showPage('listings');
+  } catch (err) {
+    toast('Create listing: ' + err.message, 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '⊘ List with escrow →'; }
+}
 </script>
 
 </html>
