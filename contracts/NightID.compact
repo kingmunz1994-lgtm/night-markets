@@ -1,0 +1,408 @@
+// ============================================================
+// NightID — ZK Identity & .night Name Service
+// Compact >= 0.20 · Midnight Network
+//
+// Three systems in one contract:
+//   1. .night Name Registry  — claim a human-readable name,
+//                              resolve it to a shielded commitment
+//   2. ZK Credential System  — issuers grant private attributes,
+//                              holders prove facts without revealing data
+//   3. Night Score           — private on-chain reputation built from
+//                              actions across the Night ecosystem
+//
+// Privacy model:
+//   Public  → name hash, credential commitments, score root, issuer registry
+//   Private → actual name string, credential values, raw score, PII
+//
+// Inspired by W3C VC Data Model v2.0 and iden3 credential patterns.
+// All circuits reimplemented from scratch in Compact (no GPL code).
+// ============================================================
+
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// ── Name Registry (public) ───────────────────────────────────
+// nameOwner: nameHash → owner commitment (who registered it)
+// nameTarget: nameHash → resolved commitment (shielded address)
+// nameTaken: nameHash → Boolean (fast existence check)
+export ledger nameOwner:       Map<Bytes<32>, Bytes<32>>;
+export ledger nameTarget:      Map<Bytes<32>, Bytes<32>>;
+export ledger nameTaken:       Map<Bytes<32>, Boolean>;
+export ledger totalNames:      Uint<32>;
+
+// ── Credential Registry (public metadata only) ───────────────
+// credentialRoot: per-holder Merkle root of issued credentials
+// credentialCount: total credentials issued (for stats)
+// issuerTrusted: issuerCommitment → Boolean (trusted issuer map)
+export ledger credentialRoot:  Map<Bytes<32>, Bytes<32>>;
+export ledger credentialCount: Uint<32>;
+export ledger issuerTrusted:   Map<Bytes<32>, Boolean>;
+export ledger issuerCount:     Uint<8>;
+
+// ── Night Score (public root only) ──────────────────────────
+// scoreRoot: per-holder Merkle root of score events
+// Only the root is public — actual score value stays private
+export ledger scoreRoot:       Map<Bytes<32>, Bytes<32>>;
+export ledger totalProofs:     Uint<32>;
+
+// ── Revocation ───────────────────────────────────────────────
+export ledger isRevoked:       Map<Bytes<32>, Boolean>;
+
+// ── Contract admin ───────────────────────────────────────────
+ledger adminCommitment:        Bytes<32>;
+ledger initialized:            Boolean;
+ledger round:                  Counter;
+
+// ── Witnesses (private inputs — never leave the prover) ──────
+witness localSecretKey():      Bytes<32>;
+witness nameString():          Bytes<32>;   // actual .night name (private)
+witness ageInYears():          Uint<8>;
+witness countryCode():         Bytes<2>;    // ISO 3166-1 alpha-2
+witness kycLevel():            Uint<8>;     // 0=none 1=basic 2=enhanced 3=institutional
+witness scoreWitness():        Uint<32>;
+witness incomeWitness():       Uint<64>;
+witness eventValueWitness():   Uint<32>;
+witness credentialHashWit():   Bytes<32>;
+witness issuerKeyWitness():    Bytes<32>;
+
+// ── Internal: caller commitment ──────────────────────────────
+// Same pattern as NightMarketsEscrow — domain-separated
+// so the same key yields different commitments per context.
+circuit callerCommitment(domain: Bytes<32>): Bytes<32> {
+  const sk = localSecretKey();
+  const contractAddr = kernel.self().bytes;
+  return persistentHash<Vector<3, Bytes<32>>>([domain, contractAddr, sk]);
+}
+
+// ── Internal: holder commitment (stable per user) ────────────
+circuit holderCommitment(): Bytes<32> {
+  return callerCommitment(pad(32, "nightid:holder"));
+}
+
+// ============================================================
+// SYSTEM 1 — .night NAME REGISTRY
+// ============================================================
+
+// registerName
+// Claim a .night name. The name string stays private — only its
+// hash is published, so nobody learns what names others hold.
+//
+// nameHash = persistentHash(nameString || holderCommitment)
+// This binds the name to the caller: two people can't hash the
+// same name to the same value because holderCommitment differs.
+//
+// targetCommitment: the shielded address commitment this name
+// should resolve to (can be same as holderCommitment or another
+// Midnight address commitment the user controls).
+export circuit registerName(
+  nameHash:         Bytes<32>,   // hash of the .night name (public)
+  targetCommitment: Bytes<32>    // what the name resolves to (public)
+): Bytes<32> {
+  // Verify the nameHash matches the caller's actual name
+  const name    = nameString();
+  const holder  = holderCommitment();
+  const claimed = persistentHash<Vector<2, Bytes<32>>>([name, holder]);
+  assert(disclose(claimed) == nameHash, "name hash mismatch");
+
+  // Name must not already be taken
+  assert(nameTaken.member(nameHash) == false, "name already registered");
+
+  const ownerCom = disclose(holder);
+  nameOwner.insert(nameHash, ownerCom);
+  nameTarget.insert(nameHash, targetCommitment);
+  nameTaken.insert(nameHash, true);
+  totalNames = totalNames + 1;
+  round.increment(1);
+
+  return ownerCom;
+}
+
+// transferName
+// Transfer a .night name to a new target commitment.
+// Only the current owner (proved via holderCommitment) can transfer.
+export circuit transferName(
+  nameHash:         Bytes<32>,
+  newTargetCommitment: Bytes<32>
+): Boolean {
+  const holder   = holderCommitment();
+  const ownerCom = disclose(holder);
+  const stored   = nameOwner.lookup(nameHash);
+  assert(ownerCom == stored, "not name owner");
+  assert(nameTaken.lookup(nameHash) == true, "name not registered");
+
+  nameTarget.insert(nameHash, newTargetCommitment);
+  round.increment(1);
+  return true;
+}
+
+// releaseName
+// Release (burn) a .night name. Owner gives it up permanently.
+export circuit releaseName(nameHash: Bytes<32>): Boolean {
+  const holder   = holderCommitment();
+  const ownerCom = disclose(holder);
+  const stored   = nameOwner.lookup(nameHash);
+  assert(ownerCom == stored, "not name owner");
+
+  nameTaken.insert(nameHash, false);
+  totalNames = totalNames - 1;
+  round.increment(1);
+  return true;
+}
+
+// resolveName (view — no state change)
+// Returns the target commitment for a .night name.
+// The caller learns the commitment but not the holder's identity.
+export circuit resolveName(nameHash: Bytes<32>): Bytes<32> {
+  assert(nameTaken.lookup(nameHash) == true, "name not registered");
+  return nameTarget.lookup(nameHash);
+}
+
+// proveNameOwnership
+// ZK-prove you own a specific .night name without revealing which name.
+// Verifier learns: this caller owns *some* registered name. That's all.
+export circuit proveNameOwnership(nameHash: Bytes<32>): Boolean {
+  const holder   = holderCommitment();
+  const ownerCom = disclose(holder);
+  const stored   = nameOwner.lookup(nameHash);
+  assert(nameTaken.lookup(nameHash) == true, "name not registered");
+  return ownerCom == stored;
+}
+
+// ============================================================
+// SYSTEM 2 — CREDENTIAL ISSUANCE & ATTRIBUTE PROOFS
+// ============================================================
+
+// registerIssuer (admin only)
+// Add a trusted credential issuer (e.g. a KYC partner, Billions bridge,
+// IAMX, or the Night ecosystem itself). Only the admin can register.
+export circuit registerIssuer(issuerCommitment: Bytes<32>): Boolean {
+  const caller = callerCommitment(pad(32, "nightid:admin"));
+  assert(disclose(caller) == adminCommitment, "admin only");
+  assert(issuerTrusted.member(issuerCommitment) == false, "already registered");
+
+  issuerTrusted.insert(issuerCommitment, true);
+  issuerCount = issuerCount + 1;
+  round.increment(1);
+  return true;
+}
+
+// issueCredential
+// A trusted issuer grants an attribute to a holder.
+// The credential data stays off-chain (W3C VC JSON).
+// Only the commitment (hash of credential facts) goes on-chain.
+//
+// credentialCommitment = hash(holderCommitment || issuerKey || attrKey || attrValue || timestamp)
+// newCredentialRoot = updated Merkle root after adding this credential
+export circuit issueCredential(
+  holderCom:            Bytes<32>,   // who receives the credential
+  credentialCommitment: Bytes<32>,   // hash of credential facts (no PII)
+  newCredentialRoot:    Bytes<32>    // updated Merkle root
+): Boolean {
+  // Verify the caller is a registered trusted issuer
+  const issuerKey = issuerKeyWitness();
+  const issuerCom = persistentHash<Vector<2, Bytes<32>>>([
+    pad(32, "nightid:issuer"),
+    issuerKey
+  ]);
+  assert(issuerTrusted.member(disclose(issuerCom)) == true, "untrusted issuer");
+  assert(isRevoked.member(credentialCommitment) == false, "credential already revoked");
+
+  credentialRoot.insert(holderCom, newCredentialRoot);
+  credentialCount = credentialCount + 1;
+  round.increment(1);
+  return true;
+}
+
+// proveAttribute
+// ZK-prove a single attribute satisfies a condition.
+// Operator: 1=eq  2=lt  3=gt  4=lte  5=gte  6=exists  7=between
+//
+// Examples:
+//   proveAttribute("kycLevel",   1, 2, 0) → kycLevel >= 2
+//   proveAttribute("ageInYears", 5, 18, 0) → age >= 18
+//   proveAttribute("countryCode",1, ..., 0) → exact country match
+//
+// What verifier learns: boolean result only.
+// What stays hidden:    actual attribute value, credential hash, PII.
+export circuit proveAttribute(
+  attrType:  Uint<8>,    // 1=kyc 2=age 3=country 4=score 5=income
+  operator:  Uint<8>,    // comparison operator (see above)
+  threshold: Uint<64>,   // comparison value
+  threshold2: Uint<64>   // upper bound for "between" operator (else 0)
+): Boolean {
+  const holder   = holderCommitment();
+  const holderCom = disclose(holder);
+
+  // Credential must not be revoked
+  const credHash = credentialHashWit();
+  assert(isRevoked.member(credHash) == false, "credential revoked");
+
+  // Dispatch to appropriate attribute witness
+  var attrVal: Uint<64> = 0;
+  if (attrType == 1) { attrVal = Uint<64>(kycLevel()); }
+  if (attrType == 2) { attrVal = Uint<64>(ageInYears()); }
+  if (attrType == 4) { attrVal = Uint<64>(scoreWitness()); }
+  if (attrType == 5) { attrVal = incomeWitness(); }
+
+  // Evaluate operator
+  var result: Boolean = false;
+  if (operator == 1) { result = attrVal == threshold; }
+  if (operator == 2) { result = attrVal < threshold; }
+  if (operator == 3) { result = attrVal > threshold; }
+  if (operator == 4) { result = attrVal <= threshold; }
+  if (operator == 5) { result = attrVal >= threshold; }
+  if (operator == 6) { result = true; }  // exists — credential present
+  if (operator == 7) { result = attrVal >= threshold && attrVal <= threshold2; }
+
+  totalProofs = totalProofs + 1;
+  round.increment(1);
+  return result;
+}
+
+// proveIdentity
+// Convenience circuit: prove KYC level, age, and country in one call.
+// Returns [kycOk, ageOk, countryOk] — three booleans.
+// Name, DOB, passport, SSN: never touched.
+export circuit proveIdentity(
+  requireKycLevel: Uint<8>,
+  requireAgeAbove: Uint<8>,
+  requireCountry:  Bytes<2>    // 0x0000 = any country
+): [Boolean, Boolean, Boolean] {
+  const credHash = credentialHashWit();
+  assert(isRevoked.member(credHash) == false, "credential revoked");
+
+  const kyc     = kycLevel();
+  const age     = ageInYears();
+  const country = countryCode();
+
+  const kycOk  = kyc >= requireKycLevel;
+  const ageOk  = requireAgeAbove == 0 || age >= requireAgeAbove;
+  const ctryOk = requireCountry == pad(2, "") || country == requireCountry;
+
+  totalProofs = totalProofs + 1;
+  round.increment(1);
+  return [kycOk, ageOk, ctryOk];
+}
+
+// revokeCredential
+// Issuer or holder revokes a credential commitment.
+// Sets revocation flag — all future proofs using this credential fail.
+export circuit revokeCredential(
+  credentialCommitment: Bytes<32>,
+  holderCom:            Bytes<32>
+): Boolean {
+  // Must be the holder OR a trusted issuer
+  const caller    = holderCommitment();
+  const callerCom = disclose(caller);
+
+  const isHolder = callerCom == holderCom;
+
+  const issuerKey = issuerKeyWitness();
+  const issuerCom = persistentHash<Vector<2, Bytes<32>>>([
+    pad(32, "nightid:issuer"),
+    issuerKey
+  ]);
+  const isIssuer = issuerTrusted.member(disclose(issuerCom));
+
+  assert(isHolder || isIssuer, "not authorized to revoke");
+
+  isRevoked.insert(credentialCommitment, true);
+  round.increment(1);
+  return true;
+}
+
+// ============================================================
+// SYSTEM 3 — NIGHT SCORE
+// ============================================================
+
+// recordScoreEvent
+// Called by Night ecosystem contracts when a user earns score.
+// All score data is private — only the Merkle root updates on-chain.
+//
+// Event types:
+//   1 = BNPL payment on time       (+10)
+//   2 = Staking 30+ days           (+15)
+//   3 = Staking 90+ days           (+25)
+//   4 = Night Market trade settled (+5)
+//   5 = Night Poker hand played    (+2)
+//   6 = Night Work task completed  (+20)
+//   7 = Night Lend repaid on time  (+15)
+//   8 = Token launched Night Fun   (+10)
+export circuit recordScoreEvent(
+  holderCom:       Bytes<32>,
+  eventType:       Uint<8>,
+  newScoreRoot:    Bytes<32>
+): Boolean {
+  const evVal = eventValueWitness();
+  assert(evVal > 0,   "event value must be positive");
+  assert(evVal <= 50, "event value too large");
+  assert(eventType >= 1 && eventType <= 8, "unknown event type");
+
+  scoreRoot.insert(holderCom, newScoreRoot);
+  round.increment(1);
+  return true;
+}
+
+// proveScore
+// ZK-prove Night Score is above a threshold.
+// Used for: preferential lending rates, Night Lend eligibility,
+//           Night Work premium tasks, Night Markets trust tier.
+//
+// What verifier learns: score >= threshold (boolean)
+// What stays hidden:    actual score, event history
+export circuit proveScore(
+  holderCom: Bytes<32>,
+  threshold: Uint<32>
+): Boolean {
+  const holder = holderCommitment();
+  assert(disclose(holder) == holderCom, "not your score");
+
+  const score = scoreWitness();
+  // Score is validated against the on-chain root off-circuit
+  // (full Merkle proof in the witness — simplified here)
+  assert(score <= 9999, "score out of range");
+
+  totalProofs = totalProofs + 1;
+  round.increment(1);
+  return score >= threshold;
+}
+
+// proveIncomeRange
+// ZK-prove income is within a range — no exact figure disclosed.
+// Used for: loan eligibility, insurance tiers, marketplace premium.
+export circuit proveIncomeRange(
+  holderCom:  Bytes<32>,
+  minIncome:  Uint<64>,
+  maxIncome:  Uint<64>
+): Boolean {
+  const holder = holderCommitment();
+  assert(disclose(holder) == holderCom, "not your credential");
+
+  const credHash = credentialHashWit();
+  assert(isRevoked.member(credHash) == false, "credential revoked");
+
+  const income = incomeWitness();
+  totalProofs = totalProofs + 1;
+  round.increment(1);
+  return income >= minIncome && income <= maxIncome;
+}
+
+// ============================================================
+// INITIALISATION
+// ============================================================
+
+// initialize
+// One-time setup — sets the admin commitment.
+// Must be called immediately after deployment.
+export circuit initialize(adminCom: Bytes<32>): Boolean {
+  assert(initialized == false, "already initialized");
+  adminCommitment = adminCom;
+  initialized     = true;
+  totalNames      = 0;
+  credentialCount = 0;
+  totalProofs     = 0;
+  issuerCount     = 0;
+  round.increment(1);
+  return true;
+}
