@@ -9,6 +9,9 @@ Work through phases in order. Check items off as they are completed.
 
 ## Current State (Honest Assessment)
 
+**🚨 MIDNIGHT MAINNET IS LIVE (Kūkolu phase, ~May 2026)**
+All deployments should now target **mainnet**, not preprod.
+
 | Repo | Contract | Deployed | Frontend | Live URL | SDK OK |
 |---|---|---|---|---|---|
 | night-markets | ✅ | ✅ preprod | ✅ | ✅ gh-pages | ✅ |
@@ -62,11 +65,11 @@ Three fixes applied to every repo's `scripts/deploy.ts` + `package.json`:
 
 ---
 
-## PHASE 3 — Deploy All Contracts to Preprod
-*Goal: Every app has a real on-chain contract. Priority = DUST holder utility.*
+## PHASE 3 — Deploy All Contracts to Mainnet
+*Goal: Every app has a real on-chain contract. Midnight mainnet is live — target it directly.*
 *Prerequisite: Phase 2 complete. Docker proof server running locally.*
 
-### Priority order (most utility for DUST holders first):
+### Priority order (night-poker first — best onboarding vehicle for DUST holders):
 
 - [ ] **night-poker** — `npm run compile && npm run deploy` in night-poker repo
   - Record contract address in night-poker README + .env
@@ -157,8 +160,21 @@ Three fixes applied to every repo's `scripts/deploy.ts` + `package.json`:
 
 ---
 
-## PHASE 9 — Mainnet / Full Launch
-*Blocked on: Midnight mainnet stability + Mōhalu DUST sponsorship (mid-2026)*
+## Funding & Ecosystem Opportunities
+
+- [ ] **Eclipse Bounty** — Tier 1 ($300–500 NIGHT): Write honest dev comparison article
+  (Midnight vs Aztec vs Aleo vs Mina vs Zcash). Draft exists from chat. Needs code examples,
+  personal Night Markets experience woven in, and heavy rewrite to avoid AI detection.
+  Publish on Dev.to. Tag @midnightntwrk. Comment "Ready for review" when done.
+- [ ] **Midnight Build Club** — 2-month accelerator, apply at mpc.midnight.network
+  Bring: GitHub repos, preprod demo video, short pitch on Night Markets ecosystem value
+- [ ] **Project Catalyst** — Midnight Compact DApps track. Non-dilutive treasury grant.
+  Apply once Build Club/bounty gives more credibility and content.
+
+---
+
+## PHASE 9 — Full Public Launch
+*Midnight mainnet is live. Phase 9 is now about scaling, not waiting for mainnet.*
 
 - [ ] DUST sponsorship live (`dust-sponsor.ts` with funded wallet) — users don't need tDUST
 - [ ] Upgrade all contracts to compact-js 2.6.0 / runtime 0.16.0 when available
