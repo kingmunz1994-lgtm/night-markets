@@ -74,16 +74,27 @@ No data is stored off-chain. No cookies. No tracking pixels. No surveillance.
 
 ---
 
+## Mainnet Status
+
+Midnight's **Kūkolu mainnet phase** launched March 2026. Night Markets is deploying all contracts to mainnet.
+
+| Contract | Network | Address |
+|---|---|---|
+| NightMarketsEscrow | Midnight Preprod | `7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711` |
+| NightFunToken | Mainnet — deploying | — |
+| NightPoker | Mainnet — deploying | — |
+| NightID | Mainnet — deploying | — |
+
 ## Smart Contract
 
-The `NightMarketsEscrow.compact` contract is **live on Midnight Preprod**:
+The `NightMarketsEscrow.compact` contract is live on Midnight Preprod and deploying to mainnet:
 
 | | |
 |---|---|
-| **Contract address** | `7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711` |
+| **Contract address (preprod)** | `7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711` |
 | **Deploy block** | 127,350 |
 | **Deploy tx** | `00e988f9d9e0509ec06a3beee4be6a60c178e5324209dbe6d5e6cd7b344a9de92c` |
-| **Network** | Midnight Preprod |
+| **Mainnet** | Kūkolu phase — contract deployment in progress |
 
 The contract implements:
 
@@ -120,15 +131,36 @@ Connect a Midnight-compatible wallet (Lace recommended) to unlock ZK-private che
 # Install dependencies
 npm install
 
-# Start the proof server
+# Start the proof server (v8.0.3)
 npm run proof-server
 
 # Compile Compact contracts
-npm run compile
+npm run compile          # NightMarketsEscrow
+npm run compile:nightfun # NightFunToken
+npm run compile:nightid  # NightID
 
-# Deploy to Midnight Preprod
+# Deploy to Midnight Network
 npm run deploy
 ```
+
+---
+
+## The Night Ecosystem
+
+Night Markets is the flagship of a 10-app privacy ecosystem on Midnight Network.
+
+| App | What it does | Live |
+|---|---|---|
+| [Night Hub](https://github.com/kingmunz1994-lgtm/night-hub) | Central launchpad | [↗](https://kingmunz1994-lgtm.github.io/night-hub/) |
+| [**Night Markets**](https://github.com/kingmunz1994-lgtm/night-markets) | **ZK global marketplace + escrow** | [↗](https://kingmunz1994-lgtm.github.io/night-markets/) |
+| [Night Poker](https://github.com/kingmunz1994-lgtm/night-poker) | Provably fair ZK Texas Hold'em | [↗](https://kingmunz1994-lgtm.github.io/night-poker/) |
+| [Night Fun](https://github.com/kingmunz1994-lgtm/night-fun) | ZK token launchpad | [↗](https://kingmunz1994-lgtm.github.io/night-fun/) |
+| [Night ID](https://github.com/kingmunz1994-lgtm/night-id) | ZK identity + .night name service | [↗](https://kingmunz1994-lgtm.github.io/night-id/) |
+| [Night Lend](https://github.com/kingmunz1994-lgtm/night-lend) | ZK lending at 75% LTV | [↗](https://kingmunz1994-lgtm.github.io/night-lend/) |
+| [Night Work](https://github.com/kingmunz1994-lgtm/night-work) | ZK task marketplace | [↗](https://kingmunz1994-lgtm.github.io/night-work/) |
+| [Night Save](https://github.com/kingmunz1994-lgtm/night-save) | ZK vault + sUSD stablecoin | [↗](https://kingmunz1994-lgtm.github.io/night-save/) |
+| [Night Biz](https://github.com/kingmunz1994-lgtm/night-biz) | ZK business loyalty tokens | [↗](https://kingmunz1994-lgtm.github.io/night-biz/) |
+| [Night Store](https://github.com/kingmunz1994-lgtm/night-store) | ZK merch shop | [↗](https://kingmunz1994-lgtm.github.io/night-store/) |
 
 ---
 
