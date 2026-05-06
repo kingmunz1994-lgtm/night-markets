@@ -158,6 +158,55 @@ a future compiler version. Current deployed contracts use `>= 0.20`.
 
 ---
 
+## Mainnet Tooling (Updated May 2026)
+
+### Midnight MCP — install this for every Claude session
+Gives Claude live Midnight docs + Compact validation. Faster sessions, fewer wasted tokens.
+```bash
+npx midnight-mcp@latest
+# or add to Claude Desktop / Cursor settings.json:
+# { "mcpServers": { "midnight": { "command": "npx", "args": ["-y", "midnight-mcp@latest"] } } }
+```
+
+### Proof Server — NOW v8.0.3 (not 7.0.0)
+```bash
+docker run -p 6300:6300 midnightntwrk/proof-server:8.0.3 midnight-proof-server -v
+```
+GPU option (community, faster): `Nocy-io/nocy-gpu-proof-server` on GitHub (CUDA, RTX 5090 benchmarked).
+
+### Mainnet Indexer/RPC — use Blockfrost (managed, no self-hosting)
+```
+INDEXER_URI=https://midnight-mainnet.blockfrost.io/api/v0/
+INDEXER_WS_URI=wss://midnight-mainnet.blockfrost.io/api/v0/ws
+NODE_URI=https://rpc.midnight-mainnet.blockfrost.io
+```
+Requires Blockfrost API key (blockfrost.dev). Eliminates running your own node.
+
+### DApp Connector API — BREAKING CHANGE in v4.0.1
+Old `enable()` / `isEnabled()` API is gone. New: `connect(networkId)`.
+```bash
+npm i @midnight-ntwrk/dapp-connector-api@4.0.1
+```
+Frontends need auditing — any code using `enable()` / `isEnabled()` is broken on mainnet.
+
+### Hosting Architecture for Night Ecosystem
+- **API server** (`api-server.ts`) → Fly.io or Render (WebSocket-friendly, persistent volumes)
+- **Proof server** → Hetzner VPS or DigitalOcean CPU droplet (Docker, ZK needs CPU)
+- **Frontends** → GitHub Pages (already set up)
+- **Indexer/RPC** → Blockfrost (managed)
+
+### Node.js Version Warning
+12 iterator bugs exist in the Midnight SDK under Node v22.
+Use Node 18 or 20. Apply `Array.from()` wrapping if stuck on v22.
+See: forum.midnight.network/t/12-iterator-helpers-bugs-in-midnight-sdk-under-node-v22
+
+### package.json — update proof server script
+```json
+"proof-server": "docker run -p 6300:6300 midnightntwrk/proof-server:8.0.3 midnight-proof-server -v"
+```
+
+---
+
 ## SDK Fixes Applied (Critical — Don't Revert)
 
 All of these were hard-won. See `docs/midnight-sdk-notes.md` for full explanation.
