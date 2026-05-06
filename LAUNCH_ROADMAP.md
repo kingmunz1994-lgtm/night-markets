@@ -1,6 +1,6 @@
 # Night Ecosystem — Full Launch Roadmap
 
-Last audited: 2026-05-03
+Last audited: 2026-05-06
 
 This is the master checklist from current state to full public launch.
 Work through phases in order. Check items off as they are completed.
@@ -12,19 +12,18 @@ Work through phases in order. Check items off as they are completed.
 | Repo | Contract | Deployed | Frontend | Live URL | SDK OK |
 |---|---|---|---|---|---|
 | night-markets | ✅ | ✅ preprod | ✅ | ✅ gh-pages | ✅ |
-| night-poker | ✅ | ❌ | ✅ | ❌ no gh-pages | ❌ isSynced bug |
-| night-fun | ✅ | ❌ | ✅ | ❌ no gh-pages | ❌ isSynced bug |
-| night-lend | ✅ | ❌ | ✅ | ❌ no gh-pages | ❌ isSynced bug |
-| night-work | ✅ | ❌ | ✅ | ❌ no gh-pages | ❌ isSynced bug |
-| night-save | ✅ | ❌ | ✅ | ❌ no gh-pages | ❌ isSynced bug |
-| night-biz | ✅ | ❌ | ✅ | ❌ no gh-pages | ❌ isSynced bug |
-| night-id | ❌ no contract | ❌ | ✅ | ❌ no gh-pages | — |
-| night-store | ❌ no contract | ❌ | ✅ | ❌ no gh-pages | — |
-| night-hub | — | — | ✅ | ❌ no gh-pages | — |
+| night-poker | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
+| night-fun | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
+| night-lend | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
+| night-work | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
+| night-save | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
+| night-biz | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
+| night-id | ❌ no contract | ❌ | ✅ | ✅ gh-pages | — |
+| night-store | ❌ no contract | ❌ | ✅ | ✅ gh-pages | — |
+| night-hub | — | — | ✅ | ✅ gh-pages | — |
 | midnight-ai-kit | — | — | — | — | — |
 
-**Critical gap:** night-hub links to 8 app URLs that all 404. Nothing is publicly reachable
-except night-markets. The whole ecosystem is invisible to anyone clicking through.
+**Phase 1+2 done:** All 10 repos on gh-pages. All 6 deploy scripts fixed. Ready to deploy contracts.
 
 ---
 
@@ -46,30 +45,20 @@ except night-markets. The whole ecosystem is invisible to anyone clicking throug
 
 ---
 
-## PHASE 2 — Fix SDK Bugs Across All Deploy Scripts
-*Goal: Every repo can actually deploy its contract. Currently all 6 will hang forever.*
-*The isSynced bug means deploy.ts in every repo waits 2.5h+ and then hangs.*
+## PHASE 2 — Fix SDK Bugs Across All Deploy Scripts ✅ COMPLETE 2026-05-06
+*Goal: Every repo can actually deploy its contract.*
 
-The same 3 fixes are needed in every repo's `scripts/deploy.ts`:
+Three fixes applied to every repo's `scripts/deploy.ts` + `package.json`:
+- Fix 1: `readyFilter` replaces `s.isSynced` (waits unshielded only, avoids 2.5h shielded scan)
+- Fix 2: Ledger v7/v8 WASM bridge added (prevents `_assertClass` crash in `deployContract`)
+- Fix 3: compact-js 2.4.0 → 2.5.0, compact-runtime 0.14.0 → 0.15.0
 
-```typescript
-// Fix 1: Replace isSynced wait with this
-const dustBal = (s: any): bigint =>
-  (s?.dust?.availableCoins ?? []).reduce((sum: bigint, c: any) => sum + (c.value ?? 0n), 0n);
-const readyFilter = (s: any) =>
-  (s.unshielded?.progress?.isCompleteWithin?.(50n) ?? false) || dustBal(s) > 0n;
-
-// Fix 2: Add ledger v7/v8 bridge (copy from night-markets/scripts/deploy.ts)
-
-// Fix 3: Upgrade compact-js 2.4.0 → 2.5.0 and compact-runtime 0.14.0 → 0.15.0 in package.json
-```
-
-- [ ] **night-poker** — apply 3 fixes, upgrade package.json versions
-- [ ] **night-fun** — apply 3 fixes, upgrade package.json versions
-- [ ] **night-lend** — apply 3 fixes, upgrade package.json versions
-- [ ] **night-work** — apply 3 fixes, upgrade package.json versions
-- [ ] **night-save** — apply 3 fixes, upgrade package.json versions
-- [ ] **night-biz** — apply 3 fixes, upgrade package.json versions
+- [x] **night-poker** — all 3 fixes applied, package.json upgraded
+- [x] **night-fun** — all 3 fixes applied, package.json upgraded
+- [x] **night-lend** — all 3 fixes applied, package.json upgraded
+- [x] **night-work** — all 3 fixes applied, package.json upgraded
+- [x] **night-save** — all 3 fixes applied, package.json upgraded
+- [x] **night-biz** — all 3 fixes applied, package.json upgraded
 
 ---
 
