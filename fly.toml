@@ -1,0 +1,33 @@
+# Night ID API — Fly.io configuration
+# Deploy: flyctl deploy
+# Logs:   flyctl logs
+# SSH:    flyctl ssh console
+
+app = "night-id-api"
+primary_region = "lax"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV    = "production"
+  PORT        = "3001"
+  CORS_ORIGINS = "https://kingmunz1994-lgtm.github.io,https://kingmunz1994-lgtm.github.io/night-id,https://kingmunz1994-lgtm.github.io/night-markets"
+
+[http_service]
+  internal_port       = 3001
+  force_https         = true
+  auto_stop_machines  = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period  = "10s"
+    interval      = "30s"
+    method        = "GET"
+    timeout       = "5s"
+    path          = "/health"
+
+[[vm]]
+  size   = "shared-cpu-1x"
+  memory = "512mb"
