@@ -31,9 +31,10 @@
  *   POST /api/nightfun/buy          — buy tokens from bonding curve (constant-product)
  *   POST /api/nightfun/sell         — sell tokens back to curve
  *   GET  /api/nightfun/curve        — curve state (reserves, price, graduation %)
- *   POST /api/nightid/register      — register a .night name (Night-ID service)
- *   GET  /api/nightid/resolve/:name — resolve name → address
- *   GET  /api/nightid/lookup/:addr  — reverse lookup address → name
+ *   POST /api/nightid/register           — register a .night name (Night-ID service)
+ *   GET  /api/nightid/resolve/:name      — resolve name → address
+ *   GET  /api/nightid/lookup/:addr       — reverse lookup address → name
+ *   GET  /api/nightid/score/:chain/:addr — multi-chain Night Score (eth|sol|ada|midnight|all)
  *
  * ZK proof generation note:
  *   Server-side: httpClientProofProvider → local proof server (port 6300)
@@ -663,6 +664,26 @@ const server = http.createServer(async (req, res) => {
     const entry = [..._nightIdStore.entries()].find(([, a]) => a === addr);
     if (!entry) return json(res, 404, { error: 'no .night name registered for this address' });
     return json(res, 200, { name: entry[0], address: addr });
+  }
+
+  // ── GET /api/nightid/score/:chain/:address ────────────────────────────────────
+  // Multi-chain Night Score. chain = eth | sol | ada | midnight | all
+  // Returns: { totalScore, level, levelEmoji, breakdowns, crossChainBonus, credential }
+  if (method === 'GET' && url.startsWith('/api/nightid/score/')) {
+    const parts = url.replace('/api/nightid/score/', '').split('/');
+    const chain = parts[0] as any;
+    const address = decodeURIComponent(parts.slice(1).join('/'));
+    if (!chain || !address) return json(res, 400, { error: 'chain and address required' });
+    const validChains = ['eth', 'sol', 'ada', 'midnight', 'all'];
+    if (!validChains.includes(chain)) return json(res, 400, { error: `chain must be one of: ${validChains.join(', ')}` });
+    try {
+      const { scoreWallet } = await import('./night-id-scorer.js');
+      const result = await scoreWallet(chain, address);
+      return json(res, 200, result);
+    } catch (err: any) {
+      console.error('[nightid/score]', err);
+      return json(res, 500, { error: 'scoring failed', detail: err?.message });
+    }
   }
 
   // ── POST /api/sponsor — proxy to dust-sponsor service (port 3002) ─────────────
