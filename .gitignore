@@ -20,3 +20,11 @@ dist/
 
 # Tool artifacts
 .repomix-output.xml
+
+# Nested repo clones (ecosystem repos cloned locally, not part of night-markets)
+night-biz/
+night-fun/
+night-id/
+night-lend/
+night-store/
+night-work/
