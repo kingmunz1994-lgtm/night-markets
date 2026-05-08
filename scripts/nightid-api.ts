@@ -40,45 +40,102 @@ const _mem_scores = new Map<string, ScoreData>();
 const _mem_names  = new Map<string, string>(); // name.night → address
 const _mem_rnames = new Map<string, string>(); // address → name.night
 
-let rc: any = null; // redis client instance
+// Minimal Redis client using Node built-in net — zero npm dependencies.
+// Supports GET, SET, QUIT over TCP/TLS using raw RESP protocol.
+import * as net  from 'node:net';
+import * as tls  from 'node:tls';
+
+let _redisSocket: net.Socket | null = null;
+let _redisReady  = false;
+
+function parseRedisUrl(raw: string): { host: string; port: number; password: string; tls: boolean } {
+  const u = new URL(raw);
+  return {
+    host:     u.hostname,
+    port:     parseInt(u.port || (u.protocol === 'rediss:' ? '6380' : '6379'), 10),
+    password: u.password ?? '',
+    tls:      u.protocol === 'rediss:',
+  };
+}
+
+function resp(...args: string[]): Buffer {
+  let s = `*${args.length}\r\n`;
+  for (const a of args) s += `$${Buffer.byteLength(a)}\r\n${a}\r\n`;
+  return Buffer.from(s);
+}
+
+async function redisCmd(...args: string[]): Promise<string | null> {
+  if (!_redisSocket || !_redisReady) return null;
+  return new Promise((resolve) => {
+    const sock = _redisSocket!;
+    const handler = (data: Buffer) => {
+      sock.removeListener('data', handler);
+      const s = data.toString();
+      if (s.startsWith('+') || s.startsWith(':')) return resolve(s.slice(1).trim());
+      if (s.startsWith('$-1')) return resolve(null);
+      if (s.startsWith('$')) {
+        const nl = s.indexOf('\r\n');
+        return resolve(nl >= 0 ? s.slice(nl + 2).replace(/\r\n$/, '') : null);
+      }
+      resolve(null);
+    };
+    sock.on('data', handler);
+    sock.write(resp(...args));
+  });
+}
 
 async function initRedis(): Promise<void> {
-  const url = process.env.REDIS_PRIVATE_URL ?? process.env.REDIS_URL ?? '';
-  if (!url) return;
+  const raw = process.env.REDIS_PRIVATE_URL ?? process.env.REDIS_URL ?? '';
+  if (!raw) return;
   try {
-    const { createClient } = await import('redis');
-    rc = createClient({ url, socket: { connectTimeout: 5000 } });
-    rc.on('error', (e: Error) => console.error('[redis error]', e.message));
-    await rc.connect();
+    const cfg = parseRedisUrl(raw);
+    const sock: net.Socket = cfg.tls
+      ? tls.connect({ host: cfg.host, port: cfg.port, rejectUnauthorized: false })
+      : net.connect({ host: cfg.host, port: cfg.port });
+
+    await new Promise<void>((resolve, reject) => {
+      sock.setTimeout(5000);
+      sock.once('error',   reject);
+      sock.once('timeout', () => reject(new Error('timeout')));
+      sock.once(cfg.tls ? 'secureConnect' : 'connect', resolve);
+    });
+
+    _redisSocket = sock;
+    sock.on('error', e => console.error('[redis]', e.message));
+
+    if (cfg.password) {
+      await redisCmd('AUTH', cfg.password);
+    }
+    _redisReady = true;
     console.log('  Redis:    connected ✓');
   } catch (e: any) {
-    console.error('[redis] failed to connect, using in-memory fallback:', e.message);
-    rc = null;
+    console.error('[redis] failed, using in-memory fallback:', e.message);
+    _redisSocket = null;
+    _redisReady  = false;
   }
 }
 
 async function scoreGet(addr: string): Promise<ScoreData> {
-  if (rc) {
-    const raw = await rc.get(`ns:score:${addr}`);
-    return raw ? JSON.parse(raw) : { total: 0, byApp: {} };
-  }
+  const raw = await redisCmd('GET', `ns:score:${addr}`);
+  if (raw) return JSON.parse(raw);
   return _mem_scores.get(addr) ?? { total: 0, byApp: {} };
 }
 
 async function scoreSet(addr: string, data: ScoreData): Promise<void> {
-  if (rc) { await rc.set(`ns:score:${addr}`, JSON.stringify(data)); return; }
+  const s = JSON.stringify(data);
+  if (_redisReady) { await redisCmd('SET', `ns:score:${addr}`, s); return; }
   _mem_scores.set(addr, data);
 }
 
 async function nameGet(name: string): Promise<string | null> {
-  if (rc) return await rc.get(`ns:name:${name}`);
-  return _mem_names.get(name) ?? null;
+  const r = await redisCmd('GET', `ns:name:${name}`);
+  return r ?? _mem_names.get(name) ?? null;
 }
 
 async function nameSet(fullName: string, addr: string): Promise<void> {
-  if (rc) {
-    await rc.set(`ns:name:${fullName}`, addr);
-    await rc.set(`ns:rname:${addr}`, fullName);
+  if (_redisReady) {
+    await redisCmd('SET', `ns:name:${fullName}`, addr);
+    await redisCmd('SET', `ns:rname:${addr}`, fullName);
     return;
   }
   _mem_names.set(fullName, addr);
@@ -86,8 +143,8 @@ async function nameSet(fullName: string, addr: string): Promise<void> {
 }
 
 async function nameFindByAddr(addr: string): Promise<string | null> {
-  if (rc) return await rc.get(`ns:rname:${addr}`);
-  return _mem_rnames.get(addr) ?? null;
+  const r = await redisCmd('GET', `ns:rname:${addr}`);
+  return r ?? _mem_rnames.get(addr) ?? null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -135,7 +192,7 @@ const server = http.createServer(async (req, res) => {
       ok: true,
       service: 'Night ID API',
       version: '1.3.0',
-      storage: rc ? 'redis' : 'in-memory',
+      storage: _redisReady ? 'redis' : 'in-memory',
       endpoints: [
         '/api/nightid/score/:chain/:addr',
         '/api/nightid/record-action',
