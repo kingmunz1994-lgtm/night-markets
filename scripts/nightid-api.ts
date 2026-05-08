@@ -44,6 +44,7 @@ const _mem_rnames = new Map<string, string>(); // address → name.night
 // Supports GET, SET, QUIT over TCP/TLS using raw RESP protocol.
 import * as net  from 'node:net';
 import * as tls  from 'node:tls';
+import { WebSocketServer } from 'ws';
 
 let _redisSocket: net.Socket | null = null;
 let _redisReady  = false;
@@ -145,6 +146,36 @@ async function nameSet(fullName: string, addr: string): Promise<void> {
 async function nameFindByAddr(addr: string): Promise<string | null> {
   const r = await redisCmd('GET', `ns:rname:${addr}`);
   return r ?? _mem_rnames.get(addr) ?? null;
+}
+
+// ─── Poker room management ────────────────────────────────────────────────────
+interface PokerTable {
+  id: string; name: string; bigBlind: number; smallBlind: number;
+  maxBuyIn: number; maxPlayers: number; players: number;
+  phase: 'waiting' | 'playing'; createdAt: number;
+}
+const _tables = new Map<string, PokerTable>();
+const _rooms  = new Map<string, Map<number, any>>(); // tableId → seat → ws
+
+const DEFAULT_TABLES: PokerTable[] = [
+  { id: 'midnight-lounge',  name: 'Midnight Lounge',  bigBlind: 100,  smallBlind: 50,  maxBuyIn: 10000,  maxPlayers: 6, players: 0, phase: 'waiting', createdAt: 0 },
+  { id: 'high-roller-room', name: 'High Roller Room', bigBlind: 1000, smallBlind: 500, maxBuyIn: 100000, maxPlayers: 6, players: 0, phase: 'waiting', createdAt: 0 },
+  { id: 'zk-private-table', name: 'ZK Private Table', bigBlind: 500,  smallBlind: 250, maxBuyIn: 50000,  maxPlayers: 6, players: 0, phase: 'waiting', createdAt: 0 },
+  { id: 'micro-stakes',     name: 'Micro Stakes',     bigBlind: 10,   smallBlind: 5,   maxBuyIn: 1000,   maxPlayers: 6, players: 0, phase: 'waiting', createdAt: 0 },
+];
+DEFAULT_TABLES.forEach(t => { t.createdAt = Date.now(); _tables.set(t.id, t); });
+
+function pokerRoomSize(tableId: string): number {
+  return _rooms.get(tableId)?.size ?? 0;
+}
+
+function broadcastPoker(tableId: string, excludeSeat: number, msg: object): void {
+  const room = _rooms.get(tableId);
+  if (!room) return;
+  const data = JSON.stringify(msg);
+  room.forEach((ws, seat) => {
+    if (seat !== excludeSeat && ws.readyState === 1) ws.send(data);
+  });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -487,7 +518,90 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // ── Poker — table registry ──────────────────────────────────────────────────
+
+  // GET /api/poker/tables
+  if (method === 'GET' && url === '/api/poker/tables') {
+    const tables = [..._tables.values()].map(t => ({
+      ...t,
+      players: pokerRoomSize(t.id),
+      phase:   pokerRoomSize(t.id) > 1 ? 'playing' : 'waiting',
+    }));
+    return json(res, 200, { tables });
+  }
+
+  // POST /api/poker/tables
+  if (method === 'POST' && url === '/api/poker/tables') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { name, bigBlind = 100, maxBuyIn = 10000, maxPlayers = 6 } = body ?? {};
+    if (!name) return json(res, 400, { error: 'name required' });
+    const id = 'tbl-' + Date.now();
+    const tbl: PokerTable = {
+      id, name: String(name),
+      bigBlind: Number(bigBlind),
+      smallBlind: Math.floor(Number(bigBlind) / 2),
+      maxBuyIn: Number(maxBuyIn),
+      maxPlayers: Number(maxPlayers),
+      players: 0, phase: 'waiting', createdAt: Date.now(),
+    };
+    _tables.set(id, tbl);
+    console.log(`[poker] table created: ${name} (${id})`);
+    return json(res, 200, { ok: true, table: tbl });
+  }
+
   json(res, 404, { error: 'not found' });
+});
+
+// ─── WebSocket — Poker rooms ──────────────────────────────────────────────────
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (req: http.IncomingMessage, socket: any, head: Buffer) => {
+  const wsUrl = (req.url ?? '').split('?')[0];
+  if (wsUrl.startsWith('/ws/poker/')) {
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      const tableId = wsUrl.replace('/ws/poker/', '');
+      let mySeat = -1;
+
+      ws.on('message', (raw: Buffer) => {
+        try {
+          const msg: any = JSON.parse(raw.toString());
+
+          if (msg.type === 'join') {
+            let room = _rooms.get(tableId);
+            if (!room) { room = new Map(); _rooms.set(tableId, room); }
+            for (let s = 0; s < 6; s++) {
+              if (!room.has(s)) { mySeat = s; break; }
+            }
+            if (mySeat === -1) { ws.close(1008, 'Table full'); return; }
+            room.set(mySeat, ws);
+            const tbl = _tables.get(tableId);
+            if (tbl) { tbl.players = room.size; tbl.phase = room.size > 1 ? 'playing' : 'waiting'; }
+            ws.send(JSON.stringify({ type: 'room_state', seat: mySeat, playerCount: room.size, tableId }));
+            broadcastPoker(tableId, mySeat, { type: 'player_joined', seat: mySeat, playerCount: room.size });
+            console.log(`[poker] ${tableId} seat ${mySeat} joined (${room.size} players)`);
+          }
+
+          if (msg.type === 'action' || msg.type === 'chat') {
+            broadcastPoker(tableId, mySeat, { ...msg, seat: mySeat });
+          }
+        } catch {}
+      });
+
+      ws.on('close', () => {
+        const room = _rooms.get(tableId);
+        if (!room) return;
+        room.delete(mySeat);
+        if (room.size === 0) _rooms.delete(tableId);
+        const tbl = _tables.get(tableId);
+        if (tbl) { tbl.players = room.size; tbl.phase = room.size > 1 ? 'playing' : 'waiting'; }
+        broadcastPoker(tableId, mySeat, { type: 'player_left', seat: mySeat, playerCount: room.size });
+        console.log(`[poker] ${tableId} seat ${mySeat} left (${room.size} players)`);
+      });
+    });
+  } else {
+    socket.destroy();
+  }
 });
 
 // Start HTTP server immediately — Redis connects in background
