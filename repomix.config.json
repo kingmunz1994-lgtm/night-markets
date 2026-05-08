@@ -1,0 +1,21 @@
+{
+  "output": {
+    "filePath": ".repomix-output.xml",
+    "style": "xml",
+    "compress": true,
+    "showLineNumbers": false,
+    "removeComments": false,
+    "removeEmptyLines": true,
+    "topFilesLength": 10,
+    "showFileSummary": true
+  },
+  "include": ["index.html"],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": ["*.output.*", "dist/", "node_modules/"]
+  },
+  "security": {
+    "enableSecurityCheck": false
+  }
+}
