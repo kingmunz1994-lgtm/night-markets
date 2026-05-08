@@ -52,7 +52,22 @@ const _mem_scores = new Map<string, ScoreData>();
 const _mem_names  = new Map<string, string>(); // name.night → address
 const _mem_rnames = new Map<string, string>(); // address → name.night
 
-interface ScoreData { total: number; byApp: Record<string, number>; }
+let rc: any = null; // redis client instance
+
+async function initRedis(): Promise<void> {
+  const url = process.env.REDIS_PRIVATE_URL ?? process.env.REDIS_URL ?? '';
+  if (!url) return;
+  try {
+    const { createClient } = await import('redis');
+    rc = createClient({ url, socket: { connectTimeout: 5000 } });
+    rc.on('error', (e: Error) => console.error('[redis error]', e.message));
+    await rc.connect();
+    console.log('  Redis:    connected ✓');
+  } catch (e: any) {
+    console.error('[redis] failed to connect, using in-memory fallback:', e.message);
+    rc = null;
+  }
+}
 
 async function scoreGet(addr: string): Promise<ScoreData> {
   if (USE_REDIS) {
@@ -250,9 +265,11 @@ const server = http.createServer(async (req, res) => {
   json(res, 404, { error: 'not found' });
 });
 
+// Start HTTP server immediately — Redis connects in background
 server.listen(PORT, () => {
-  console.log(`\n⊘ Night ID API v1.2.0 — listening on :${PORT}`);
-  console.log(`  Storage:  ${USE_REDIS ? 'Upstash Redis (persistent)' : 'in-memory (set UPSTASH_REDIS_REST_URL to persist)'}`);
+  console.log(`\n⊘ Night ID API v1.3.0 — listening on :${PORT}`);
   console.log(`  Scoring:  ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
   console.log(`  Health:   http://localhost:${PORT}/health\n`);
 });
+
+initRedis().catch(e => console.error('[redis] init failed:', e?.message));
