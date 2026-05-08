@@ -46,6 +46,14 @@ export ledger issuerCount:     Uint<8>;
 export ledger scoreRoot:       Map<Bytes<32>, Bytes<32>>;
 export ledger totalProofs:     Uint<32>;
 
+// ── Action Score (public total) ──────────────────────────────
+// actionScore: holderCommitment → cumulative Night Score points
+// Readable directly from the indexer — used by Night Hub, the
+// AI Builder Program threshold check, and Night Work routing.
+export ledger actionScore:     Map<Bytes<32>, Uint<32>>;
+export ledger trustedApps:     Map<Bytes<32>, Boolean>;
+export ledger appCount:        Uint<8>;
+
 // ── Revocation ───────────────────────────────────────────────
 export ledger isRevoked:       Map<Bytes<32>, Boolean>;
 
@@ -389,6 +397,64 @@ export circuit proveIncomeRange(
 }
 
 // ============================================================
+// SYSTEM 4 — CROSS-APP ACTION SCORE
+// ============================================================
+
+// registerApp (admin only)
+// Register a trusted Night ecosystem app so it can call recordAction.
+// appCommitment = persistentHash("nightid:app" || contractAddr || appSecretKey)
+// The app server generates this commitment from its own secret key.
+export circuit registerApp(appCommitment: Bytes<32>): Boolean {
+  const caller = callerCommitment(pad(32, "nightid:admin"));
+  assert(disclose(caller) == adminCommitment, "admin only");
+  assert(trustedApps.member(appCommitment) == false, "app already registered");
+  trustedApps.insert(appCommitment, true);
+  appCount = appCount + 1;
+  round.increment(1);
+  return true;
+}
+
+// recordAction
+// Called by a trusted Night app when a user completes a scored action.
+// The app proves it is registered via callerCommitment("nightid:app").
+//
+// Action points by app:
+//   night-markets: escrow settled          → 50 pts
+//   night-fun:     token launched          → 25 pts
+//   night-poker:   hand played             → 15 pts
+//   night-lend:    repaid on time          → 30 pts
+//   night-work:    task completed          → 40 pts
+//   night-save:    vault deposit           → 10 pts
+//   night-biz:     loyalty tier verified   → 10 pts
+//
+// Points accumulate in actionScore (public, indexer-readable).
+// Night Hub reads this directly — no ZK proof needed for display.
+// Night Work routing and AI Builder Program threshold use this value.
+export circuit recordAction(
+  holderCom: Bytes<32>,
+  points:    Uint<8>
+): Uint<32> {
+  const appCom = callerCommitment(pad(32, "nightid:app"));
+  assert(trustedApps.member(disclose(appCom)) == true, "untrusted app");
+  assert(points > 0,   "points must be positive");
+  assert(points <= 50, "points too large");
+
+  var current: Uint<32> = 0;
+  if (actionScore.member(holderCom)) { current = actionScore.lookup(holderCom); }
+  const newTotal: Uint<32> = current + Uint<32>(points);
+  actionScore.insert(holderCom, newTotal);
+  round.increment(1);
+  return newTotal;
+}
+
+// getActionScore (view)
+// Read the public cumulative Night Score for any holder.
+export circuit getActionScore(holderCom: Bytes<32>): Uint<32> {
+  if (actionScore.member(holderCom)) { return actionScore.lookup(holderCom); }
+  return 0;
+}
+
+// ============================================================
 // INITIALISATION
 // ============================================================
 
@@ -403,6 +469,7 @@ export circuit initialize(adminCom: Bytes<32>): Boolean {
   credentialCount = 0;
   totalProofs     = 0;
   issuerCount     = 0;
+  appCount        = 0;
   round.increment(1);
   return true;
 }

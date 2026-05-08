@@ -31,10 +31,12 @@
  *   POST /api/nightfun/buy          — buy tokens from bonding curve (constant-product)
  *   POST /api/nightfun/sell         — sell tokens back to curve
  *   GET  /api/nightfun/curve        — curve state (reserves, price, graduation %)
- *   POST /api/nightid/register           — register a .night name (Night-ID service)
- *   GET  /api/nightid/resolve/:name      — resolve name → address
- *   GET  /api/nightid/lookup/:addr       — reverse lookup address → name
- *   GET  /api/nightid/score/:chain/:addr — multi-chain Night Score (eth|sol|ada|midnight|all)
+ *   POST /api/nightid/register                — register a .night name (Night-ID service)
+ *   GET  /api/nightid/resolve/:name          — resolve name → address
+ *   GET  /api/nightid/lookup/:addr           — reverse lookup address → name
+ *   GET  /api/nightid/score/:chain/:addr     — multi-chain Night Score (eth|sol|ada|midnight|all)
+ *   POST /api/nightid/record-action          — award Night Score points (called by Night apps)
+ *   GET  /api/nightid/action-score/:address  — cumulative cross-app Night Score + threshold check
  *
  * ZK proof generation note:
  *   Server-side: httpClientProofProvider → local proof server (port 6300)
@@ -333,6 +335,8 @@ const _ratingStore:   Map<string, any[]>  = new Map();
 const _deliveryStore: Map<string, any>    = new Map();
 const _curveStore:    Map<string, any>    = new Map(); // tokenAddress → curve state
 const _nightIdStore:  Map<string, string> = new Map(); // "name.night" → address
+const _nightScoreStore: Map<string, number> = new Map(); // address → cumulative action score
+const _scoreEventLog:   any[]              = [];         // full event history
 
 // Bonding curve math (bigint, constant-product AMM)
 function calcBuy(nightReserve: bigint, tokenReserve: bigint, nightIn: bigint): bigint {
@@ -460,11 +464,21 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (action === 'release') {
-        const { orderId } = body;
+        const { orderId, sellerAddress } = body;
         if (!orderId) return json(res, 400, { error: 'orderId required' });
         const oidBytes = toBytes32(String(orderId));
         console.log(`\n  [release] orderId="${orderId}"`);
         const r = await appState.contract.callTx.releaseEscrow(oidBytes);
+
+        // Award Night Score to seller — fire-and-forget, non-blocking
+        const seller = sellerAddress ?? _listingStore.get(String(orderId))?.sellerId;
+        if (seller) {
+          const prev = _nightScoreStore.get(seller) ?? 0;
+          _nightScoreStore.set(seller, prev + 50);
+          _scoreEventLog.push({ address: seller, appId: 'night-markets', points: 50, eventType: 4, ts: Date.now(), orderId });
+          console.log(`  ✓ Night Score +50 → ${seller.slice(0, 16)}… (total: ${prev + 50})`);
+        }
+
         return json(res, 200, { txId: r.public.txId, blockHeight: r.public.blockHeight, orderId });
       }
 
@@ -684,6 +698,56 @@ const server = http.createServer(async (req, res) => {
       console.error('[nightid/score]', err);
       return json(res, 500, { error: 'scoring failed', detail: err?.message });
     }
+  }
+
+  // ── POST /api/nightid/record-action ──────────────────────────────────────────
+  // Called by any Night app when a user completes a scored action.
+  // v1: records in-memory (no contract call yet).
+  // v2: will call NightID.compact recordAction circuit on-chain.
+  // Body: { holderAddress, appId, points, eventType }
+  // Returns: { ok, address, appId, points, newTotal }
+  if (method === 'POST' && url === '/api/nightid/record-action') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { holderAddress, appId, points, eventType } = body;
+    if (!holderAddress) return json(res, 400, { error: 'holderAddress required' });
+    if (!appId)         return json(res, 400, { error: 'appId required' });
+    const pts = Number(points ?? 0);
+    if (pts < 1 || pts > 50) return json(res, 400, { error: 'points must be 1–50' });
+
+    const VALID_APPS: Record<string, number> = {
+      'night-markets': 50,
+      'night-fun':     25,
+      'night-poker':   15,
+      'night-lend':    30,
+      'night-work':    40,
+      'night-save':    10,
+      'night-biz':     10,
+    };
+    if (!VALID_APPS[appId]) return json(res, 400, { error: `unknown appId: ${appId}` });
+
+    const prev     = _nightScoreStore.get(holderAddress) ?? 0;
+    const newTotal = prev + pts;
+    _nightScoreStore.set(holderAddress, newTotal);
+    _scoreEventLog.push({ address: holderAddress, appId, points: pts, eventType: eventType ?? 0, ts: Date.now() });
+    console.log(`\n  [record-action] ${appId} +${pts} → ${holderAddress.slice(0, 16)}… (total: ${newTotal})`);
+    return json(res, 200, { ok: true, address: holderAddress, appId, points: pts, newTotal });
+  }
+
+  // ── GET /api/nightid/action-score/:address ────────────────────────────────────
+  // Returns the cumulative Night Score for an address across all Night apps.
+  // Used by Night Hub, Night Work routing, and AI Builder Program threshold.
+  if (method === 'GET' && url.startsWith('/api/nightid/action-score/')) {
+    const address = decodeURIComponent(url.replace('/api/nightid/action-score/', ''));
+    if (!address) return json(res, 400, { error: 'address required' });
+    const total  = _nightScoreStore.get(address) ?? 0;
+    const events = _scoreEventLog.filter(e => e.address === address);
+    const byApp  = events.reduce((acc: Record<string, number>, e: any) => {
+      acc[e.appId] = (acc[e.appId] ?? 0) + e.points;
+      return acc;
+    }, {});
+    const threshold200 = total >= 200;
+    return json(res, 200, { address, total, threshold200, byApp, eventCount: events.length });
   }
 
   // ── POST /api/sponsor — proxy to dust-sponsor service (port 3002) ─────────────
