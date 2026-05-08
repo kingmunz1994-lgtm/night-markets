@@ -34,7 +34,7 @@ const PORT = parseInt(process.env.PORT ?? process.env.API_PORT ?? '3001', 10);
 // ─── Redis persistence ────────────────────────────────────────────────────────
 // Uses Railway Redis when REDIS_PRIVATE_URL / REDIS_URL is set.
 // Falls back to in-memory Maps for local dev (scores reset on restart).
-interface ScoreData { total: number; byApp: Record<string, number>; }
+interface ScoreData { total: number; byApp: Record<string, number>; spent?: number; }
 
 const _mem_scores = new Map<string, ScoreData>();
 const _mem_names  = new Map<string, string>(); // name.night → address
@@ -305,6 +305,186 @@ const server = http.createServer(async (req, res) => {
     const name = await nameFindByAddr(addr);
     if (!name) return json(res, 404, { error: 'no .night name for this address' });
     return json(res, 200, { name, address: addr });
+  }
+
+  // ── Night Store — Printful integration ──────────────────────────────────────
+
+  const PF_TOKEN  = process.env.PRINTFUL_API_TOKEN ?? '';
+  const NIGHT_USD = 0.04; // 1 NIGHT = $0.04
+
+  async function pf(path: string, opts: RequestInit = {}): Promise<any> {
+    if (!PF_TOKEN) throw new Error('PRINTFUL_API_TOKEN not set');
+    const r = await fetch('https://api.printful.com' + path, {
+      ...opts,
+      headers: { 'Authorization': `Bearer ${PF_TOKEN}`, 'Content-Type': 'application/json', ...(opts.headers ?? {}) },
+    });
+    const d = await r.json() as any;
+    if (!r.ok) throw new Error(d?.error?.message ?? `Printful ${r.status}: ${JSON.stringify(d)}`);
+    return d.result ?? d;
+  }
+
+  // Night Markets branded catalog — 5 products with Printful catalog IDs
+  // Variant IDs fetched live from Printful catalog API and cached.
+  const CATALOG_DEF = [
+    { id: 'tshirt',  pfId: 71,  name: 'Night Markets Tee',    desc: 'Unisex Bella+Canvas 3001',      priceUSD: 32, emoji: '👕', color: 'Black', sizes: ['S','M','L','XL','2XL'] },
+    { id: 'hoodie',  pfId: 380, name: 'Night Markets Hoodie',  desc: 'Unisex Gildan 18500 Hoodie',    priceUSD: 55, emoji: '🧥', color: 'Black', sizes: ['S','M','L','XL','2XL'] },
+    { id: 'mug',     pfId: 19,  name: 'Night Markets Mug',     desc: 'White Glossy Ceramic 11oz',     priceUSD: 22, emoji: '☕', color: 'White', sizes: ['11oz'] },
+    { id: 'tote',    pfId: 2,   name: 'Night Markets Tote',    desc: 'Natural Canvas Tote Bag',       priceUSD: 26, emoji: '🛍️', color: 'Natural', sizes: ['One Size'] },
+    { id: 'cap',     pfId: 74,  name: 'Night Markets Cap',     desc: 'Classic Structured Dad Cap',    priceUSD: 30, emoji: '🧢', color: 'Black', sizes: ['One Size'] },
+  ];
+
+  // Design file hosted on GitHub Pages — print-ready Night Markets logo
+  const DESIGN_URL = 'https://kingmunz1994-lgtm.github.io/night-store/night-print.svg';
+
+  // Cache of { pfId → { size → variantId } } fetched from Printful catalog
+  const _variantCache = new Map<number, Record<string, number>>();
+
+  async function getVariants(pfId: number, wantedSizes: string[], wantedColor: string): Promise<Record<string, number>> {
+    if (_variantCache.has(pfId)) return _variantCache.get(pfId)!;
+    const data = await pf(`/catalog/products/${pfId}`);
+    const variants: any[] = data.variants ?? [];
+    const map: Record<string, number> = {};
+    for (const v of variants) {
+      const colorMatch = !wantedColor || v.color?.toLowerCase().includes(wantedColor.toLowerCase());
+      if (colorMatch && wantedSizes.includes(v.size)) {
+        map[v.size] = v.id;
+      }
+    }
+    // For single-size products (mug/tote/cap) just take first matching variant
+    if (wantedSizes.length === 1 && Object.keys(map).length === 0) {
+      const first = variants.find(v => !wantedColor || v.color?.toLowerCase().includes(wantedColor.toLowerCase()));
+      if (first) map[wantedSizes[0]] = first.id;
+    }
+    _variantCache.set(pfId, map);
+    return map;
+  }
+
+  // GET /api/store/products
+  if (method === 'GET' && url === '/api/store/products') {
+    try {
+      const products = await Promise.all(CATALOG_DEF.map(async p => {
+        let variants: Record<string, number> = {};
+        try { variants = await getVariants(p.pfId, p.sizes, p.color); } catch { /* use empty */ }
+        return {
+          id:       p.id,
+          name:     p.name,
+          desc:     p.desc,
+          emoji:    p.emoji,
+          priceUSD: p.priceUSD,
+          priceNIGHT: Math.ceil(p.priceUSD / NIGHT_USD),
+          sizes:    p.sizes,
+          variants, // size → variantId
+          available: Object.keys(variants).length > 0,
+        };
+      }));
+      return json(res, 200, { products, nightUSD: NIGHT_USD });
+    } catch (e: any) {
+      return json(res, 500, { error: e.message });
+    }
+  }
+
+  // POST /api/store/estimate — shipping estimate
+  // Body: { countryCode, items: [{ variantId, qty }] }
+  if (method === 'POST' && url === '/api/store/estimate') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { countryCode = 'US', stateCode = '', zip = '', items = [] } = body ?? {};
+    try {
+      const rates = await pf('/shipping/rates', {
+        method: 'POST',
+        body: JSON.stringify({
+          recipient: { country_code: countryCode, state_code: stateCode, zip },
+          items: items.map((i: any) => ({ variant_id: i.variantId, quantity: i.qty ?? 1 })),
+        }),
+      });
+      const cheapest = Array.isArray(rates) ? rates.sort((a: any, b: any) => a.rate - b.rate)[0] : rates[0];
+      return json(res, 200, { rates, cheapest });
+    } catch (e: any) {
+      return json(res, 200, { rates: [], cheapest: { name: 'Standard Shipping', rate: '4.99', minDeliveryDays: 5, maxDeliveryDays: 10 } });
+    }
+  }
+
+  // POST /api/store/checkout
+  // Body: { address (wallet), items: [{ productId, size, qty }], shipping: { name, address1, city, stateCode, countryCode, zip } }
+  if (method === 'POST' && url === '/api/store/checkout') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+
+    const { address: walletAddr, items = [], shipping } = body ?? {};
+    if (!walletAddr)           return json(res, 400, { error: 'wallet address required' });
+    if (!items.length)         return json(res, 400, { error: 'cart is empty' });
+    if (!shipping?.name)       return json(res, 400, { error: 'shipping address required' });
+    if (!shipping?.countryCode) return json(res, 400, { error: 'country code required' });
+
+    // Calculate NIGHT cost
+    let totalNIGHT = 0;
+    const pfItems: any[] = [];
+    for (const item of items) {
+      const def = CATALOG_DEF.find(p => p.id === item.productId);
+      if (!def) return json(res, 400, { error: `unknown product: ${item.productId}` });
+      const variants = await getVariants(def.pfId, def.sizes, def.color);
+      const variantId = item.size ? variants[item.size] : Object.values(variants)[0];
+      if (!variantId) return json(res, 400, { error: `size ${item.size} not available for ${def.name}` });
+      totalNIGHT += Math.ceil(def.priceUSD / NIGHT_USD) * (item.qty ?? 1);
+      pfItems.push({ variant_id: variantId, quantity: item.qty ?? 1, files: [{ type: 'front', url: DESIGN_URL }] });
+    }
+
+    // Check NIGHT balance
+    const scoreData = await scoreGet(walletAddr);
+    const available = scoreData.total - (scoreData.spent ?? 0);
+    if (available < totalNIGHT) {
+      return json(res, 402, { error: `Insufficient NIGHT — need ${totalNIGHT}, have ${available}` });
+    }
+
+    // Place Printful order
+    let pfOrder: any;
+    try {
+      pfOrder = await pf('/orders', {
+        method: 'POST',
+        body: JSON.stringify({
+          recipient: {
+            name:         shipping.name,
+            address1:     shipping.address1,
+            address2:     shipping.address2 ?? '',
+            city:         shipping.city,
+            state_code:   shipping.stateCode ?? '',
+            country_code: shipping.countryCode,
+            zip:          shipping.zip ?? '',
+          },
+          items: pfItems,
+        }),
+      });
+    } catch (e: any) {
+      return json(res, 502, { error: 'Printful order failed: ' + e.message });
+    }
+
+    // Deduct NIGHT — update score
+    const newSpent = (scoreData.spent ?? 0) + totalNIGHT;
+    await scoreSet(walletAddr, { ...scoreData, spent: newSpent });
+
+    // Record as app action (small bonus for purchasing)
+    const newByApp = { ...scoreData.byApp, 'night-store': (scoreData.byApp['night-store'] ?? 0) + 5 };
+    await scoreSet(walletAddr, { ...scoreData, spent: newSpent, byApp: newByApp, total: scoreData.total + 5 });
+
+    console.log(`[store/checkout] ${String(walletAddr).slice(0,16)}… → ${totalNIGHT} NIGHT → Printful order #${pfOrder.id}`);
+    return json(res, 200, {
+      ok:           true,
+      orderId:      pfOrder.id,
+      status:       pfOrder.status,
+      nightDeducted: totalNIGHT,
+      newBalance:   available - totalNIGHT,
+    });
+  }
+
+  // GET /api/store/order/:id
+  if (method === 'GET' && url.startsWith('/api/store/order/')) {
+    const orderId = url.replace('/api/store/order/', '');
+    try {
+      const order = await pf(`/orders/${orderId}`);
+      return json(res, 200, { order });
+    } catch (e: any) {
+      return json(res, 404, { error: e.message });
+    }
   }
 
   json(res, 404, { error: 'not found' });
