@@ -29,7 +29,9 @@ const PORT = parseInt(process.env.PORT ?? process.env.API_PORT ?? '3001', 10);
 
 // ─── In-memory .night name store ─────────────────────────────────────────────
 // Note: resets on restart — add a DB (PlanetScale/Supabase) for persistence.
-const _nameStore = new Map<string, string>(); // name.night → address
+const _nameStore  = new Map<string, string>(); // name.night → address
+const _scoreStore = new Map<string, number>(); // address → cumulative action score
+const _scoreLog:  any[] = [];                  // full event history
 
 function normalizeNightName(raw: string): string {
   return raw.toLowerCase().replace(/\.night$/, '').replace(/[^a-z0-9-_]/g, '').slice(0, 32);
@@ -77,8 +79,15 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, {
       ok: true,
       service: 'Night ID API',
-      version: '1.0.0',
-      endpoints: ['/api/nightid/score/:chain/:addr', '/api/nightid/register', '/api/nightid/resolve/:name', '/api/nightid/lookup/:addr'],
+      version: '1.1.0',
+      endpoints: [
+        '/api/nightid/score/:chain/:addr',
+        '/api/nightid/record-action',
+        '/api/nightid/action-score/:address',
+        '/api/nightid/register',
+        '/api/nightid/resolve/:name',
+        '/api/nightid/lookup/:addr',
+      ],
       scoring: {
         eth: !!process.env.ETHERSCAN_API_KEY,
         sol: !!process.env.HELIUS_API_KEY,
@@ -104,6 +113,40 @@ const server = http.createServer(async (req, res) => {
       console.error('[nightid/score]', err?.message);
       return json(res, 500, { error: 'scoring failed', detail: err?.message });
     }
+  }
+
+  // ── POST /api/nightid/record-action ──────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightid/record-action') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { holderAddress, appId, points, eventType } = body ?? {};
+    if (!holderAddress) return json(res, 400, { error: 'holderAddress required' });
+    if (!appId)         return json(res, 400, { error: 'appId required' });
+    const pts = Number(points ?? 0);
+    if (pts < 1 || pts > 50) return json(res, 400, { error: 'points must be 1–50' });
+    const VALID: Record<string, number> = {
+      'night-markets': 50, 'night-work': 40, 'night-lend': 30,
+      'night-fun': 25, 'night-poker': 15, 'night-save': 10, 'night-biz': 10,
+    };
+    if (!VALID[appId]) return json(res, 400, { error: `unknown appId: ${appId}` });
+    const prev     = _scoreStore.get(holderAddress) ?? 0;
+    const newTotal = prev + pts;
+    _scoreStore.set(holderAddress, newTotal);
+    _scoreLog.push({ address: holderAddress, appId, points: pts, eventType: eventType ?? 0, ts: Date.now() });
+    console.log(`[record-action] ${appId} +${pts} → ${String(holderAddress).slice(0, 16)}… (total: ${newTotal})`);
+    return json(res, 200, { ok: true, address: holderAddress, appId, points: pts, newTotal });
+  }
+
+  // ── GET /api/nightid/action-score/:address ────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/nightid/action-score/')) {
+    const address = decodeURIComponent(url.replace('/api/nightid/action-score/', ''));
+    if (!address) return json(res, 400, { error: 'address required' });
+    const total  = _scoreStore.get(address) ?? 0;
+    const events = _scoreLog.filter(e => e.address === address);
+    const byApp  = events.reduce((acc: Record<string, number>, e: any) => {
+      acc[e.appId] = (acc[e.appId] ?? 0) + e.points; return acc;
+    }, {});
+    return json(res, 200, { address, total, threshold200: total >= 200, byApp, eventCount: events.length });
   }
 
   // ── POST /api/nightid/register ────────────────────────────────────────────
