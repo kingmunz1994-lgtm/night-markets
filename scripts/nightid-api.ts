@@ -17,11 +17,11 @@
  *   GET  /api/nightid/lookup/:addr         — address → name
  *
  * Env vars:
- *   ETHERSCAN_API_KEY           — https://etherscan.io/apis
- *   HELIUS_API_KEY              — https://helius.dev
- *   BLOCKFROST_ADA_KEY          — https://blockfrost.io
- *   UPSTASH_REDIS_REST_URL      — https://upstash.com (free tier)
- *   UPSTASH_REDIS_REST_TOKEN    — Upstash REST token
+ *   ETHERSCAN_API_KEY     — https://etherscan.io/apis
+ *   HELIUS_API_KEY        — https://helius.dev
+ *   BLOCKFROST_ADA_KEY    — https://blockfrost.io
+ *   REDIS_URL             — Railway Redis (add Database → Redis in Railway project)
+ *   REDIS_PRIVATE_URL     — Railway internal Redis URL (preferred when available)
  */
 
 process.on('uncaughtException',  (err: unknown) => console.error('Uncaught:', err));
@@ -31,51 +31,54 @@ import * as http from 'node:http';
 
 const PORT = parseInt(process.env.PORT ?? process.env.API_PORT ?? '3001', 10);
 
-// ─── Upstash Redis (persistent storage) ──────────────────────────────────────
-// Falls back to in-memory Maps when env vars not set (local dev / CI).
-const REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL   ?? '';
-const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? '';
-const USE_REDIS   = !!(REDIS_URL && REDIS_TOKEN);
+// ─── Redis persistence ────────────────────────────────────────────────────────
+// Uses Railway Redis when REDIS_PRIVATE_URL / REDIS_URL is set.
+// Falls back to in-memory Maps for local dev (scores reset on restart).
+interface ScoreData { total: number; byApp: Record<string, number>; }
 
-async function rd(...args: (string | number)[]): Promise<any> {
-  const r = await fetch(REDIS_URL, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(args),
-  });
-  const d = await r.json() as any;
-  return d.result ?? null;
-}
-
-// In-memory fallback
 const _mem_scores = new Map<string, ScoreData>();
 const _mem_names  = new Map<string, string>(); // name.night → address
 const _mem_rnames = new Map<string, string>(); // address → name.night
 
-interface ScoreData { total: number; byApp: Record<string, number>; }
+let rc: any = null; // redis client instance
+
+async function initRedis(): Promise<void> {
+  const url = process.env.REDIS_PRIVATE_URL ?? process.env.REDIS_URL ?? '';
+  if (!url) return;
+  try {
+    const { createClient } = await import('redis');
+    rc = createClient({ url });
+    rc.on('error', (e: Error) => console.error('[redis error]', e.message));
+    await rc.connect();
+    console.log('  Redis:    connected ✓');
+  } catch (e: any) {
+    console.error('[redis] failed to connect, using in-memory fallback:', e.message);
+    rc = null;
+  }
+}
 
 async function scoreGet(addr: string): Promise<ScoreData> {
-  if (USE_REDIS) {
-    const raw = await rd('GET', `ns:score:${addr}`);
+  if (rc) {
+    const raw = await rc.get(`ns:score:${addr}`);
     return raw ? JSON.parse(raw) : { total: 0, byApp: {} };
   }
   return _mem_scores.get(addr) ?? { total: 0, byApp: {} };
 }
 
 async function scoreSet(addr: string, data: ScoreData): Promise<void> {
-  if (USE_REDIS) { await rd('SET', `ns:score:${addr}`, JSON.stringify(data)); return; }
+  if (rc) { await rc.set(`ns:score:${addr}`, JSON.stringify(data)); return; }
   _mem_scores.set(addr, data);
 }
 
 async function nameGet(name: string): Promise<string | null> {
-  if (USE_REDIS) return await rd('GET', `ns:name:${name}`);
+  if (rc) return await rc.get(`ns:name:${name}`);
   return _mem_names.get(name) ?? null;
 }
 
 async function nameSet(fullName: string, addr: string): Promise<void> {
-  if (USE_REDIS) {
-    await rd('SET', `ns:name:${fullName}`, addr);
-    await rd('SET', `ns:rname:${addr}`, fullName);
+  if (rc) {
+    await rc.set(`ns:name:${fullName}`, addr);
+    await rc.set(`ns:rname:${addr}`, fullName);
     return;
   }
   _mem_names.set(fullName, addr);
@@ -83,7 +86,7 @@ async function nameSet(fullName: string, addr: string): Promise<void> {
 }
 
 async function nameFindByAddr(addr: string): Promise<string | null> {
-  if (USE_REDIS) return await rd('GET', `ns:rname:${addr}`);
+  if (rc) return await rc.get(`ns:rname:${addr}`);
   return _mem_rnames.get(addr) ?? null;
 }
 
@@ -131,8 +134,8 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, {
       ok: true,
       service: 'Night ID API',
-      version: '1.2.0',
-      storage: USE_REDIS ? 'upstash-redis' : 'in-memory',
+      version: '1.3.0',
+      storage: rc ? 'redis' : 'in-memory',
       endpoints: [
         '/api/nightid/score/:chain/:addr',
         '/api/nightid/record-action',
@@ -250,9 +253,11 @@ const server = http.createServer(async (req, res) => {
   json(res, 404, { error: 'not found' });
 });
 
-server.listen(PORT, () => {
-  console.log(`\n⊘ Night ID API v1.2.0 — listening on :${PORT}`);
-  console.log(`  Storage:  ${USE_REDIS ? 'Upstash Redis (persistent)' : 'in-memory (set UPSTASH_REDIS_REST_URL to persist)'}`);
-  console.log(`  Scoring:  ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
-  console.log(`  Health:   http://localhost:${PORT}/health\n`);
+initRedis().then(() => {
+  server.listen(PORT, () => {
+    console.log(`\n⊘ Night ID API v1.3.0 — listening on :${PORT}`);
+    console.log(`  Storage:  ${rc ? 'Redis (persistent)' : 'in-memory (add REDIS_URL to persist)'}`);
+    console.log(`  Scoring:  ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
+    console.log(`  Health:   http://localhost:${PORT}/health\n`);
+  });
 });
