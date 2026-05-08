@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install"
+buildCommand = "npm install --prefer-online"
 
 [deploy]
 startCommand = "npx tsx scripts/nightid-api.ts"
@@ -11,4 +11,3 @@ restartPolicyMaxRetries = 3
 
 [environments.production.variables]
 NODE_ENV = "production"
-PORT = "3000"
