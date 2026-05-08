@@ -9,6 +9,7 @@
     "compile:nightpoker": "compact compile contracts/NightPoker.compact contracts/managed/night-poker",
     "compile:nightid": "compact compile contracts/NightID.compact contracts/managed/night-id",
     "compile:nightfun-oz": "compact compile contracts/NightFunToken.compact contracts/managed/night-fun-token-oz",
+    "start": "npx tsx scripts/nightid-api.ts",
     "night-fun": "node --env-file=.env --import tsx scripts/night-fun.ts",
     "api-server": "node --env-file=.env --import tsx scripts/api-server.ts",
     "nightid-api": "node --env-file=.env --import tsx scripts/nightid-api.ts",
