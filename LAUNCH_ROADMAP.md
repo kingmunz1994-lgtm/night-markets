@@ -1,215 +1,196 @@
 # Night Ecosystem — Full Launch Roadmap
 
-Last audited: 2026-05-06
+Last audited: 2026-05-08
 
 This is the master checklist from current state to full public launch.
-Work through phases in order. Check items off as they are completed.
+Each Claude session should READ THIS FIRST, mark completed items, and pick the next unchecked item.
+Do not ask "what's next?" — the answer is always the first unchecked item in the lowest-numbered phase.
 
 ---
 
-## Current State (Honest Assessment)
+## Current State (as of 2026-05-08)
 
-**🚨 MIDNIGHT MAINNET IS LIVE (Kūkolu phase, ~May 2026)**
-All deployments should now target **mainnet**, not preprod.
+| Repo | Contract | Deployed | Frontend | GitHub Pages | SDK | proof-server |
+|---|---|---|---|---|---|---|
+| night-markets | ✅ | ✅ preprod | ✅ | ✅ | ✅ 2.5.0 | ✅ 8.0.3 |
+| night-poker | ✅ compiled | ❌ | ✅ | ✅ | ✅ 2.5.0 | ✅ 8.0.3 |
+| night-fun | ✅ compiled | ❌ | ✅ | ✅ | ✅ 2.5.0 | ✅ 8.0.3 |
+| night-lend | ✅ compiled | ❌ | ✅ | ✅ | ✅ 2.5.0 | ✅ 8.0.3 |
+| night-work | ✅ compiled | ❌ | ✅ | ✅ | ✅ 2.5.0 | ✅ 8.0.3 |
+| night-save | ✅ compiled | ❌ | ✅ | ✅ | ✅ 2.5.0 | ✅ 8.0.3 |
+| night-biz | ✅ compiled | ❌ | ✅ | ✅ | ✅ 2.5.0 | ✅ 8.0.3 |
+| night-id | ❌ no contract | ❌ | ✅ multi-chain | ✅ | — | — |
+| night-store | no contract (API) | — | ✅ Printful | ✅ | — | — |
+| night-hub | — | — | ✅ | ✅ | — | — |
 
-| Repo | Contract | Deployed | Frontend | Live URL | SDK OK |
-|---|---|---|---|---|---|
-| night-markets | ✅ | ✅ preprod | ✅ | ✅ gh-pages | ✅ |
-| night-poker | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
-| night-fun | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
-| night-lend | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
-| night-work | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
-| night-save | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
-| night-biz | ✅ | ❌ | ✅ | ✅ gh-pages | ✅ fixed |
-| night-id | ❌ no contract | ❌ | ✅ | ✅ gh-pages | — |
-| night-store | ❌ no contract | ❌ | ✅ | ✅ gh-pages | — |
-| night-hub | — | — | ✅ | ✅ gh-pages | — |
-| midnight-ai-kit | — | — | — | — | — |
-
-**Phase 1+2 done:** All 10 repos on gh-pages. All 6 deploy scripts fixed. Ready to deploy contracts.
-
----
-
-## PHASE 1 — Get Everything Publicly Visible ✅ COMPLETE 2026-05-03
-*Goal: All apps live on GitHub Pages. Night Hub is the working front door.*
-
-- [x] **night-hub** → https://kingmunz1994-lgtm.github.io/night-hub/
-- [x] **night-poker** → https://kingmunz1994-lgtm.github.io/night-poker/
-- [x] **night-fun** → https://kingmunz1994-lgtm.github.io/night-fun/
-- [x] **night-lend** → https://kingmunz1994-lgtm.github.io/night-lend/
-- [x] **night-work** → https://kingmunz1994-lgtm.github.io/night-work/
-- [x] **night-save** → https://kingmunz1994-lgtm.github.io/night-save/
-- [x] **night-biz** → https://kingmunz1994-lgtm.github.io/night-biz/
-- [x] **night-id** → https://kingmunz1994-lgtm.github.io/night-id/
-- [x] **night-store** → https://kingmunz1994-lgtm.github.io/night-store/
-- [x] **night-markets** → https://kingmunz1994-lgtm.github.io/night-markets/
-- [ ] Verify all links in night-hub load correctly (allow 2-3 min for CDN propagation)
-- [ ] Verify night-markets `night-poker/` link points to night-poker repo URL
+**Railway API:** `https://night-markets-94-production.up.railway.app`
+- Night Score (ETH/SOL/ADA/Midnight multi-chain) ✅
+- Night ID (.night names, registration, lookup) ✅
+- Night Store (Printful checkout, NIGHT balance deduction) ✅
+- Poker WebSocket rooms + table registry ✅
 
 ---
 
-## PHASE 2 — Fix SDK Bugs Across All Deploy Scripts ✅ COMPLETE 2026-05-06
-*Goal: Every repo can actually deploy its contract.*
+## PHASE 1 — Get Everything Publicly Visible ✅ COMPLETE
 
-Three fixes applied to every repo's `scripts/deploy.ts` + `package.json`:
-- Fix 1: `readyFilter` replaces `s.isSynced` (waits unshielded only, avoids 2.5h shielded scan)
-- Fix 2: Ledger v7/v8 WASM bridge added (prevents `_assertClass` crash in `deployContract`)
-- Fix 3: compact-js 2.4.0 → 2.5.0, compact-runtime 0.14.0 → 0.15.0
+All repos have `pages.yml` — every push to main auto-deploys to GitHub Pages.
 
-- [x] **night-poker** — all 3 fixes applied, package.json upgraded
-- [x] **night-fun** — all 3 fixes applied, package.json upgraded
-- [x] **night-lend** — all 3 fixes applied, package.json upgraded
-- [x] **night-work** — all 3 fixes applied, package.json upgraded
-- [x] **night-save** — all 3 fixes applied, package.json upgraded
-- [x] **night-biz** — all 3 fixes applied, package.json upgraded
-
----
-
-## PHASE 3 — Deploy All Contracts to Mainnet
-*Goal: Every app has a real on-chain contract. Midnight mainnet is live — target it directly.*
-*Prerequisite: Phase 2 complete. Docker proof server running locally.*
-
-### Priority order (night-poker first — best onboarding vehicle for DUST holders):
-
-- [ ] **night-poker** — `npm run compile && npm run deploy` in night-poker repo
-  - Record contract address in night-poker README + .env
-  - Wire WS handler to on-chain `commitHand` / `claimPot` at showdown
-- [ ] **night-fun** — deploy NightFunToken, wire bonding curve to real contract
-  - Record address, update frontend API calls
-  - Test: launch token → buy → sell → graduate curve
-- [ ] **night-markets NightFunToken** — deploy the copy in night-markets repo
-  - Run `npm run set-address <new-address>` after deploy
-- [ ] **night-lend** — deploy NightLend
-  - Test: deposit NIGHT → borrow sUSD → repay → withdraw
-- [ ] **night-work** — deploy NightWork
-  - Test: postTask → acceptTask → submitProof → verifyTask → claimReward
-- [ ] **night-save** — deploy NightSave
-  - Test: deposit → mint sUSD → BNPL flow → repay → redeem
-- [ ] **night-biz** — deploy NightBizToken
-  - Test: deploy token → transfer → proveTierStatus
-- [ ] Update CLAUDE.md with all deployed contract addresses after each deploy
+- [x] night-hub — `kingmunz1994-lgtm.github.io/night-hub/`
+- [x] night-poker — `kingmunz1994-lgtm.github.io/night-poker/`
+- [x] night-fun — `kingmunz1994-lgtm.github.io/night-fun/`
+- [x] night-lend — `kingmunz1994-lgtm.github.io/night-lend/`
+- [x] night-work — `kingmunz1994-lgtm.github.io/night-work/`
+- [x] night-save — `kingmunz1994-lgtm.github.io/night-save/`
+- [x] night-biz — `kingmunz1994-lgtm.github.io/night-biz/`
+- [x] night-id — `kingmunz1994-lgtm.github.io/night-id/`
+- [x] night-store — `kingmunz1994-lgtm.github.io/night-store/`
 
 ---
 
-## PHASE 4 — night-id Contract (Missing)
-*Goal: ZK identity layer that every other app can plug into.*
-*night-id has a frontend but NO contract. Needs to be written.*
+## PHASE 2 — SDK + Infrastructure ✅ COMPLETE
 
-- [ ] Write `NightID.compact` — key circuits:
-  - `registerName(name: Bytes<32>)` — claim a .night name, ZK auth
-  - `resolveName(name: Bytes<32>) → Bytes<32>` — name → address commitment
-  - `proveAttribute(attrKey, attrValue)` — ZK: prove claim without revealing it
+- [x] compact-js 2.5.0 + compact-runtime 0.15.0 across all repos
+- [x] proof-server 8.0.3 across all repos
+- [x] Ledger v7/v8 WASM bridge in all deploy.ts scripts
+- [x] `dustBal` helper (no `.balance()` on DustWalletState) in all deploy.ts
+- [x] `isSynced` removed, replaced with `readyFilter` in all deploy.ts
+- [x] `new WalletFacade(...)` constructor (no static init) in all deploy.ts
+- [x] `overrides` pinned correctly (compact-js 2.5.0) in all package.json
+- [x] Railway: nightid-api.ts serving Night Score, .night names, store API, poker WS
+- [x] Poker WebSocket rooms on Railway (`/ws/poker/{tableId}`) + `/api/poker/tables`
+- [x] night-poker: dynamic WS URL (localhost vs Railway), live table loading from API
+- [x] night-poker: compiled artifacts (keys, zkir, contract/index.js) committed
+- [x] Night Store: Printful checkout, NIGHT balance tracking, shopper UI
+- [x] Night Hub: correct app count (9), updated descriptions and icons
+
+---
+
+## PHASE 3 — Deploy Contracts to Preprod
+*Requires: Docker + proof server running locally. Cannot be done from Railway/remote.*
+*Priority order: most user-visible impact first.*
+
+### Deploy command pattern (same for every repo):
+```bash
+# Terminal 1:
+npm run proof-server   # midnightntwrk/proof-server:8.0.3
+
+# Terminal 2 (in repo dir):
+npm install && npm run compile && npm run deploy
+# Outputs: CONTRACT_ADDRESS=<hex>
+
+# Then:
+# 1. echo "CONTRACT_ADDRESS=<hex>" >> .env
+# 2. Update README.md with address + block
+# 3. Update CLAUDE.md deployed contracts table
+```
+
+- [ ] **night-poker** — deploy `poker.compact`
+  - After deploy: wire `commitHand`/`claimPot` ZK circuits into nightid-api.ts WS handler
+  - After deploy: update night-poker README
+- [ ] **night-fun** — deploy `NightFunToken.compact`
+  - After deploy: replace bonding curve simulation in api-server.ts with real contract calls
+  - After deploy: update night-fun README
+- [ ] **night-lend** — deploy `NightLend.compact`
+  - After deploy: wire deposit/borrow/repay/withdraw to contract
+- [ ] **night-work** — deploy `NightWork.compact`
+  - After deploy: wire postTask/acceptTask/submitProof/claimReward to contract
+- [ ] **night-save** — deploy `NightSave.compact`
+  - After deploy: wire deposit/mintSUSD/BNPL/redeem to contract
+- [ ] **night-biz** — deploy `NightBizToken.compact`
+  - After deploy: wire deployToken/transfer/proveTier to contract
+- [ ] Update CLAUDE.md deployed contracts table after each deploy
+
+---
+
+## PHASE 4 — night-id Contract
+*night-id has multi-chain frontend + Railway API but NO on-chain contract.*
+*.night names and Night Score live in Redis only — not ZK-provable.*
+
+- [ ] Write `NightID.compact` with circuits:
+  - `registerName(name: Bytes<32>)` — ZK-authenticated .night name claim
+  - `resolveName(name: Bytes<32>) → commitment` — name → address commitment
   - `issueCredential(subject, key, value)` — issuer grants attribute
+  - `proveAttribute(attrKey, attrValue)` — prove claim without revealing data
 - [ ] Deploy NightID contract to preprod
-- [ ] Wire night-id frontend to contract (currently in-memory only)
-- [ ] Connect night-hub Night Score to NightID on-chain data
+- [ ] Update nightid-api.ts register/resolve to write to contract (not Redis-only)
+- [ ] Connect night-hub Night Score to on-chain credential data
 
 ---
 
-## PHASE 5 — night-store Integration
-*Goal: Real merch shop powered by NIGHT tokens via Night Fun merch revenue.*
-*night-store has a frontend but no contract. It integrates with NightFunToken.*
+## PHASE 5 — Night Store + Night Score Polish
 
-- [ ] Wire night-store to NightFunToken `recordMerchSale()` circuit
-- [ ] Implement stripe/payment → NIGHT conversion flow (or NIGHT-direct checkout)
-- [ ] Connect merch revenue → epoch royalty distribution for token holders
-- [ ] Test: purchase → `recordMerchSale` → epoch close → holder claims royalty
+- [ ] Test real Printful order: POST /api/store/checkout with a test shipping address
+- [ ] Verify night-print.svg loads correctly at GitHub Pages URL (Printful fetches it for print)
+- [ ] Decide: NIGHT payment = Night Score points (current) OR real tNIGHT wallet balance
+  - Night Score (current) works without mainnet token — recommended for now
+  - Real wallet requires NightFunToken deployed + wallet integration
+- [ ] Expose `spent` field in `/api/nightid/action-score` response so frontends show real available NIGHT
+- [ ] Add `record-action` calls in all standalone app frontends (night-fun, night-lend etc.) — night-poker already does this ✅
+- [ ] Optional: expand Printful catalog (stickers, poster, phone case)
 
 ---
 
-## PHASE 6 — Cross-App Integration (Night Score + NIGHT Token)
-*Goal: The ecosystem feels connected. Night Hub shows live data. Night Score means something.*
+## PHASE 6 — Cross-App Integration + Night Hub Live Data
+*Goal: Night Hub shows real numbers. Night Score driven by real on-chain events.*
 
-- [ ] **Night Score** (night-hub) — pull real on-chain data:
-  - Hands played (night-poker contract)
-  - Tokens launched (night-fun contract)
-  - ZK proofs submitted (any contract call)
-  - Tasks completed (night-work)
-- [ ] **NIGHT token** — currently simulated in all UIs. Wire to real tNIGHT balance via wallet
-- [ ] **night-hub live stats** — TVL (night-lend + night-save), active tables (night-poker),
-  tokens launched (night-fun), tasks open (night-work)
-- [ ] **night-markets api-server** — ensure all ecosystem API routes proxy to real contract
-  state rather than in-memory simulation
+- [ ] **Night Hub live stats** — wire to real APIs:
+  - Active poker tables: `/api/poker/tables` (already available) ✅ — just add to hub UI
+  - Night Score leaderboard: query Redis for top N addresses by total score
+  - Total .night names registered: count Redis `ns:name:*` keys
+- [ ] **Night Score from contract events** (blocked on Phase 3):
+  - Query Midnight indexer for escrow calls → award points server-side
+  - Query poker contract for completed hands → award points server-side
+- [ ] **NIGHT balance in all frontends** — update hub to show `total - spent` not just `total`
 
 ---
 
 ## PHASE 7 — End-to-End Testing
-*Goal: Every app's golden path works with a real Lace wallet on preprod.*
+*Prerequisite: Phase 3 complete. Needs real Lace wallet with tDUST.*
 
-- [ ] night-markets: Lace connect → create listing → fund escrow → release → check NIGHT received
-- [ ] night-poker: create room → 2 players join → play hand → ZK showdown → pot claimed
-- [ ] night-fun: connect → launch token → buy on curve → sell → check graduation at 85 tNIGHT
-- [ ] night-lend: deposit NIGHT → borrow sUSD → confirm health factor → repay
+- [ ] night-markets: Lace → create listing → fund escrow → release → verify tDUST received
+- [ ] night-poker: two wallets → join room → play hand → ZK showdown → verify pot on-chain
+- [ ] night-fun: Lace → launch token → buy on curve → sell → graduation threshold
+- [ ] night-lend: deposit → borrow sUSD → health factor → repay
 - [ ] night-work: post task → accept → submit proof → verify → claim reward
 - [ ] night-save: deposit → mint sUSD → BNPL → repay → redeem
-- [ ] night-biz: deploy token → transfer to test wallet → prove Bronze tier
-- [ ] night-id: register name → resolve → prove attribute
+- [ ] night-biz: deploy token → transfer → prove Bronze tier
+- [ ] night-id: register .night name → resolve → prove attribute
 
 ---
 
 ## PHASE 8 — Pre-Launch Polish
-*Goal: Everything looks and feels production-ready.*
+*Can be done in parallel with Phase 3.*
 
-- [ ] All frontends: consistent "Connect Wallet" UX — same flow, same error messages
-- [ ] All frontends: tDUST balance shown (requires parseDustAmt fix from night-markets)
-- [ ] All frontends: wallet poll backoff (no APIError spam — fix from night-markets)
-- [ ] night-hub: add night-store to app grid
-- [ ] All README files: update with deployed contract addresses
-- [ ] midnight-ai-kit: add patterns extracted from deployed contracts (real addresses, real examples)
-- [ ] Verify all GitHub Pages URLs work from a clean browser (no localhost, no cached state)
-
----
-
-## Funding & Ecosystem Opportunities
-
-- [ ] **Eclipse Bounty** — Tier 1 ($300–500 NIGHT): Write honest dev comparison article
-  (Midnight vs Aztec vs Aleo vs Mina vs Zcash). Draft exists from chat. Needs code examples,
-  personal Night Markets experience woven in, and heavy rewrite to avoid AI detection.
-  Publish on Dev.to. Tag @midnightntwrk. Comment "Ready for review" when done.
-- [ ] **Midnight Build Club** — 2-month accelerator, apply at mpc.midnight.network
-  Bring: GitHub repos, preprod demo video, short pitch on Night Markets ecosystem value
-- [ ] **Project Catalyst** — Midnight Compact DApps track. Non-dilutive treasury grant.
-  Apply once Build Club/bounty gives more credibility and content.
+- [ ] All frontends: `parseDustAmt()` balance fix (from night-markets) applied everywhere
+- [ ] All frontends: wallet poll backoff to prevent APIError spam when Lace is locked
+- [ ] night-hub: add live poker table count chip to landing strip
+- [ ] night-hub: Night Score leaderboard section (top addresses by score)
+- [ ] All READMEs: update with deployed addresses after Phase 3
+- [ ] midnight-ai-kit: update case study metrics (currently 1 deployed contract → will be 7+)
+- [ ] midnight-ai-kit CURRENT_SPRINT.md: keep updated each session
 
 ---
 
-## PHASE 9 — Full Public Launch
-*Midnight mainnet is live. Phase 9 is now about scaling, not waiting for mainnet.*
+## PHASE 9 — Mainnet
+*Blocked on: Midnight mainnet stability + Mōhalu DUST sponsorship phase (mid-2026)*
 
-- [ ] DUST sponsorship live (`dust-sponsor.ts` with funded wallet) — users don't need tDUST
-- [ ] Upgrade all contracts to compact-js 2.6.0 / runtime 0.16.0 when available
+- [ ] DUST sponsorship live (`dust-sponsor.ts` with funded sponsor wallet)
+- [ ] Upgrade to compact-js 2.6.0 / runtime 0.16.0 when available
 - [ ] Deploy all contracts to Midnight mainnet
-- [ ] Update all `.env` files and frontends to mainnet endpoints
-- [ ] Announce: night-hub as the homepage, all 8 apps linked and live
+- [ ] Switch all endpoints to mainnet indexer + RPC
+- [ ] Announce via night-hub
 
 ---
 
-## Quick Reference — Deploy Command Pattern
+## Deployed Contract Addresses
 
-Same pattern for every repo:
-```bash
-# 1. In one terminal:
-docker run -p 6300:6300 midnightntwrk/proof-server:7.0.0 -- midnight-proof-server -v
-
-# 2. In repo directory:
-npm install
-npm run compile
-WALLET_SEED=<hex> npm run deploy
-# → outputs: CONTRACT_ADDRESS=<address>
-
-# 3. Update README + .env with address
-```
-
-## Quick Reference — gh-pages Deploy Pattern
-
-Same pattern for every repo (deploy public/ to gh-pages):
-```bash
-git subtree push --prefix public origin gh-pages
-# OR if that fails:
-git checkout -b gh-pages-tmp
-git add public/ -f
-git commit -m "deploy to gh-pages"
-git push origin HEAD:gh-pages
-git checkout main
-git branch -D gh-pages-tmp
-```
+| Contract | Address | Block |
+|---|---|---|
+| NightMarketsEscrow | `7473b82b398f6b8665541862a1165c6c5da379355f9c32dace36ed234b7cc711` | 127,350 |
+| NightPoker | not deployed | — |
+| NightFunToken | not deployed | — |
+| NightLend | not deployed | — |
+| NightWork | not deployed | — |
+| NightSave | not deployed | — |
+| NightBizToken | not deployed | — |
+| NightID | not written yet | — |
