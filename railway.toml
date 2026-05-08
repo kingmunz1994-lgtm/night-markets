@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install --prefer-online"
+buildCommand = "npm ci"
 
 [deploy]
 startCommand = "npx tsx scripts/nightid-api.ts"
