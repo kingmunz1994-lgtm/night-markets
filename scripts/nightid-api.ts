@@ -47,7 +47,7 @@ async function initRedis(): Promise<void> {
   if (!url) return;
   try {
     const { createClient } = await import('redis');
-    rc = createClient({ url });
+    rc = createClient({ url, socket: { connectTimeout: 5000 } });
     rc.on('error', (e: Error) => console.error('[redis error]', e.message));
     await rc.connect();
     console.log('  Redis:    connected ✓');
@@ -253,11 +253,11 @@ const server = http.createServer(async (req, res) => {
   json(res, 404, { error: 'not found' });
 });
 
-initRedis().then(() => {
-  server.listen(PORT, () => {
-    console.log(`\n⊘ Night ID API v1.3.0 — listening on :${PORT}`);
-    console.log(`  Storage:  ${rc ? 'Redis (persistent)' : 'in-memory (add REDIS_URL to persist)'}`);
-    console.log(`  Scoring:  ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
-    console.log(`  Health:   http://localhost:${PORT}/health\n`);
-  });
+// Start HTTP server immediately — Redis connects in background
+server.listen(PORT, () => {
+  console.log(`\n⊘ Night ID API v1.3.0 — listening on :${PORT}`);
+  console.log(`  Scoring:  ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
+  console.log(`  Health:   http://localhost:${PORT}/health\n`);
 });
+
+initRedis().catch(e => console.error('[redis] init failed:', e?.message));
