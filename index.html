@@ -6112,6 +6112,7 @@ async function commitBid(id){
   let si=0;
   const iv=setInterval(()=>{if(si<steps.length){btn.textContent=steps[si];si++;}else clearInterval(iv);},580);
   // Real cryptography runs in parallel with animation
+  NightSounds.bid();
   const nonce=await _mkNonce();
   const commitment=await _mkCommit(amt,nonce);
   setTimeout(()=>{
@@ -6125,6 +6126,7 @@ async function commitBid(id){
     const mb=_myBidsLoad();
     mb[id]={amt,nonce,commitment,anon,ts:new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'})};
     _myBidsSave(mb);
+    NightSounds.zkProof();
     document.getElementById('bid-modal-body').innerHTML=
       '<div style="text-align:center;padding:32px 20px;">'
       +'<div style="font-size:52px;margin-bottom:16px;">🔐</div>'
@@ -6181,6 +6183,7 @@ async function executeReveal(id){
     clearInterval(viv);
     if(!valid){toast('Commitment verification failed','error');btn.disabled=false;btn.textContent='🔓 Verify Commitment & Open Escrow →';return;}
     a.status='settled';
+    NightSounds.escrow();
     _aucSave();
     document.getElementById('bid-modal-body').innerHTML=
       '<div style="text-align:center;padding:24px 0 16px;">'
@@ -6549,7 +6552,7 @@ function addToCart(p){
   const ex=cart.find(i=>i.id===prod.id);
   if(ex)ex.qty=(ex.qty||1)+1;
   else cart.push({id:prod.id,brand:prod.brand,seller:prod.seller,sellerCountry:prod.sellerCountry,title:prod.title,price:prod.price,qty:1,opts:{...selectedOpts},small:prod.small,img:prod.img});
-  saveCart();toast('Added to cart','success');
+  saveCart();NightSounds.addToCart();toast('Added to cart','success');
 }
 function quickAdd(id){const p=PRODUCTS.find(x=>x.id===id);if(p)addToCart(p);}
 
@@ -6604,7 +6607,7 @@ function renderCart(){
     </div>`;
 }
 function changeQty(id,d){const i=cart.find(x=>x.id===id);if(i){i.qty=Math.max(1,(i.qty||1)+d);saveCart();renderCart();}}
-function removeItem(id){cart=cart.filter(i=>i.id!==id);saveCart();renderCart();toast('Item removed','info');}
+function removeItem(id){cart=cart.filter(i=>i.id!==id);saveCart();NightSounds.click();renderCart();toast('Item removed','info');}
 
 // ── CHECKOUT ──
 function openCheckoutFromCart(total){coTotal=total;coStep=0;coMethod='p4';openModal('ov-co');renderCoStep();}
@@ -7110,6 +7113,7 @@ function coConfirm(){
       ]:null};
     orders.push(ord);saveOrders();
     cart=[];saveCart();
+    NightSounds.checkout();
     var nightEarned=Math.max(1,Math.floor(coTotal/50));
     var zkTxHash='0x'+Array.from({length:16},function(){return Math.floor(Math.random()*16).toString(16);}).join('');
     var zkProofHash='zkp_'+Array.from({length:12},function(){return Math.floor(Math.random()*16).toString(16);}).join('');
@@ -16326,6 +16330,7 @@ function mintVaultItem(id) {
   if (typeof walletState === 'undefined' || !walletState.connected) { openModal('ov-wallet'); return; }
   _vaultOwned.push(id);
   localStorage.setItem('nm_vault_owned', JSON.stringify(_vaultOwned));
+  NightSounds.mint();
   toast('✨ ' + item.name + ' minted to your Night ID!', 'success');
   setTimeout(function(){ toast('🃏 Equip it in Night Poker from your profile', 'info'); }, 1500);
   renderVaultItems(document.getElementById('vault-filter-active') ? document.getElementById('vault-filter-active').textContent : 'All');
@@ -16408,7 +16413,7 @@ async function confirmCheckout() {
   try {
     var result = await nmApiPost('/api/escrow/fund', { orderId: _checkoutListing.id, amountNight: Math.round(_checkoutListing.price * 1_000_000) });
     closeModal('ov-checkout');
-    toast('✓ Funds locked in escrow — seller has been notified', 'success');
+    toast('✓ Funds locked in escrow — seller has been notified', 'success');NightSounds.escrow();
     setTimeout(function(){ toast('📦 Confirm delivery when it arrives to release funds', 'info'); }, 2000);
     renderListings();
   } catch (err) {
@@ -16434,7 +16439,7 @@ async function createListing() {
     var id = 'lst_' + Date.now();
     await nmApiPost('/api/listings/create', { id, title, cat, price, cond, desc, from, emoji, sellerId: walletState.address });
     await nmApiPost('/api/escrow/create', { orderId: id, amountNight: Math.round(price * 1_000_000) });
-    toast('✓ Listing live — escrow contract created on Midnight', 'success');
+    toast('✓ Listing live — escrow contract created on Midnight', 'success');NightSounds.listing();
     document.getElementById('nl-title') && (document.getElementById('nl-title').value = '');
     document.getElementById('nl-price') && (document.getElementById('nl-price').value = '');
     document.getElementById('nl-desc')  && (document.getElementById('nl-desc').value  = '');
@@ -16445,5 +16450,6 @@ async function createListing() {
   if (btn) { btn.disabled = false; btn.textContent = '⊘ List with escrow →'; }
 }
 </script>
+<script src="sounds.js"></script>
 
 </html>

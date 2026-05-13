@@ -109,6 +109,7 @@ async function initRedis(): Promise<void> {
     }
     _redisReady = true;
     console.log('  Redis:    connected ✓');
+    await leaderboardLoad();
   } catch (e: any) {
     console.error('[redis] failed, using in-memory fallback:', e.message);
     _redisSocket = null;
@@ -124,8 +125,35 @@ async function scoreGet(addr: string): Promise<ScoreData> {
 
 async function scoreSet(addr: string, data: ScoreData): Promise<void> {
   const s = JSON.stringify(data);
-  if (_redisReady) { await redisCmd('SET', `ns:score:${addr}`, s); return; }
-  _mem_scores.set(addr, data);
+  if (_redisReady) { await redisCmd('SET', `ns:score:${addr}`, s); }
+  else { _mem_scores.set(addr, data); }
+  leaderboardUpdate(addr, data.total);
+  leaderboardPersist().catch(() => {});
+}
+
+// ─── In-memory leaderboard (updated on every scoreSet, persisted to Redis) ───
+const _leaderboard = new Map<string, number>(); // addr → total
+
+function leaderboardUpdate(addr: string, total: number): void {
+  _leaderboard.set(addr, total);
+}
+
+async function leaderboardPersist(): Promise<void> {
+  if (!_redisReady) return;
+  const top = [..._leaderboard.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 100);
+  await redisCmd('SET', 'ns:leaderboard', JSON.stringify(top));
+}
+
+async function leaderboardLoad(): Promise<void> {
+  const raw = await redisCmd('GET', 'ns:leaderboard');
+  if (!raw) return;
+  try {
+    const entries: [string, number][] = JSON.parse(raw);
+    entries.forEach(([a, s]) => _leaderboard.set(a, s));
+    console.log(`  Leaderboard: ${entries.length} entries loaded`);
+  } catch {}
 }
 
 async function nameGet(name: string): Promise<string | null> {
@@ -179,6 +207,10 @@ function broadcastPoker(tableId: string, excludeSeat: number, msg: object): void
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+function parseQuery(rawUrl: string): URLSearchParams {
+  return new URLSearchParams((rawUrl ?? '').split('?')[1] ?? '');
+}
+
 function normalizeNightName(raw: string): string {
   return raw.toLowerCase().replace(/\.night$/, '').replace(/[^a-z0-9-_]/g, '').slice(0, 32);
 }
@@ -228,6 +260,7 @@ const server = http.createServer(async (req, res) => {
         '/api/nightid/score/:chain/:addr',
         '/api/nightid/record-action',
         '/api/nightid/action-score/:address',
+        '/api/nightid/leaderboard?limit=10',
         '/api/nightid/register',
         '/api/nightid/resolve/:name',
         '/api/nightid/lookup/:addr',
@@ -284,6 +317,17 @@ const server = http.createServer(async (req, res) => {
 
     console.log(`[record-action] ${appId} +${pts} → ${String(holderAddress).slice(0, 16)}… (total: ${newTotal})`);
     return json(res, 200, { ok: true, address: holderAddress, appId, points: pts, newTotal });
+  }
+
+  // ── GET /api/nightid/leaderboard ────────────────────────────────────────────
+  if (method === 'GET' && url === '/api/nightid/leaderboard') {
+    const q     = parseQuery(req.url ?? '');
+    const limit = Math.min(Math.max(1, parseInt(q.get('limit') ?? '10', 10)), 100);
+    const top   = [..._leaderboard.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([address, score], i) => ({ rank: i + 1, address, score }));
+    return json(res, 200, { leaderboard: top, total: _leaderboard.size });
   }
 
   // ── GET /api/nightid/action-score/:address ──────────────────────────────────
