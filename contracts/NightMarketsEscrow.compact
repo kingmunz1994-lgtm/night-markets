@@ -20,6 +20,11 @@ export ledger vote_against: Map<Bytes<32>, Uint<64>>;
 export ledger vote_abstain: Map<Bytes<32>, Uint<64>>;
 ledger has_voted: Map<Bytes<32>, Boolean>;
 
+// Initializable + Pausable
+ledger _is_initialized: Boolean;
+export ledger _is_paused:      Boolean;
+export ledger admin_commit:    Bytes<32>;
+
 witness localSecretKey(): Bytes<32>;
 witness voterNightBalance(): Uint<64>;
 
@@ -29,7 +34,39 @@ circuit callerCommitment(domain: Bytes<32>): Bytes<32> {
   return persistentHash<Vector<3, Bytes<32>>>([domain, contractAddr, sk]);
 }
 
+circuit assertNotPaused(): [] {
+  assert(_is_paused == false, "contract is paused");
+}
+
+circuit assertOnlyAdmin(): [] {
+  assert(_is_initialized, "not initialized");
+  const com = callerCommitment(pad(32, "admin"));
+  assert(disclose(com) == admin_commit, "not admin");
+}
+
+export circuit initialize(): [] {
+  assert(_is_initialized == false, "already initialized");
+  const com = callerCommitment(pad(32, "admin"));
+  admin_commit = disclose(com);
+  _is_initialized = true;
+}
+
+export circuit pause(): [] {
+  assertOnlyAdmin();
+  _is_paused = true;
+}
+
+export circuit unpause(): [] {
+  assertOnlyAdmin();
+  _is_paused = false;
+}
+
+export circuit isPaused(): Boolean {
+  return _is_paused;
+}
+
 export circuit createListing(orderId: Bytes<32>, amountNight: Uint<64>): Bytes<32> {
+  assertNotPaused();
   const com = callerCommitment(pad(32, "seller"));
   const oid = disclose(orderId);
   const amt = disclose(amountNight);
@@ -43,6 +80,7 @@ export circuit createListing(orderId: Bytes<32>, amountNight: Uint<64>): Bytes<3
 }
 
 export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>): Bytes<32> {
+  assertNotPaused();
   const com = callerCommitment(pad(32, "buyer"));
   const oid = disclose(orderId);
   const amt = disclose(amountNight);
@@ -57,6 +95,7 @@ export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>): Bytes<32> 
 }
 
 export circuit releaseEscrow(orderId: Bytes<32>): Boolean {
+  assertNotPaused();
   const callerCom = callerCommitment(pad(32, "buyer"));
   const oid = disclose(orderId);
   const storedCom = buyer_commit.lookup(oid);
@@ -69,6 +108,7 @@ export circuit releaseEscrow(orderId: Bytes<32>): Boolean {
 }
 
 export circuit disputeEscrow(orderId: Bytes<32>): Boolean {
+  assertNotPaused();
   const callerCom = callerCommitment(pad(32, "buyer"));
   const oid = disclose(orderId);
   const storedCom = buyer_commit.lookup(oid);
@@ -81,6 +121,7 @@ export circuit disputeEscrow(orderId: Bytes<32>): Boolean {
 }
 
 export circuit refundEscrow(orderId: Bytes<32>): Boolean {
+  assertNotPaused();
   const callerCom = callerCommitment(pad(32, "seller"));
   const oid = disclose(orderId);
   const storedCom = seller_commit.lookup(oid);
