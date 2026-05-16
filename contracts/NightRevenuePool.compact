@@ -1,0 +1,181 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// ══════════════════════════════════════════════════════════════════
+//  NightRevenuePool — Ecosystem profit sharing
+//
+//  Real DUST from Night ecosystem apps flows into epoch pools.
+//  Night Score (off-chain, oracle-attested) determines each
+//  contributor's proportional share. Claims are ZK-private.
+//
+//  Flow:
+//    1. Admin initialises pool, sets oracle authority
+//    2. Revenue sources call depositRevenue() as apps earn DUST
+//    3. Oracle snapshots Night Scores → calls recordScore() per contributor
+//    4. Oracle calls finalizeEpoch() — locks totals, opens claims
+//    5. Contributors call claimShare() privately — nobody sees your cut
+//
+//  No token. No dump mechanism. Score = ZK commitment to secret key.
+// ══════════════════════════════════════════════════════════════════
+
+// ── Epoch ledgers ─────────────────────────────────────────────────────────────
+export ledger pool_balance:     Map<Bytes<32>, Uint<64>>;   // epochId → µDUST collected
+export ledger pool_total_score: Map<Bytes<32>, Uint<64>>;   // epochId → sum of all scores
+export ledger pool_state:       Map<Bytes<32>, Uint<8>>;    // 0=collecting 1=finalized
+export ledger pool_label:       Map<Bytes<32>, Bytes<64>>;  // epochId → human label
+
+// ── Per-contributor ───────────────────────────────────────────────────────────
+// Key = persistentHash([epochId, workerCommitment]) — same pattern as NightWork payroll
+export ledger contributor_score: Map<Bytes<32>, Uint<64>>;  // entryKey → Night Score
+export ledger pool_claimed:      Map<Bytes<32>, Boolean>;   // entryKey → claimed?
+
+// ── Authority ─────────────────────────────────────────────────────────────────
+// Fixed keys: pad(32,"admin") and pad(32,"oracle")
+export ledger pool_admin:  Map<Bytes<32>, Bytes<32>>;
+export ledger pool_oracle: Map<Bytes<32>, Bytes<32>>;
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+export ledger epoch_count:       Counter;
+export ledger total_distributed: Map<Bytes<32>, Uint<64>>;  // key pad(32,"total")
+
+// ── Witnesses ─────────────────────────────────────────────────────────────────
+witness localSecretKey(): Bytes<32>;
+
+circuit callerCommitment(): Bytes<32> {
+  const sk = localSecretKey();
+  return persistentHash<Vector<2, Bytes<32>>>([kernel.self().bytes, sk]);
+}
+
+// ── Setup ─────────────────────────────────────────────────────────────────────
+
+// One-time initialisation — caller becomes admin, oracle commitment provided
+export circuit initialize(oracleCom: Bytes<32>): Boolean {
+  assert(!pool_admin.member(pad(32, "admin")), "already initialized");
+  pool_admin.insert(pad(32, "admin"),   disclose(callerCommitment()));
+  pool_oracle.insert(pad(32, "oracle"), disclose(oracleCom));
+  return true;
+}
+
+// Admin rotates oracle (e.g. key rotation)
+export circuit setOracle(newOracleCom: Bytes<32>): Boolean {
+  const caller = disclose(callerCommitment());
+  assert(pool_admin.lookup(pad(32, "admin")) == caller, "only admin");
+  pool_oracle.insert(pad(32, "oracle"), disclose(newOracleCom));
+  return true;
+}
+
+// ── Epoch lifecycle ───────────────────────────────────────────────────────────
+
+// Open a new collection epoch. Any admin-authorised caller can open one.
+export circuit openEpoch(epochId: Bytes<32>, label: Bytes<64>): Boolean {
+  const id     = disclose(epochId);
+  const caller = disclose(callerCommitment());
+  assert(pool_admin.lookup(pad(32, "admin")) == caller, "only admin");
+  assert(!pool_state.member(id), "epoch already exists");
+  pool_state.insert(id, 0);
+  pool_balance.insert(id, 0 as Uint<64>);
+  pool_label.insert(id, disclose(label));
+  epoch_count.increment(1);
+  return true;
+}
+
+// Revenue source deposits µDUST into an open epoch.
+// Called by Night Store, Night Markets, Night Work etc. when fees are collected.
+export circuit depositRevenue(epochId: Bytes<32>, amount: Uint<64>): Boolean {
+  const id  = disclose(epochId);
+  const amt = disclose(amount);
+  assert(pool_state.lookup(id) == 0, "epoch not collecting");
+  assert(amt >= 1000000, "minimum 1 DUST");
+  const prev = pool_balance.lookup(id);
+  pool_balance.insert(id, (prev + amt) as Uint<64>);
+  return true;
+}
+
+// Oracle records a single contributor's Night Score for this epoch.
+// Called off-chain by the nightid-api server at snapshot time.
+// entryKey = hash(epochId, workerCommitment) — same key the worker uses to claim.
+export circuit recordScore(
+  epochId:    Bytes<32>,
+  workerCom:  Bytes<32>,
+  score:      Uint<64>
+): Boolean {
+  const id     = disclose(epochId);
+  const wCom   = disclose(workerCom);
+  const s      = disclose(score);
+  const caller = disclose(callerCommitment());
+  assert(pool_oracle.lookup(pad(32, "oracle")) == caller, "only oracle");
+  assert(pool_state.lookup(id) == 0, "epoch not collecting");
+  assert(s > (0 as Uint<64>), "score must be positive");
+  const entryKey = disclose(persistentHash<Vector<2, Bytes<32>>>([id, wCom]));
+  assert(!contributor_score.member(entryKey), "score already recorded for this contributor");
+  contributor_score.insert(entryKey, s);
+  const prevTotal = pool_total_score.member(id)
+    ? pool_total_score.lookup(id)
+    : (0 as Uint<64>);
+  pool_total_score.insert(id, (prevTotal + s) as Uint<64>);
+  return true;
+}
+
+// Oracle finalises epoch — locks totals, opens contributor claims.
+export circuit finalizeEpoch(epochId: Bytes<32>): Boolean {
+  const id     = disclose(epochId);
+  const caller = disclose(callerCommitment());
+  assert(pool_oracle.lookup(pad(32, "oracle")) == caller, "only oracle");
+  assert(pool_state.lookup(id) == 0, "epoch not collecting");
+  assert(pool_balance.lookup(id) > (0 as Uint<64>), "nothing to distribute");
+  assert(
+    pool_total_score.member(id) && pool_total_score.lookup(id) > (0 as Uint<64>),
+    "no scores recorded"
+  );
+  pool_state.insert(id, 1);
+  return true;
+}
+
+// ── Claim ─────────────────────────────────────────────────────────────────────
+
+// Contributor privately claims their proportional share of a finalised epoch.
+//
+// The caller provides `share` (computed off-chain). The circuit validates it
+// as the correct integer floor:
+//   share * totalScore  <=  myScore * balance
+//   (share+1) * totalScore  >  myScore * balance
+//
+// This avoids in-circuit division while proving the amount is exact.
+// Intermediate products use Uint<128> to prevent overflow.
+export circuit claimShare(epochId: Bytes<32>, share: Uint<64>): Uint<64> {
+  const id   = disclose(epochId);
+  assert(pool_state.lookup(id) == 1, "epoch not finalized");
+
+  const wCom     = disclose(callerCommitment());
+  const entryKey = disclose(persistentHash<Vector<2, Bytes<32>>>([id, wCom]));
+
+  assert(contributor_score.member(entryKey), "no score recorded for you this epoch");
+  assert(
+    !pool_claimed.member(entryKey) || !pool_claimed.lookup(entryKey),
+    "already claimed"
+  );
+
+  const myScore    = contributor_score.lookup(entryKey);
+  const totalScore = pool_total_score.lookup(id);
+  const balance    = pool_balance.lookup(id);
+  const s          = disclose(share);
+
+  // Validate share = floor(myScore * balance / totalScore)
+  const s128 = s            as Uint<128>;
+  const m128 = myScore      as Uint<128>;
+  const t128 = totalScore   as Uint<128>;
+  const b128 = balance      as Uint<128>;
+  assert(s128 * t128 <= m128 * b128,                   "share too large");
+  assert((s128 + (1 as Uint<128>)) * t128 > m128 * b128, "share too small");
+  assert(s > (0 as Uint<64>), "share rounds to zero — score too small for this pool");
+
+  pool_claimed.insert(entryKey, true);
+
+  const prevTotal = total_distributed.member(pad(32, "total"))
+    ? total_distributed.lookup(pad(32, "total"))
+    : (0 as Uint<64>);
+  total_distributed.insert(pad(32, "total"), (prevTotal + s) as Uint<64>);
+
+  return s;
+}

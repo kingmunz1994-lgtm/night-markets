@@ -59,6 +59,52 @@ const _mem_scores = new Map<string, ScoreData>();
 const _mem_names  = new Map<string, string>(); // name.night → address
 const _mem_rnames = new Map<string, string>(); // address → name.night
 
+// ─── Revenue pool (in-memory, persisted to Redis as ns:revenue:epoch:<id>) ───
+interface EpochData {
+  id:          string;
+  label:       string;
+  balance:     number;                  // µDUST
+  state:       0 | 1;                  // 0=collecting 1=finalized
+  startedAt:   number;
+  finalizedAt?: number;
+  scores:      Record<string, number>; // address → Night Score at snapshot
+  totalScore:  number;
+  claimed:     string[];               // addresses that claimed
+}
+const _epochs = new Map<string, EpochData>();
+let _currentEpochId: string | null = null;
+
+function epochKey(id: string) { return `ns:revenue:epoch:${id}`; }
+function epochIndexKey()       { return `ns:revenue:index`; }
+
+async function loadEpochs() {
+  try {
+    const index = await redisGet(epochIndexKey());
+    if (!index) return;
+    const ids: string[] = JSON.parse(index);
+    for (const id of ids) {
+      const raw = await redisGet(epochKey(id));
+      if (raw) {
+        const e: EpochData = JSON.parse(raw);
+        e.claimed = e.claimed ?? [];
+        _epochs.set(id, e);
+      }
+    }
+    const open = [..._epochs.values()].find(e => e.state === 0);
+    _currentEpochId = open?.id ?? [..._epochs.values()].sort((a,b) => b.startedAt - a.startedAt)[0]?.id ?? null;
+  } catch {}
+}
+async function saveEpoch(e: EpochData) {
+  _epochs.set(e.id, e);
+  const ids = [..._epochs.keys()];
+  await redisSet(epochKey(e.id), JSON.stringify(e));
+  await redisSet(epochIndexKey(), JSON.stringify(ids));
+}
+function computeShare(myScore: number, totalScore: number, balance: number): number {
+  if (totalScore === 0 || balance === 0) return 0;
+  return Math.floor((myScore * balance) / totalScore);
+}
+
 // Minimal Redis client using Node built-in net — zero npm dependencies.
 // Supports GET, SET, QUIT over TCP/TLS using raw RESP protocol.
 import * as net    from 'node:net';
@@ -130,6 +176,7 @@ async function initRedis(): Promise<void> {
     _redisReady = true;
     console.log('  Redis:    connected ✓');
     await leaderboardLoad();
+    await loadEpochs();
   } catch (e: any) {
     console.error('[redis] failed, using in-memory fallback:', e.message);
     _redisSocket = null;
@@ -747,6 +794,161 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // ── Revenue pool ────────────────────────────────────────────────────────────
+
+  // GET /api/revenue/pool — current epoch summary + lifetime stats
+  if (method === 'GET' && url === '/api/revenue/pool') {
+    const epoch = _currentEpochId ? _epochs.get(_currentEpochId) : null;
+    const totalDistributed = [..._epochs.values()]
+      .filter(e => e.state === 1)
+      .reduce((sum, e) => sum + e.balance, 0);
+    return json(res, 200, {
+      currentEpoch: epoch ? {
+        id:         epoch.id,
+        label:      epoch.label,
+        balance:    epoch.balance,
+        balanceDust: epoch.balance / 1_000_000,
+        state:      epoch.state === 0 ? 'collecting' : 'finalized',
+        startedAt:  epoch.startedAt,
+        finalizedAt: epoch.finalizedAt,
+        contributors: Object.keys(epoch.scores).length,
+        totalScore:  epoch.totalScore,
+      } : null,
+      totalDistributed,
+      totalEpochs: _epochs.size,
+    });
+  }
+
+  // GET /api/revenue/share/:addr — estimated share for an address in current epoch
+  if (method === 'GET' && url.startsWith('/api/revenue/share/')) {
+    const addr  = url.split('/api/revenue/share/')[1];
+    const epoch = _currentEpochId ? _epochs.get(_currentEpochId) : null;
+    if (!epoch) return json(res, 200, { share: 0, shareDust: 0, epoch: null });
+    const myScore   = epoch.scores[addr] ?? 0;
+    const estimated = computeShare(myScore, epoch.totalScore, epoch.balance);
+    const claimed   = epoch.claimed.includes(addr);
+    return json(res, 200, {
+      epochId:        epoch.id,
+      state:          epoch.state === 0 ? 'collecting' : 'finalized',
+      myScore,
+      totalScore:     epoch.totalScore,
+      poolBalance:    epoch.balance,
+      estimatedShare: estimated,
+      shareDust:      estimated / 1_000_000,
+      sharePercent:   epoch.totalScore > 0 ? ((myScore / epoch.totalScore) * 100).toFixed(2) : '0.00',
+      claimed,
+    });
+  }
+
+  // GET /api/revenue/epochs — list all epochs
+  if (method === 'GET' && url === '/api/revenue/epochs') {
+    const epochs = [..._epochs.values()].sort((a, b) => b.startedAt - a.startedAt).map(e => ({
+      id:          e.id,
+      label:       e.label,
+      balance:     e.balance,
+      balanceDust: e.balance / 1_000_000,
+      state:       e.state === 0 ? 'collecting' : 'finalized',
+      startedAt:   e.startedAt,
+      finalizedAt: e.finalizedAt,
+      contributors: Object.keys(e.scores).length,
+    }));
+    return json(res, 200, { epochs });
+  }
+
+  // POST /api/revenue/epoch — admin: open a new collecting epoch
+  // Body: { adminKey, label?, epochId? }
+  if (method === 'POST' && url === '/api/revenue/epoch') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    if (body?.adminKey !== (process.env.ADMIN_KEY ?? ISSUER_SECRET)) {
+      return json(res, 401, { error: 'unauthorized' });
+    }
+    const openEpoch = [..._epochs.values()].find(e => e.state === 0);
+    if (openEpoch) return json(res, 409, { error: 'epoch already collecting', epochId: openEpoch.id });
+    const epochId = body.epochId ?? `epoch-${Date.now()}`;
+    const label   = body.label   ?? `Night Share — ${new Date().toISOString().slice(0, 7)}`;
+    const epoch: EpochData = {
+      id: epochId, label, balance: 0, state: 0,
+      startedAt: Date.now(), scores: {}, totalScore: 0, claimed: [],
+    };
+    await saveEpoch(epoch);
+    _currentEpochId = epochId;
+    console.log(`[revenue] epoch opened: ${epochId} "${label}"`);
+    return json(res, 200, { ok: true, epochId, label });
+  }
+
+  // POST /api/revenue/deposit — revenue source deposits into current epoch
+  // Body: { amount, source, epochId? }  amount in µDUST
+  if (method === 'POST' && url === '/api/revenue/deposit') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { amount, source = 'unknown', epochId } = body ?? {};
+    const targetId = epochId ?? _currentEpochId;
+    if (!targetId) return json(res, 404, { error: 'no open epoch' });
+    const epoch = _epochs.get(targetId);
+    if (!epoch) return json(res, 404, { error: 'epoch not found' });
+    if (epoch.state !== 0) return json(res, 409, { error: 'epoch not collecting' });
+    const amt = Number(amount);
+    if (!amt || amt < 1_000_000) return json(res, 400, { error: 'minimum 1 DUST (1000000 µDUST)' });
+    epoch.balance += amt;
+    await saveEpoch(epoch);
+    console.log(`[revenue] deposit ${amt}µDUST from ${source} → epoch ${targetId}`);
+    return json(res, 200, { ok: true, epochId: targetId, newBalance: epoch.balance });
+  }
+
+  // POST /api/revenue/snapshot — admin: snapshot scores + finalize epoch
+  // Snapshots current Night Scores for all known addresses, then finalizes.
+  // Body: { adminKey, epochId? }
+  if (method === 'POST' && url === '/api/revenue/snapshot') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    if (body?.adminKey !== (process.env.ADMIN_KEY ?? ISSUER_SECRET)) {
+      return json(res, 401, { error: 'unauthorized' });
+    }
+    const targetId = body?.epochId ?? _currentEpochId;
+    if (!targetId) return json(res, 404, { error: 'no open epoch' });
+    const epoch = _epochs.get(targetId);
+    if (!epoch) return json(res, 404, { error: 'epoch not found' });
+    if (epoch.state !== 0) return json(res, 409, { error: 'epoch not collecting' });
+    if (epoch.balance === 0) return json(res, 400, { error: 'pool is empty — deposit revenue first' });
+    // Snapshot all Night Scores
+    const allAddrs = [..._mem_scores.keys()];
+    let totalScore = 0;
+    const scores: Record<string, number> = {};
+    for (const addr of allAddrs) {
+      const s = _mem_scores.get(addr)?.total ?? 0;
+      if (s > 0) { scores[addr] = s; totalScore += s; }
+    }
+    if (totalScore === 0) return json(res, 400, { error: 'no Night Scores recorded yet' });
+    epoch.scores     = scores;
+    epoch.totalScore = totalScore;
+    epoch.state      = 1;
+    epoch.finalizedAt = Date.now();
+    await saveEpoch(epoch);
+    console.log(`[revenue] epoch ${targetId} finalized — ${Object.keys(scores).length} contributors, ${totalScore} total score, ${epoch.balance}µDUST pool`);
+    return json(res, 200, {
+      ok: true, epochId: targetId,
+      contributors: Object.keys(scores).length,
+      totalScore, poolBalance: epoch.balance,
+    });
+  }
+
+  // POST /api/revenue/claim — record a claim (on-chain claim triggers this webhook)
+  // Body: { address, epochId }
+  if (method === 'POST' && url === '/api/revenue/claim') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { address, epochId } = body ?? {};
+    if (!address || !epochId) return json(res, 400, { error: 'address and epochId required' });
+    const epoch = _epochs.get(epochId);
+    if (!epoch) return json(res, 404, { error: 'epoch not found' });
+    if (epoch.claimed.includes(address)) return json(res, 409, { error: 'already claimed' });
+    const share = computeShare(epoch.scores[address] ?? 0, epoch.totalScore, epoch.balance);
+    epoch.claimed.push(address);
+    await saveEpoch(epoch);
+    return json(res, 200, { ok: true, address, epochId, share, shareDust: share / 1_000_000 });
+  }
+
   // ── Poker — table registry ──────────────────────────────────────────────────
 
   // GET /api/poker/tables
@@ -836,12 +1038,13 @@ server.on('upgrade', (req: http.IncomingMessage, socket: any, head: Buffer) => {
 // Start HTTP server immediately — Redis connects in background
 server.listen(PORT, () => {
   console.log(`\n⊘ Night Ecosystem API v2.0.0 — listening on :${PORT}`);
-  console.log(`  Night Score:  /api/night-score/record | /api/night-score/:addr`);
-  console.log(`  Build Score:  /api/build-score/:chain/:addr`);
-  console.log(`  Night ID:     /api/nightid/identity/:addr | /api/nightid/credentials/:addr`);
-  console.log(`  Scoring:      ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
-  console.log(`  Credentials:  issuer=${ISSUER_SECRET === 'night-id-dev-secret-change-in-prod' ? 'DEV KEY ⚠️' : 'custom ✓'}`);
-  console.log(`  Health:       http://localhost:${PORT}/health\n`);
+  console.log(`  Night Score:   /api/night-score/record | /api/night-score/:addr`);
+  console.log(`  Build Score:   /api/build-score/:chain/:addr`);
+  console.log(`  Night ID:      /api/nightid/identity/:addr | /api/nightid/credentials/:addr`);
+  console.log(`  Revenue Pool:  /api/revenue/pool | /api/revenue/share/:addr`);
+  console.log(`  Scoring:       ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
+  console.log(`  Credentials:   issuer=${ISSUER_SECRET === 'night-id-dev-secret-change-in-prod' ? 'DEV KEY ⚠️' : 'custom ✓'}`);
+  console.log(`  Health:        http://localhost:${PORT}/health\n`);
 });
 
 initRedis().catch(e => console.error('[redis] init failed:', e?.message));
