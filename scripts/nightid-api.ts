@@ -1,27 +1,46 @@
 /**
- * nightid-api.ts — Night ID public API
+ * nightid-api.ts — Night ecosystem API v2.0.0
  *
- * Lightweight scorer API — no Midnight wallet, no proof server required.
- * Handles multi-chain Night Score, cross-app action scoring, .night names.
+ * Three distinct systems, now properly separated:
  *
- * Run:
- *   node --env-file=.env --import tsx scripts/nightid-api.ts
+ *  NIGHT SCORE — ecosystem activity points (record-action calls from Night apps)
+ *    POST /api/night-score/record          — apps post points here
+ *    GET  /api/night-score/:addr           — Night Score totals + breakdown
+ *    GET  /api/night-score/leaderboard     — top addresses by Night Score
  *
- * Endpoints:
- *   GET  /health
- *   GET  /api/nightid/score/:chain/:addr   — ETH/SOL/ADA/Midnight/All scorer
- *   POST /api/nightid/record-action        — apps post points here
- *   GET  /api/nightid/action-score/:addr   — cross-app score totals
- *   POST /api/nightid/register             — register a .night name
- *   GET  /api/nightid/resolve/:name        — name → address
- *   GET  /api/nightid/lookup/:addr         — address → name
+ *  BUILD SCORE — multi-chain on-chain reputation (ETH/SOL/ADA/Midnight history)
+ *    GET  /api/build-score/:chain/:addr    — credibility score from on-chain data
+ *
+ *  NIGHT ID — ZK identity layer (.night names + verifiable credentials)
+ *    POST /api/nightid/register            — claim a .night name
+ *    GET  /api/nightid/resolve/:name       — name → address
+ *    GET  /api/nightid/lookup/:addr        — address → .night name
+ *    GET  /api/nightid/identity/:addr      — unified: name + scores + credentials
+ *    POST /api/nightid/issue-credential    — issue a signed credential for an address
+ *    GET  /api/nightid/credentials/:addr   — list credentials held by address
+ *    POST /api/nightid/verify-credential   — verify a credential is valid
+ *
+ *  Legacy paths (kept for backward compat):
+ *    GET  /api/nightid/score/:chain/:addr  → same as /api/build-score/:chain/:addr
+ *    POST /api/nightid/record-action       → same as /api/night-score/record
+ *    GET  /api/nightid/action-score/:addr  → same as /api/night-score/:addr
+ *    GET  /api/nightid/leaderboard         → same as /api/night-score/leaderboard
+ *
+ * Credential types issued automatically on threshold crossing:
+ *   verified-human  — Build Score > 100  (basic sybil resistance)
+ *   builder         — Build Score > 500  (established on-chain history)
+ *   night-citizen   — Night Score > 100  (used Night ecosystem)
+ *   night-builder   — Night Score > 500  (power user)
+ *   night-founder   — Night Score > 1000 (ecosystem founder)
+ *   creditworthy    — Build Score > 300 + Night Score > 50 (for night-lend)
  *
  * Env vars:
- *   ETHERSCAN_API_KEY     — https://etherscan.io/apis
- *   HELIUS_API_KEY        — https://helius.dev
- *   BLOCKFROST_ADA_KEY    — https://blockfrost.io
- *   REDIS_URL             — Railway Redis (add Database → Redis in Railway project)
- *   REDIS_PRIVATE_URL     — Railway internal Redis URL (preferred when available)
+ *   ETHERSCAN_API_KEY      — https://etherscan.io/apis
+ *   HELIUS_API_KEY         — https://helius.dev
+ *   BLOCKFROST_ADA_KEY     — https://blockfrost.io
+ *   REDIS_URL              — Railway Redis
+ *   REDIS_PRIVATE_URL      — Railway internal Redis URL (preferred)
+ *   NIGHTID_ISSUER_SECRET  — HMAC secret for credential signing (set in Railway env)
  */
 
 process.on('uncaughtException',  (err: unknown) => console.error('Uncaught:', err));
@@ -42,8 +61,9 @@ const _mem_rnames = new Map<string, string>(); // address → name.night
 
 // Minimal Redis client using Node built-in net — zero npm dependencies.
 // Supports GET, SET, QUIT over TCP/TLS using raw RESP protocol.
-import * as net  from 'node:net';
-import * as tls  from 'node:tls';
+import * as net    from 'node:net';
+import * as tls    from 'node:tls';
+import * as crypto from 'node:crypto';
 import { WebSocketServer } from 'ws';
 
 let _redisSocket: net.Socket | null = null;
@@ -176,6 +196,73 @@ async function nameFindByAddr(addr: string): Promise<string | null> {
   return r ?? _mem_rnames.get(addr) ?? null;
 }
 
+// ─── Credential system ───────────────────────────────────────────────────────
+// Server-side HMAC-signed credentials. Each credential states:
+//   "address X has claim Y of type T, issued at timestamp Z"
+// Apps verify the sig without needing to know the raw scores.
+// On-chain ZK proof replaces this when NightID.compact is deployed (Phase 4).
+
+const ISSUER_SECRET = process.env.NIGHTID_ISSUER_SECRET ?? 'night-id-dev-secret-change-in-prod';
+
+interface Credential {
+  subject:  string;
+  type:     string;
+  claim:    Record<string, unknown>;
+  issuedAt: number;
+  sig:      string;
+}
+
+const CREDENTIAL_THRESHOLDS: Record<string, (bs: number, ns: number) => boolean> = {
+  'verified-human':  (bs)     => bs  > 100,
+  'builder':         (bs)     => bs  > 500,
+  'night-citizen':   (_,  ns) => ns  > 100,
+  'night-builder':   (_,  ns) => ns  > 500,
+  'night-founder':   (_,  ns) => ns  > 1000,
+  'creditworthy':    (bs, ns) => bs  > 300 && ns > 50,
+};
+
+function credSign(subject: string, type: string, claim: Record<string, unknown>, issuedAt: number): string {
+  const payload = JSON.stringify({ subject, type, claim, issuedAt });
+  return crypto.createHmac('sha256', ISSUER_SECRET).update(payload).digest('hex');
+}
+
+function credVerify(c: Credential): boolean {
+  const expected = credSign(c.subject, c.type, c.claim, c.issuedAt);
+  return c.sig === expected;
+}
+
+async function credGet(addr: string, type: string): Promise<Credential | null> {
+  const raw = await redisCmd('GET', `ns:cred:${addr}:${type}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+async function credSet(c: Credential): Promise<void> {
+  const s = JSON.stringify(c);
+  if (_redisReady) await redisCmd('SET', `ns:cred:${c.subject}:${c.type}`, s);
+}
+
+async function credListForAddr(addr: string): Promise<Credential[]> {
+  const types = Object.keys(CREDENTIAL_THRESHOLDS);
+  const results = await Promise.all(types.map(t => credGet(addr, t)));
+  return results.filter((c): c is Credential => c !== null);
+}
+
+async function issueThresholdCredentials(addr: string, buildScore: number, nightScore: number): Promise<string[]> {
+  const issued: string[] = [];
+  for (const [type, check] of Object.entries(CREDENTIAL_THRESHOLDS)) {
+    if (!check(buildScore, nightScore)) continue;
+    const existing = await credGet(addr, type);
+    if (existing) continue; // already issued
+    const issuedAt = Date.now();
+    const claim: Record<string, unknown> = { buildScore, nightScore };
+    const cred: Credential = { subject: addr, type, claim, issuedAt, sig: credSign(addr, type, claim, issuedAt) };
+    await credSet(cred);
+    issued.push(type);
+  }
+  return issued;
+}
+
 // ─── Poker room management ────────────────────────────────────────────────────
 interface PokerTable {
   id: string; name: string; bigBlind: number; smallBlind: number;
@@ -253,18 +340,14 @@ const server = http.createServer(async (req, res) => {
   if (url === '/health' || url === '/') {
     return json(res, 200, {
       ok: true,
-      service: 'Night ID API',
-      version: '1.3.0',
+      service: 'Night Ecosystem API',
+      version: '2.0.0',
       storage: _redisReady ? 'redis' : 'in-memory',
-      endpoints: [
-        '/api/nightid/score/:chain/:addr',
-        '/api/nightid/record-action',
-        '/api/nightid/action-score/:address',
-        '/api/nightid/leaderboard?limit=10',
-        '/api/nightid/register',
-        '/api/nightid/resolve/:name',
-        '/api/nightid/lookup/:addr',
-      ],
+      systems: {
+        nightScore:  ['/api/night-score/record', '/api/night-score/:addr', '/api/night-score/leaderboard'],
+        buildScore:  ['/api/build-score/:chain/:addr'],
+        nightId:     ['/api/nightid/identity/:addr', '/api/nightid/register', '/api/nightid/resolve/:name', '/api/nightid/lookup/:addr', '/api/nightid/credentials/:addr', '/api/nightid/issue-credential', '/api/nightid/verify-credential'],
+      },
       scoring: {
         eth:      !!process.env.ETHERSCAN_API_KEY,
         sol:      !!process.env.HELIUS_API_KEY,
@@ -274,10 +357,14 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // ── GET /api/nightid/score/:chain/:addr ─────────────────────────────────────
-  if (method === 'GET' && url.startsWith('/api/nightid/score/')) {
-    const parts   = url.replace('/api/nightid/score/', '').split('/');
-    const chain   = parts[0] as any;
+  // ── GET /api/build-score/:chain/:addr ──────────────────────────────────────
+  // Multi-chain on-chain reputation: ETH history, DeFi, wallet age, Midnight.
+  // Legacy alias: /api/nightid/score/:chain/:addr
+  const isBuildScore = url.startsWith('/api/build-score/') || url.startsWith('/api/nightid/score/');
+  if (method === 'GET' && isBuildScore) {
+    const base   = url.startsWith('/api/build-score/') ? '/api/build-score/' : '/api/nightid/score/';
+    const parts  = url.replace(base, '').split('/');
+    const chain  = parts[0] as any;
     const address = decodeURIComponent(parts.slice(1).join('/'));
     if (!chain || !address) return json(res, 400, { error: 'chain and address required' });
     const valid = ['eth', 'sol', 'ada', 'midnight', 'all'];
@@ -287,13 +374,15 @@ const server = http.createServer(async (req, res) => {
       const result = await scoreWallet(chain, address);
       return json(res, 200, result);
     } catch (err: any) {
-      console.error('[nightid/score]', err?.message);
+      console.error('[build-score]', err?.message);
       return json(res, 500, { error: 'scoring failed', detail: err?.message });
     }
   }
 
-  // ── POST /api/nightid/record-action ─────────────────────────────────────────
-  if (method === 'POST' && url === '/api/nightid/record-action') {
+  // ── POST /api/night-score/record ────────────────────────────────────────────
+  // Night ecosystem activity points. Legacy alias: /api/nightid/record-action
+  const isRecordAction = url === '/api/night-score/record' || url === '/api/nightid/record-action';
+  if (method === 'POST' && isRecordAction) {
     let body: any;
     try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
 
@@ -315,12 +404,18 @@ const server = http.createServer(async (req, res) => {
     const newByApp  = { ...existing.byApp, [appId]: (existing.byApp[appId] ?? 0) + pts };
     await scoreSet(holderAddress, { total: newTotal, byApp: newByApp });
 
-    console.log(`[record-action] ${appId} +${pts} → ${String(holderAddress).slice(0, 16)}… (total: ${newTotal})`);
-    return json(res, 200, { ok: true, address: holderAddress, appId, points: pts, newTotal });
+    // Auto-issue credentials when Night Score thresholds are crossed
+    const newCreds = await issueThresholdCredentials(holderAddress, 0, newTotal);
+    if (newCreds.length) console.log(`[night-id] issued credentials for ${String(holderAddress).slice(0, 16)}…: ${newCreds.join(', ')}`);
+
+    console.log(`[night-score] ${appId} +${pts} → ${String(holderAddress).slice(0, 16)}… (total: ${newTotal})`);
+    return json(res, 200, { ok: true, address: holderAddress, appId, points: pts, newTotal, newCredentials: newCreds });
   }
 
-  // ── GET /api/nightid/leaderboard ────────────────────────────────────────────
-  if (method === 'GET' && url === '/api/nightid/leaderboard') {
+  // ── GET /api/night-score/leaderboard ───────────────────────────────────────
+  // Legacy alias: /api/nightid/leaderboard
+  const isLeaderboard = url === '/api/night-score/leaderboard' || url === '/api/nightid/leaderboard';
+  if (method === 'GET' && isLeaderboard) {
     const q     = parseQuery(req.url ?? '');
     const limit = Math.min(Math.max(1, parseInt(q.get('limit') ?? '10', 10)), 100);
     const top   = [..._leaderboard.entries()]
@@ -330,12 +425,15 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { leaderboard: top, total: _leaderboard.size });
   }
 
-  // ── GET /api/nightid/action-score/:address ──────────────────────────────────
-  if (method === 'GET' && url.startsWith('/api/nightid/action-score/')) {
-    const address = decodeURIComponent(url.replace('/api/nightid/action-score/', ''));
-    if (!address) return json(res, 400, { error: 'address required' });
-    const s = await scoreGet(address);
-    const spent     = s.spent ?? 0;
+  // ── GET /api/night-score/:addr ──────────────────────────────────────────────
+  // Night ecosystem activity score. Legacy alias: /api/nightid/action-score/:addr
+  const isNightScore = url.startsWith('/api/night-score/') || url.startsWith('/api/nightid/action-score/');
+  if (method === 'GET' && isNightScore) {
+    const base    = url.startsWith('/api/night-score/') ? '/api/night-score/' : '/api/nightid/action-score/';
+    const address = decodeURIComponent(url.replace(base, ''));
+    if (!address || address === 'leaderboard') return json(res, 400, { error: 'address required' });
+    const s        = await scoreGet(address);
+    const spent    = s.spent ?? 0;
     const available = s.total - spent;
     return json(res, 200, {
       address,
@@ -347,6 +445,89 @@ const server = http.createServer(async (req, res) => {
       appsUsed:     Object.keys(s.byApp).length,
     });
   }
+
+  // ── GET /api/nightid/identity/:addr ─────────────────────────────────────────
+  // Unified Night ID: .night name + Night Score + credentials.
+  // This is the single endpoint apps should query to know who a user is.
+  if (method === 'GET' && url.startsWith('/api/nightid/identity/')) {
+    const address = decodeURIComponent(url.replace('/api/nightid/identity/', ''));
+    if (!address) return json(res, 400, { error: 'address required' });
+
+    const [nightName, scoreData, credentials] = await Promise.all([
+      nameFindByAddr(address),
+      scoreGet(address),
+      credListForAddr(address),
+    ]);
+
+    const spent     = scoreData.spent ?? 0;
+    const available = scoreData.total - spent;
+
+    return json(res, 200, {
+      address,
+      nightName,
+      nightScore: {
+        total:    scoreData.total,
+        available,
+        spent,
+        byApp:    scoreData.byApp,
+        appsUsed: Object.keys(scoreData.byApp).length,
+      },
+      credentials: credentials.map(c => ({ type: c.type, claim: c.claim, issuedAt: c.issuedAt })),
+      credentialTypes: credentials.map(c => c.type),
+    });
+  }
+
+  // ── POST /api/nightid/issue-credential ─────────────────────────────────────
+  // Issue a signed credential for an address. Can be called by apps or admin.
+  // For auto-threshold credentials, record-action calls this automatically.
+  if (method === 'POST' && url === '/api/nightid/issue-credential') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+
+    const { address, type, claim = {} } = body ?? {};
+    if (!address) return json(res, 400, { error: 'address required' });
+    if (!type)    return json(res, 400, { error: 'type required' });
+
+    const issuedAt = Date.now();
+    const cred: Credential = {
+      subject: address, type, claim,
+      issuedAt, sig: credSign(address, type, claim, issuedAt),
+    };
+    await credSet(cred);
+    console.log(`[night-id] issued '${type}' credential for ${String(address).slice(0, 16)}…`);
+    return json(res, 200, { ok: true, credential: cred });
+  }
+
+  // ── GET /api/nightid/credentials/:addr ─────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/nightid/credentials/')) {
+    const address = decodeURIComponent(url.replace('/api/nightid/credentials/', ''));
+    if (!address) return json(res, 400, { error: 'address required' });
+    const credentials = await credListForAddr(address);
+    return json(res, 200, {
+      address,
+      credentials: credentials.map(c => ({ type: c.type, claim: c.claim, issuedAt: c.issuedAt })),
+      credentialTypes: credentials.map(c => c.type),
+    });
+  }
+
+  // ── POST /api/nightid/verify-credential ────────────────────────────────────
+  if (method === 'POST' && url === '/api/nightid/verify-credential') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+
+    const { credential } = body ?? {};
+    if (!credential) return json(res, 400, { error: 'credential required' });
+
+    const valid = credVerify(credential as Credential);
+    return json(res, 200, {
+      valid,
+      subject:  credential.subject,
+      type:     credential.type,
+      claim:    credential.claim,
+      issuedAt: credential.issuedAt,
+    });
+  }
+
 
   // ── POST /api/nightid/register ──────────────────────────────────────────────
   if (method === 'POST' && url === '/api/nightid/register') {
@@ -654,9 +835,13 @@ server.on('upgrade', (req: http.IncomingMessage, socket: any, head: Buffer) => {
 
 // Start HTTP server immediately — Redis connects in background
 server.listen(PORT, () => {
-  console.log(`\n⊘ Night ID API v1.3.0 — listening on :${PORT}`);
-  console.log(`  Scoring:  ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
-  console.log(`  Health:   http://localhost:${PORT}/health\n`);
+  console.log(`\n⊘ Night Ecosystem API v2.0.0 — listening on :${PORT}`);
+  console.log(`  Night Score:  /api/night-score/record | /api/night-score/:addr`);
+  console.log(`  Build Score:  /api/build-score/:chain/:addr`);
+  console.log(`  Night ID:     /api/nightid/identity/:addr | /api/nightid/credentials/:addr`);
+  console.log(`  Scoring:      ETH=${!!process.env.ETHERSCAN_API_KEY} SOL=${!!process.env.HELIUS_API_KEY} ADA=${!!process.env.BLOCKFROST_ADA_KEY} Midnight=yes`);
+  console.log(`  Credentials:  issuer=${ISSUER_SECRET === 'night-id-dev-secret-change-in-prod' ? 'DEV KEY ⚠️' : 'custom ✓'}`);
+  console.log(`  Health:       http://localhost:${PORT}/health\n`);
 });
 
 initRedis().catch(e => console.error('[redis] init failed:', e?.message));
