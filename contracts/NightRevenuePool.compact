@@ -29,6 +29,7 @@ export ledger pool_label:       Map<Bytes<32>, Bytes<64>>;  // epochId → human
 // Key = persistentHash([epochId, workerCommitment]) — same pattern as NightWork payroll
 export ledger contributor_score: Map<Bytes<32>, Uint<64>>;  // entryKey → Night Score
 export ledger pool_claimed:      Map<Bytes<32>, Boolean>;   // entryKey → claimed?
+export ledger contributor_addr:  Map<Bytes<32>, Bytes<32>>; // entryKey → NIGHT address for payout
 
 // ── Authority ─────────────────────────────────────────────────────────────────
 // Fixed keys: pad(32,"admin") and pad(32,"oracle")
@@ -95,14 +96,17 @@ export circuit depositRevenue(epochId: Bytes<32>, amount: Uint<64>): Boolean {
 // Oracle records a single contributor's Night Score for this epoch.
 // Called off-chain by the nightid-api server at snapshot time.
 // entryKey = hash(epochId, workerCommitment) — same key the worker uses to claim.
+// nightAddr is the contributor's NIGHT address, stored so the server can pay them.
 export circuit recordScore(
   epochId:    Bytes<32>,
   workerCom:  Bytes<32>,
-  score:      Uint<64>
+  score:      Uint<64>,
+  nightAddr:  Bytes<32>
 ): Boolean {
   const id     = disclose(epochId);
   const wCom   = disclose(workerCom);
   const s      = disclose(score);
+  const addr   = disclose(nightAddr);
   const caller = disclose(callerCommitment());
   assert(pool_oracle.lookup(pad(32, "oracle")) == caller, "only oracle");
   assert(pool_state.lookup(id) == 0, "epoch not collecting");
@@ -110,6 +114,7 @@ export circuit recordScore(
   const entryKey = disclose(persistentHash<Vector<2, Bytes<32>>>([id, wCom]));
   assert(!contributor_score.member(entryKey), "score already recorded for this contributor");
   contributor_score.insert(entryKey, s);
+  contributor_addr.insert(entryKey, addr);
   const prevTotal = pool_total_score.member(id)
     ? pool_total_score.lookup(id)
     : (0 as Uint<64>);
@@ -143,6 +148,7 @@ export circuit finalizeEpoch(epochId: Bytes<32>): Boolean {
 //
 // This avoids in-circuit division while proving the amount is exact.
 // Intermediate products use Uint<128> to prevent overflow.
+// Returns share amount. Server reads contributor_addr from ledger to send real NIGHT.
 export circuit claimShare(epochId: Bytes<32>, share: Uint<64>): Uint<64> {
   const id   = disclose(epochId);
   assert(pool_state.lookup(id) == 1, "epoch not finalized");

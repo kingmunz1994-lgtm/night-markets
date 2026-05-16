@@ -14,6 +14,12 @@ export ledger escrow_state:  Map<Bytes<32>, EscrowState>;
 export ledger seller_commit: Map<Bytes<32>, Bytes<32>>;
 export ledger buyer_commit:  Map<Bytes<32>, Bytes<32>>;
 export ledger amount_night:  Map<Bytes<32>, Uint<64>>;
+// Payout addresses: needed so the server wallet can send real NIGHT on release/refund.
+// Unshielded NIGHT is a public UTXO — recipient address is inherently public here,
+// same tradeoff as any Ethereum escrow. ZK auth (who can authorize) is still enforced
+// by the commitment checks. Empty = address not yet provided.
+export ledger seller_addr:   Map<Bytes<32>, Bytes<32>>;  // orderId → seller NIGHT address
+export ledger buyer_addr:    Map<Bytes<32>, Bytes<32>>;  // orderId → buyer NIGHT address
 ledger round: Counter;
 export ledger vote_for:     Map<Bytes<32>, Uint<64>>;
 export ledger vote_against: Map<Bytes<32>, Uint<64>>;
@@ -65,36 +71,41 @@ export circuit isPaused(): Boolean {
   return _is_paused;
 }
 
-export circuit createListing(orderId: Bytes<32>, amountNight: Uint<64>): Bytes<32> {
+export circuit createListing(orderId: Bytes<32>, amountNight: Uint<64>, sellerNightAddr: Bytes<32>): Bytes<32> {
   assertNotPaused();
-  const com = callerCommitment(pad(32, "seller"));
-  const oid = disclose(orderId);
-  const amt = disclose(amountNight);
-  const c   = disclose(com);
+  const com  = callerCommitment(pad(32, "seller"));
+  const oid  = disclose(orderId);
+  const amt  = disclose(amountNight);
+  const c    = disclose(com);
+  const addr = disclose(sellerNightAddr);
   assert(escrow_state.member(oid) == false, "listing exists");
   escrow_state.insert(oid, EscrowState.OPEN);
   seller_commit.insert(oid, c);
+  seller_addr.insert(oid, addr);
   amount_night.insert(oid, amt);
   round.increment(1);
   return c;
 }
 
-export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>): Bytes<32> {
+export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>, buyerNightAddr: Bytes<32>): Bytes<32> {
   assertNotPaused();
-  const com = callerCommitment(pad(32, "buyer"));
-  const oid = disclose(orderId);
-  const amt = disclose(amountNight);
-  const c   = disclose(com);
+  const com  = callerCommitment(pad(32, "buyer"));
+  const oid  = disclose(orderId);
+  const amt  = disclose(amountNight);
+  const c    = disclose(com);
+  const addr = disclose(buyerNightAddr);
   const state = escrow_state.lookup(oid);
   assert(state == EscrowState.OPEN, "not open");
   buyer_commit.insert(oid, c);
+  buyer_addr.insert(oid, addr);
   amount_night.insert(oid, amt);
   escrow_state.insert(oid, EscrowState.FUNDED);
   round.increment(1);
   return c;
 }
 
-export circuit releaseEscrow(orderId: Bytes<32>): Boolean {
+// Returns seller's NIGHT address so the server can send real NIGHT to them.
+export circuit releaseEscrow(orderId: Bytes<32>): Bytes<32> {
   assertNotPaused();
   const callerCom = callerCommitment(pad(32, "buyer"));
   const oid = disclose(orderId);
@@ -104,7 +115,7 @@ export circuit releaseEscrow(orderId: Bytes<32>): Boolean {
   assert(state == EscrowState.FUNDED, "not funded");
   escrow_state.insert(oid, EscrowState.RELEASED);
   round.increment(1);
-  return true;
+  return seller_addr.lookup(oid);
 }
 
 export circuit disputeEscrow(orderId: Bytes<32>): Boolean {
@@ -120,7 +131,8 @@ export circuit disputeEscrow(orderId: Bytes<32>): Boolean {
   return true;
 }
 
-export circuit refundEscrow(orderId: Bytes<32>): Boolean {
+// Returns buyer's NIGHT address so the server can refund real NIGHT to them.
+export circuit refundEscrow(orderId: Bytes<32>): Bytes<32> {
   assertNotPaused();
   const callerCom = callerCommitment(pad(32, "seller"));
   const oid = disclose(orderId);
@@ -130,7 +142,7 @@ export circuit refundEscrow(orderId: Bytes<32>): Boolean {
   assert(state == EscrowState.OPEN || state == EscrowState.DISPUTED, "invalid state");
   escrow_state.insert(oid, EscrowState.REFUNDED);
   round.increment(1);
-  return true;
+  return buyer_addr.lookup(oid);
 }
 
 export circuit castVote(proposalId: Bytes<32>, choice: Uint<8>): Boolean {

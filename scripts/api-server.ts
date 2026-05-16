@@ -245,11 +245,33 @@ function toBytes32(s: string): Uint8Array {
 let appState: {
   ready:    boolean;
   contract: any;
+  walletCtx: Awaited<ReturnType<typeof buildWallet>> | null;
   address:  string;
   night:    bigint;
   dust:     bigint;
   error?:   string;
-} = { ready: false, contract: null, address: '', night: 0n, dust: 0n };
+} = { ready: false, contract: null, walletCtx: null, address: '', night: 0n, dust: 0n };
+
+// Send real NIGHT from the server custodial wallet to a recipient.
+// This is how the escrow pays out: server holds NIGHT on behalf of users,
+// state changes are ZK-authorised on-chain, payouts go here.
+// Architecture note: this makes the escrow "server-assisted custodial" for Stage 1.
+// Stage 6 will migrate to DApp-connector-signed atomic txs (trustless).
+async function sendNight(recipientAddr: string, amountNight: bigint): Promise<string> {
+  const ctx = appState.walletCtx;
+  if (!ctx) throw new Error('Wallet not initialised');
+  const nightColor = unshieldedToken().raw;
+  const ttl = new Date(Date.now() + 30 * 60 * 1000);
+  // wallet.transfer sends unshielded (public) NIGHT tokens to a recipient address.
+  // The wallet-sdk-facade routes this through the unshielded sub-wallet's makeTransfer.
+  const result = await (ctx.wallet as any).transfer(
+    [{ value: amountNight, type: nightColor, owner: recipientAddr }],
+    ttl,
+  );
+  const txId: string = result?.txId ?? result?.public?.txId ?? String(result);
+  console.log(`  ✓ Sent ${amountNight} NIGHT → ${recipientAddr.slice(0, 20)}… txId=${txId}`);
+  return txId;
+}
 
 async function init() {
   const seed = process.env.WALLET_SEED;
@@ -298,7 +320,8 @@ async function init() {
       initialPrivateState: {},
     });
 
-    appState = { ready: true, contract, address: ctx.keystore.getBech32Address(), night, dust };
+    appState = { ready: true, contract, walletCtx: ctx, address: ctx.keystore.getBech32Address(), night, dust };
+    console.log(`  Server NIGHT address (buyers send here): ${ctx.keystore.getBech32Address()}`);
     console.log(`\n✅  Ready — contract: ${CONTRACT_ADDRESS}`);
   } catch (err: any) {
     appState.error = err.message ?? String(err);
@@ -443,35 +466,63 @@ const server = http.createServer(async (req, res) => {
     const action = url.replace('/api/escrow/', '');
 
     try {
+      // Returns the server's custodial NIGHT address — buyers send NIGHT here before funding.
+      if (action === 'wallet-address') {
+        return json(res, 200, { address: appState.address, note: 'Send NIGHT here before calling /api/escrow/fund' });
+      }
+
       if (action === 'create') {
-        const { orderId, amountNight } = body;
+        const { orderId, amountNight, sellerNightAddr } = body;
         if (!orderId) return json(res, 400, { error: 'orderId required' });
-        const oidBytes = toBytes32(String(orderId));
-        const amt      = BigInt(amountNight ?? 1_000_000);
-        console.log(`\n  [create] orderId="${orderId}" amount=${amt}`);
-        const r = await appState.contract.callTx.createListing(oidBytes, amt);
+        if (!sellerNightAddr) return json(res, 400, { error: 'sellerNightAddr required — seller NIGHT address for payout' });
+        const oidBytes  = toBytes32(String(orderId));
+        const amt       = BigInt(amountNight ?? 1_000_000);
+        const addrBytes = toBytes32(String(sellerNightAddr));
+        console.log(`\n  [create] orderId="${orderId}" amount=${amt} seller=${sellerNightAddr.slice(0,20)}…`);
+        const r = await appState.contract.callTx.createListing(oidBytes, amt, addrBytes);
         return json(res, 200, { txId: r.public.txId, blockHeight: r.public.blockHeight, orderId, amountNight: amt.toString() });
       }
 
       if (action === 'fund') {
-        const { orderId, amountNight } = body;
+        const { orderId, amountNight, buyerNightAddr } = body;
         if (!orderId) return json(res, 400, { error: 'orderId required' });
-        const oidBytes = toBytes32(String(orderId));
-        const amt      = BigInt(amountNight ?? 1_000_000);
-        console.log(`\n  [fund] orderId="${orderId}" amount=${amt}`);
-        const r = await appState.contract.callTx.fundEscrow(oidBytes, amt);
-        return json(res, 200, { txId: r.public.txId, blockHeight: r.public.blockHeight, orderId });
+        if (!buyerNightAddr) return json(res, 400, { error: 'buyerNightAddr required — buyer NIGHT address for refunds' });
+        const oidBytes  = toBytes32(String(orderId));
+        const amt       = BigInt(amountNight ?? 1_000_000);
+        const addrBytes = toBytes32(String(buyerNightAddr));
+        console.log(`\n  [fund] orderId="${orderId}" amount=${amt} buyer=${buyerNightAddr.slice(0,20)}…`);
+        // NIGHT custody: buyer must have already sent NIGHT to appState.address before calling this.
+        // The contract records the ZK authorization; the server holds the funds.
+        const r = await appState.contract.callTx.fundEscrow(oidBytes, amt, addrBytes);
+        return json(res, 200, {
+          txId: r.public.txId, blockHeight: r.public.blockHeight, orderId,
+          note: 'Escrow funded on-chain. NIGHT should have been sent to server wallet before this call.',
+        });
       }
 
       if (action === 'release') {
-        const { orderId, sellerAddress } = body;
+        const { orderId } = body;
         if (!orderId) return json(res, 400, { error: 'orderId required' });
         const oidBytes = toBytes32(String(orderId));
         console.log(`\n  [release] orderId="${orderId}"`);
-        const r = await appState.contract.callTx.releaseEscrow(oidBytes);
 
-        // Award Night Score to seller — fire-and-forget, non-blocking
-        const seller = sellerAddress ?? _listingStore.get(String(orderId))?.sellerId;
+        // Contract returns the seller's NIGHT address from its ledger state
+        const r = await appState.contract.callTx.releaseEscrow(oidBytes);
+        const sellerNightAddr: string = r.public.result ?? '';
+        const listing = _listingStore.get(String(orderId));
+        const amt = listing?.price ? BigInt(Math.round(Number(listing.price) * 1_000_000)) : 1_000_000n;
+
+        // Send real NIGHT to seller — fire-and-forget so state change is already committed
+        if (sellerNightAddr) {
+          sendNight(sellerNightAddr, amt).catch(err =>
+            console.error(`  ⚠ sendNight failed for ${orderId}:`, err.message ?? err)
+          );
+        } else {
+          console.warn(`  ⚠ [release] no seller NIGHT address on contract for orderId=${orderId}`);
+        }
+
+        // Award Night Score to seller
+        const seller = listing?.sellerId;
         if (seller) {
           const prev = _nightScoreStore.get(seller) ?? 0;
           _nightScoreStore.set(seller, prev + 50);
@@ -479,7 +530,10 @@ const server = http.createServer(async (req, res) => {
           console.log(`  ✓ Night Score +50 → ${seller.slice(0, 16)}… (total: ${prev + 50})`);
         }
 
-        return json(res, 200, { txId: r.public.txId, blockHeight: r.public.blockHeight, orderId });
+        return json(res, 200, {
+          txId: r.public.txId, blockHeight: r.public.blockHeight, orderId,
+          nightSentTo: sellerNightAddr || null,
+        });
       }
 
       if (action === 'dispute') {
@@ -494,8 +548,26 @@ const server = http.createServer(async (req, res) => {
         const { orderId } = body;
         if (!orderId) return json(res, 400, { error: 'orderId required' });
         const oidBytes = toBytes32(String(orderId));
+        console.log(`\n  [refund] orderId="${orderId}"`);
+
+        // Contract returns the buyer's NIGHT address from its ledger state
         const r = await appState.contract.callTx.refundEscrow(oidBytes);
-        return json(res, 200, { txId: r.public.txId, blockHeight: r.public.blockHeight, orderId });
+        const buyerNightAddr: string = r.public.result ?? '';
+        const listing = _listingStore.get(String(orderId));
+        const amt = listing?.price ? BigInt(Math.round(Number(listing.price) * 1_000_000)) : 1_000_000n;
+
+        if (buyerNightAddr) {
+          sendNight(buyerNightAddr, amt).catch(err =>
+            console.error(`  ⚠ sendNight failed for ${orderId}:`, err.message ?? err)
+          );
+        } else {
+          console.warn(`  ⚠ [refund] no buyer NIGHT address on contract for orderId=${orderId}`);
+        }
+
+        return json(res, 200, {
+          txId: r.public.txId, blockHeight: r.public.blockHeight, orderId,
+          nightSentTo: buyerNightAddr || null,
+        });
       }
 
       return json(res, 404, { error: `Unknown action: ${action}` });
