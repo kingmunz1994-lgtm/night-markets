@@ -162,6 +162,34 @@ nav{position:sticky;top:0;z-index:200;background:rgba(6,4,14,.88);backdrop-filte
 .tl-title{font-size:16px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px;}
 .tl-desc{font-size:13px;color:var(--muted);line-height:1.7;font-weight:300;}
 
+/* ECOSYSTEM GRID */
+.ecosystem{margin-bottom:80px;}
+.eco-intro{font-size:17px;color:var(--text2);line-height:1.75;font-weight:300;max-width:660px;margin-bottom:52px;}
+.eco-intro strong{color:var(--glow);font-weight:600;}
+.eco-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.eco-card{background:var(--card);border:1px solid var(--rim);border-radius:16px;padding:22px 20px 18px;position:relative;transition:border-color .25s,transform .25s,box-shadow .25s;overflow:hidden;}
+.eco-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--halo2),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none;}
+.eco-card:hover{border-color:var(--rim3);transform:translateY(-3px);box-shadow:0 10px 40px rgba(124,58,237,.18);}
+.eco-card:hover::after{opacity:1;}
+.eco-icon{font-size:24px;line-height:1;margin-bottom:12px;}
+.eco-name{font-size:14px;font-weight:700;letter-spacing:-.025em;margin-bottom:3px;}
+.eco-tag{font-size:10.5px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;letter-spacing:.2px;}
+.eco-desc{font-size:12px;color:var(--text2);line-height:1.6;font-weight:300;margin-bottom:13px;min-height:38px;}
+.eco-badge{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.7px;border-radius:20px;padding:3px 9px;}
+.eco-badge.live{background:rgba(0,214,143,.13);color:var(--green);}
+.eco-badge.beta{background:rgba(245,197,24,.11);color:var(--gold);}
+.eco-badge.soon{background:rgba(157,92,246,.13);color:var(--plasma);}
+.eco-badge.planned{background:rgba(56,189,248,.1);color:var(--blue);}
+.eco-badge.vision{background:rgba(107,99,144,.1);color:var(--muted);}
+.eco-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.eco-tier{margin-bottom:20px;}
+.eco-tier-label{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:2px;font-family:var(--mono);margin:36px 0 14px;display:flex;align-items:center;gap:10px;}
+.eco-tier-label::before,.eco-tier-label::after{content:'';flex:1;height:1px;background:var(--rim);}
+.eco-stats-row{display:flex;gap:32px;margin-bottom:52px;flex-wrap:wrap;}
+.eco-stat{display:flex;flex-direction:column;gap:4px;}
+.eco-stat-num{font-family:var(--serif);font-size:36px;font-style:italic;color:var(--glow);line-height:1;}
+.eco-stat-lbl{font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;}
+
 /* TAGLINE STRIP */
 .tagline-strip{border-radius:20px;overflow:hidden;margin-bottom:72px;border:1px solid var(--rim2);position:relative;cursor:pointer;}
 .tagline-strip img{width:100%;display:block;max-height:280px;object-fit:cover;}
@@ -479,6 +507,211 @@ footer{border-top:1px solid var(--rim);padding:48px 60px;max-width:1400px;margin
       </div>
     </div>
   </div>
+</div>
+
+<!-- ECOSYSTEM — THE FULL NIGHT UNIVERSE -->
+<div class="wrap">
+  <div class="eyebrow" style="margin-bottom:16px">The ecosystem</div>
+  <h2 style="font-family:var(--serif);font-size:44px;font-style:italic;margin-bottom:24px;letter-spacing:-.02em;">Every app you use, rebuilt<br><span style="color:var(--glow);">with ZK privacy at the core.</span></h2>
+  <p class="eco-intro">Night isn't one app — it's an <strong>open privacy network</strong> built on Midnight. Every app you rely on today — payments, social, work, lending, identity — has a Night equivalent where you stay in control. No surveillance. No data harvesting. No platform lock-in.</p>
+
+  <div class="eco-stats-row">
+    <div class="eco-stat"><div class="eco-stat-num">23</div><div class="eco-stat-lbl">Apps planned</div></div>
+    <div class="eco-stat"><div class="eco-stat-num">2</div><div class="eco-stat-lbl">Live today</div></div>
+    <div class="eco-stat"><div class="eco-stat-num">∞</div><div class="eco-stat-lbl">Open protocol</div></div>
+    <div class="eco-stat"><div class="eco-stat-num">0</div><div class="eco-stat-lbl">Data leaks by design</div></div>
+  </div>
+
+  <div class="ecosystem">
+
+    <div class="eco-tier-label">Tier 1 — Core Utility</div>
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-icon">🏪</div>
+        <div class="eco-name">Night Markets</div>
+        <div class="eco-tag">ZK eBay · ZK Airbnb</div>
+        <div class="eco-desc">Escrow marketplace where buyers and sellers trade privately. ZK auth, no identity leaks.</div>
+        <span class="eco-badge live">Live</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🃏</div>
+        <div class="eco-name">Night Poker</div>
+        <div class="eco-tag">ZK PokerStars · ZK GGPoker</div>
+        <div class="eco-desc">Texas Hold'em on Midnight. Private hand commitment, fair shuffle, real NIGHT pots.</div>
+        <span class="eco-badge beta">Beta</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">💸</div>
+        <div class="eco-name">Night Pay</div>
+        <div class="eco-tag">ZK Venmo · ZK PayPal</div>
+        <div class="eco-desc">Private peer-to-peer payments. Send NIGHT to anyone. Transaction amounts stay hidden.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🏪</div>
+        <div class="eco-name">Night Store</div>
+        <div class="eco-tag">ZK Shopify · ZK Etsy</div>
+        <div class="eco-desc">Night-branded merch and physical goods. Revenue flows back into the ecosystem pool.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+    </div>
+
+    <div class="eco-tier-label">Tier 2 — Economic Layer</div>
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-icon">🚀</div>
+        <div class="eco-name">Night Fun</div>
+        <div class="eco-tag">ZK Pump.fun · ZK TokenLaunch</div>
+        <div class="eco-desc">Launch tokens privately. Buy early without front-running. Fair launch, hidden until reveal.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">💼</div>
+        <div class="eco-name">Night Work</div>
+        <div class="eco-tag">ZK Fiverr · ZK Upwork</div>
+        <div class="eco-desc">Post bounties. AI agents and humans compete privately. Pay in NIGHT via ZK escrow.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🏦</div>
+        <div class="eco-name">Night Lend</div>
+        <div class="eco-tag">ZK Aave · ZK Compound</div>
+        <div class="eco-desc">Borrow against private collateral. 75% LTV. No credit check — ZK proof of balance.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🔐</div>
+        <div class="eco-name">Night Save</div>
+        <div class="eco-tag">ZK Savings Vault · ZK BNPL</div>
+        <div class="eco-desc">Deposit NIGHT, mint sUSD. Hidden balances. BNPL credit without exposing your wealth.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">📈</div>
+        <div class="eco-name">Night Trade</div>
+        <div class="eco-tag">ZK DEX · ZK Dark Pool</div>
+        <div class="eco-desc">Trade tokens privately. No front-running, no MEV. Dark pool mechanics on Midnight.</div>
+        <span class="eco-badge planned">Planned</span>
+      </div>
+    </div>
+
+    <div class="eco-tier-label">Tier 3 — Identity + Reputation</div>
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-icon">🪪</div>
+        <div class="eco-name">Night ID</div>
+        <div class="eco-tag">ZK LinkedIn · ZK Passport</div>
+        <div class="eco-desc">Prove who you are without revealing it. .night names, ZK credentials, portable reputation.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">⭐</div>
+        <div class="eco-name">Night Score</div>
+        <div class="eco-tag">ZK Credit Score · ZK Reputation</div>
+        <div class="eco-desc">Cross-app reputation built from real activity. Prove your score without revealing the data.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🎖️</div>
+        <div class="eco-name">Night Biz</div>
+        <div class="eco-tag">ZK Loyalty · ZK Rewards</div>
+        <div class="eco-desc">Private loyalty tiers for businesses. Verify VIP status with ZK — no customer data stored.</div>
+        <span class="eco-badge soon">Coming Soon</span>
+      </div>
+    </div>
+
+    <div class="eco-tier-label">Tier 4 — Social Layer</div>
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-icon">💬</div>
+        <div class="eco-name">Night Chat</div>
+        <div class="eco-tag">ZK WhatsApp · ZK Signal</div>
+        <div class="eco-desc">Encrypted messaging with Night Pay built in. Send money inside a chat. Nothing logged.</div>
+        <span class="eco-badge planned">Planned</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">📣</div>
+        <div class="eco-name">Night Social</div>
+        <div class="eco-tag">ZK Twitter · ZK Farcaster</div>
+        <div class="eco-desc">Post publicly or privately. ZK-verified identity. Followers never see your wallet address.</div>
+        <span class="eco-badge planned">Planned</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🔎</div>
+        <div class="eco-name">Night Review</div>
+        <div class="eco-tag">ZK Glassdoor · ZK Yelp</div>
+        <div class="eco-desc">Verified reviews without revealing the reviewer. Prove you bought it. Stay anonymous.</div>
+        <span class="eco-badge planned">Planned</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">❤️</div>
+        <div class="eco-name">Night Match</div>
+        <div class="eco-tag">ZK Dating · ZK Matching</div>
+        <div class="eco-desc">Match on shared ZK attributes — location, interests, values — without revealing raw data.</div>
+        <span class="eco-badge vision">Vision</span>
+      </div>
+    </div>
+
+    <div class="eco-tier-label">Tier 5 — Governance + Data</div>
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-icon">🗳️</div>
+        <div class="eco-name">Night Vote</div>
+        <div class="eco-tag">ZK Governance · ZK DAO</div>
+        <div class="eco-desc">Private on-chain voting. Prove eligibility with ZK. Votes counted without being surveilled.</div>
+        <span class="eco-badge planned">Planned</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🤝</div>
+        <div class="eco-name">Night Co-op</div>
+        <div class="eco-tag">ZK Cooperative · ZK Guild</div>
+        <div class="eco-desc">Form worker-owned groups on-chain. Private membership, shared revenue, ZK treasury.</div>
+        <span class="eco-badge planned">Planned</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🗃️</div>
+        <div class="eco-name">Night Data</div>
+        <div class="eco-tag">ZK Data Marketplace</div>
+        <div class="eco-desc">Sell proofs of your data — not the data itself. Earn NIGHT for attributes you choose to share.</div>
+        <span class="eco-badge planned">Planned</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🎯</div>
+        <div class="eco-name">Night Raise</div>
+        <div class="eco-tag">ZK Kickstarter · ZK Crowdfund</div>
+        <div class="eco-desc">Raise privately. Contributors stay hidden until close. Milestone-unlocked ZK escrow.</div>
+        <span class="eco-badge planned">Planned</span>
+      </div>
+    </div>
+
+    <div class="eco-tier-label">Tier 6 — Future Vision</div>
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-icon">🏥</div>
+        <div class="eco-name">Night Health</div>
+        <div class="eco-tag">ZK Medical Records</div>
+        <div class="eco-desc">Prove health status, vaccination, or diagnosis to providers — without revealing your full record.</div>
+        <span class="eco-badge vision">Vision</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">⚖️</div>
+        <div class="eco-name">Night Legal</div>
+        <div class="eco-tag">ZK Notarization · ZK Docs</div>
+        <div class="eco-desc">Sign and verify legal documents with ZK timestamps. Notarise without a notary knowing contents.</div>
+        <span class="eco-badge vision">Vision</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon">🚗</div>
+        <div class="eco-name">Night Drive</div>
+        <div class="eco-tag">ZK Gig Economy · ZK Uber</div>
+        <div class="eco-desc">Private gig work. Prove your rating. Get paid in NIGHT. Neither party reveals their identity.</div>
+        <span class="eco-badge vision">Vision</span>
+      </div>
+    </div>
+
+  </div><!-- /.ecosystem -->
+
+  <div class="divider"></div>
 </div>
 
 <!-- TAGLINE STRIP -->
