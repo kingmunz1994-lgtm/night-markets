@@ -223,6 +223,10 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <label>Small Blind (NIGHT)</label>
         <input id="cr-sb" type="number" placeholder="25" min="1" value="25">
       </div>
+      <div class="field">
+        <label>Your Name</label>
+        <input id="cr-pname" type="text" placeholder="e.g. CryptoKing" maxlength="20">
+      </div>
       <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="createRoom()">Create Room</button>
     </div>
   </div>
@@ -300,8 +304,8 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
           <div class="action-row" id="action-btns" style="display:none;">
             <button class="btn btn-danger btn-sm" onclick="doAction('fold')">✕ Fold</button>
-            <button class="btn btn-outline btn-sm" onclick="doAction('check')">— Check</button>
-            <button class="btn btn-outline btn-sm" onclick="doAction('call')">✓ Call</button>
+            <button id="check-btn" class="btn btn-outline btn-sm" onclick="doAction('check')">— Check</button>
+            <button id="call-btn" class="btn btn-outline btn-sm" onclick="doAction('call')">✓ Call</button>
           </div>
           <div id="bet-section" style="display:none;">
             <div class="bet-row">
@@ -317,8 +321,8 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
             </div>
           </div>
 
-          <div id="dealer-btns" style="display:none;margin-top:8px;">
-            <button class="btn btn-outline btn-sm" style="width:100%;" onclick="advancePhase()">⏭ Advance Phase (Dealer)</button>
+          <div id="start-hand-btn" style="display:none;margin-top:8px;">
+            <button class="btn btn-primary btn-sm" style="width:100%;" onclick="startHand()">▶ Start Hand</button>
           </div>
           <div id="waiting-msg" style="font-size:13px;color:var(--muted);text-align:center;padding:8px 0;">
             Waiting for players to join…
@@ -350,581 +354,305 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
 <script>
 // ══════════════════════════════════════════════════════════════
-// Night Poker — Client
-// WebSocket: ws://localhost:3001/ws/poker/:roomId
-// ZK: hands committed on Midnight via NightPoker.compact
+// Night Poker — Client v2  (real game engine)
+// ?server=HOST:PORT  to point at a remote api-server
 // ══════════════════════════════════════════════════════════════
+(function(){
+  var sp=new URLSearchParams(location.search);
+  var srv=sp.get('server')||'127.0.0.1:3001';
+  window.API_WS  ='ws://'+srv+'/ws/poker/';
+  window.API_HTTP='http://'+srv;
+})();
 
-const API_WS   = 'ws://127.0.0.1:3001/ws/poker/';
-const API_HTTP = 'http://127.0.0.1:3001';
+// ── Card helpers ──────────────────────────────────────────────
+var RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+var RANKS_IDX = {'2':0,'3':1,'4':2,'5':3,'6':4,'7':5,'8':6,'9':7,'T':8,'J':9,'Q':10,'K':11,'A':12};
+var SUITS = ['♣','♦','♥','♠'];
+var SUIT_IDX = {'c':0,'d':1,'h':2,'s':3};
+var SUIT_CLS = ['black','red','red','black'];
 
-// ── Card helpers ───────────────────────────────────────────────
-const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-const SUITS = ['♣','♦','♥','♠'];
-const SUIT_CLASS = ['black','red','red','black'];
-
-function cardFromIndex(i) {
-  const rank = RANKS[i % 13];
-  const suit = SUITS[Math.floor(i / 13)];
-  const cls  = SUIT_CLASS[Math.floor(i / 13)];
-  return { rank, suit, cls };
+function parseCard(s) {
+  if(s==null) return null;
+  var r=RANKS_IDX[s.slice(0,-1)], su=SUIT_IDX[s.slice(-1)];
+  return (r==null||su==null)?null:su*13+r;
 }
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function renderCard(idx, large) {
-  if (idx == null) {
-    const sz = large ? 'width:52px;height:72px;font-size:28px;' : '';
-    return `<div class="card back" style="${sz}"></div>`;
-  }
-  const { rank, suit, cls } = cardFromIndex(idx);
-  const sz = large ? 'width:52px;height:72px;' : '';
-  return `<div class="card ${cls}" style="${sz}">
-    <div class="card-rank">${rank}</div>
-    <div class="card-suit">${suit}</div>
-  </div>`;
+  var sz=large?'width:52px;height:72px;':'';
+  if(idx==null) return '<div class="card back" style="'+sz+'font-size:28px;"></div>';
+  var r=RANKS[idx%13], su=SUITS[0|(idx/13)], cls=SUIT_CLS[0|(idx/13)];
+  return '<div class="card '+cls+'" style="'+sz+'"><div class="card-rank">'+r+'</div><div class="card-suit">'+su+'</div></div>';
 }
 
-function renderCommunityCard(el, idx, visible) {
-  if (!visible) {
-    el.className = 'card back community-card';
-    el.innerHTML = '';
-    el.style.opacity = idx >= 3 ? '.3' : '1';
-    return;
-  }
-  const { rank, suit, cls } = cardFromIndex(idx);
-  el.className = `card ${cls} community-card`;
-  el.innerHTML = `<div class="card-rank">${rank}</div><div class="card-suit">${suit}</div>`;
-  el.style.opacity = '1';
+function renderCommunityCard(el, cardStr, visible) {
+  if(!visible||cardStr==null){el.className='card back community-card';el.innerHTML='';el.style.opacity='1';return;}
+  var idx=parseCard(cardStr); if(idx==null) return;
+  var r=RANKS[idx%13], su=SUITS[0|(idx/13)], cls=SUIT_CLS[0|(idx/13)];
+  el.className='card '+cls+' community-card';
+  el.innerHTML='<div class="card-rank">'+r+'</div><div class="card-suit">'+su+'</div>';
+  el.style.opacity='1';
 }
 
 // ── State ──────────────────────────────────────────────────────
 var state = {
-  view:       'lobby',
-  ws:         null,
-  roomId:     null,
-  roomName:   '',
-  mySeat:     null,
-  myName:     'Player',
-  players:    [],           // [{seat, name, stack, bet, active, folded, isWinner}]
-  phase:      'waiting',
-  pot:        0,
-  community:  [],           // revealed card indices
-  myCards:    [null, null], // your hole cards (local only, never sent)
-  myStack:    0,
-  dealerSeat: 0,
-  sb:         25,
-  bb:         50,
-  buyin:      1000,
-  maxPlayers: 6,
-  handHistory:[]
+  view:'lobby', ws:null, roomId:null, roomName:'',
+  mySeatIdx:-1, myName:localStorage.getItem('poker-name')||'Player',
+  seats:[], phase:'waiting', pot:0, community:[],
+  myCards:[null,null], toCall:0, minRaise:50,
+  myTurn:false, dealerSeat:-1, actionSeat:-1,
+  sb:25, bb:50, buyin:1000, maxPlayers:6, handHistory:[],
 };
-
-// Demo rooms (shown before connecting to WS)
-var _demoRooms = [
-  { id:'room-alpha', name:'Alpha Table', players:3, maxPlayers:6, buyin:1000, phase:'flop', sb:25 },
-  { id:'room-beta',  name:'High Roller', players:1, maxPlayers:4, buyin:5000, phase:'waiting', sb:100 },
-  { id:'room-gamma', name:'Heads-Up',    players:2, maxPlayers:2, buyin:500,  phase:'river', sb:10 },
-];
+function getMe(){return state.seats.find(function(s){return s.seatIdx===state.mySeatIdx;});}
 
 // ── Toast ──────────────────────────────────────────────────────
 function toast(msg, type) {
-  type = type || 'info';
-  var t = document.getElementById('toast-root');
-  var el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.textContent = msg;
-  t.appendChild(el);
-  setTimeout(function(){ el.remove(); }, 3500);
+  var t=document.getElementById('toast-root');
+  var el=document.createElement('div'); el.className='toast '+(type||'info'); el.textContent=msg;
+  t.appendChild(el); setTimeout(function(){el.remove();},3500);
 }
 
 // ── Views ──────────────────────────────────────────────────────
-function showLobby() {
-  state.view = 'lobby';
-  document.getElementById('view-lobby').style.display = '';
-  document.getElementById('view-table').style.display = 'none';
-  loadRooms();
-}
-
-function showTable() {
-  state.view = 'table';
-  document.getElementById('view-lobby').style.display = 'none';
-  document.getElementById('view-table').style.display = '';
-  updateTableUI();
-}
+function showLobby(){state.view='lobby';document.getElementById('view-lobby').style.display='';document.getElementById('view-table').style.display='none';loadRooms();}
+function showTable(){state.view='table';document.getElementById('view-lobby').style.display='none';document.getElementById('view-table').style.display='';updateTableUI();}
 
 // ── Lobby ──────────────────────────────────────────────────────
-function loadRooms() {
-  fetch(API_HTTP + '/api/poker/rooms')
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      var live = (data.rooms || []).map(function(r){
-        return { id:r.id, name:r.name, players:r.playerCount, maxPlayers:r.maxPlayers, buyin:r.buyin, phase:r.phase||'waiting', sb:r.sb };
-      });
-      renderRooms(live.length ? live : _demoRooms);
-    })
-    .catch(function(){ renderRooms(_demoRooms); });
+function loadRooms(){
+  fetch(API_HTTP+'/api/poker/rooms').then(function(r){return r.json();})
+    .then(function(d){renderRooms((d.rooms||[]).map(function(r){return{id:r.id,name:r.name,players:r.playerCount,maxPlayers:r.maxPlayers,buyin:r.buyin,phase:r.phase||'waiting',sb:r.sb};}));})
+    .catch(function(){renderRooms([]);});
 }
-
-function renderRooms(rooms) {
-  var list = document.getElementById('room-list');
-  if (!rooms.length) {
-    list.innerHTML = '<div style="color:var(--muted);font-size:13px;font-style:italic;padding:16px 0;">No active rooms — create one!</div>';
-    return;
-  }
-  list.innerHTML = rooms.map(function(r) {
-    var phaseBadge = r.phase === 'waiting'
-      ? '<span class="badge badge-green">Open</span>'
-      : '<span class="badge badge-gold">' + r.phase.charAt(0).toUpperCase() + r.phase.slice(1) + '</span>';
-    return '<div class="room-card" onclick="joinRoom(\'' + r.id + '\',\'' + (r.name||r.id) + '\',' + r.buyin + ',' + r.sb + ',' + r.maxPlayers + ')">'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-      + '<div class="room-card-title">🃏 ' + (r.name||r.id) + '</div>' + phaseBadge + '</div>'
-      + '<div class="room-card-meta">'
-      + '<span>👥 ' + r.players + '/' + r.maxPlayers + '</span>'
-      + '<span>🌙 ' + r.buyin.toLocaleString() + ' buy-in</span>'
-      + '<span>🔵 ' + r.sb + '/' + (r.sb*2) + ' blinds</span>'
-      + '</div></div>';
+function renderRooms(rooms){
+  var list=document.getElementById('room-list');
+  if(!rooms.length){list.innerHTML='<div style="color:var(--muted);font-size:13px;font-style:italic;padding:16px 0;">No active rooms — create one to start a game!</div>';return;}
+  list.innerHTML=rooms.map(function(r){
+    var badge=r.phase==='waiting'?'<span class="badge badge-green">Open</span>':'<span class="badge badge-gold">'+r.phase.charAt(0).toUpperCase()+r.phase.slice(1)+'</span>';
+    return '<div class="room-card" onclick="joinRoom(\''+r.id+'\',\''+escHtml(r.name||r.id)+'\','+r.buyin+','+r.sb+','+r.maxPlayers+')">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div class="room-card-title">🃏 '+escHtml(r.name||r.id)+'</div>'+badge+'</div>'
+      +'<div class="room-card-meta"><span>👥 '+r.players+'/'+r.maxPlayers+'</span><span>🌙 '+r.buyin.toLocaleString()+' buy-in</span><span>🔵 '+r.sb+'/'+(r.sb*2)+' blinds</span></div></div>';
   }).join('');
 }
-
-function createRoom() {
-  var name  = document.getElementById('cr-name').value.trim() || 'Night Table';
-  var buyin = parseInt(document.getElementById('cr-buyin').value) || 1000;
-  var maxp  = parseInt(document.getElementById('cr-maxp').value) || 6;
-  var sb    = parseInt(document.getElementById('cr-sb').value) || 25;
-  fetch(API_HTTP + '/api/poker/create', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name:name, buyin:buyin, maxPlayers:maxp, sb:sb })
-  })
-    .then(function(r){ return r.json(); })
-    .then(function(d){ joinRoom(d.roomId||('room-'+Math.random().toString(36).slice(2,8)), d.name||name, d.buyin||buyin, d.sb||sb, d.maxPlayers||maxp); })
-    .catch(function(){ joinRoom('room-'+Math.random().toString(36).slice(2,8), name, buyin, sb, maxp); });
+function createRoom(){
+  var name=document.getElementById('cr-name').value.trim()||'Night Table';
+  var buyin=parseInt(document.getElementById('cr-buyin').value)||1000;
+  var maxp=parseInt(document.getElementById('cr-maxp').value)||6;
+  var sb=parseInt(document.getElementById('cr-sb').value)||25;
+  var pname=document.getElementById('cr-pname').value.trim();
+  if(pname){state.myName=pname;localStorage.setItem('poker-name',pname);}
+  fetch(API_HTTP+'/api/poker/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,buyin:buyin,maxPlayers:maxp,sb:sb})})
+    .then(function(r){return r.json();})
+    .then(function(d){joinRoom(d.roomId,d.name||name,d.buyin||buyin,d.sb||sb,d.maxPlayers||maxp);})
+    .catch(function(){toast('Cannot reach api-server at '+API_HTTP,'error');});
 }
-
-function joinRoom(roomId, name, buyin, sb, maxPlayers) {
-  state.roomId     = roomId;
-  state.roomName   = name;
-  state.buyin      = buyin;
-  state.sb         = sb;
-  state.bb         = sb * 2;
-  state.maxPlayers = maxPlayers;
-  state.mySeat     = null;
-  state.players    = [];
-  state.community  = [];
-  state.pot        = 0;
-  state.phase      = 'waiting';
-  state.myCards    = [null, null];
-  connectWS(roomId);
-  showTable();
-  toast('🃏 Joining ' + name + '…', 'info');
+function joinRoom(roomId,name,buyin,sb,maxPlayers){
+  var pname=document.getElementById('cr-pname')?document.getElementById('cr-pname').value.trim():'';
+  if(pname){state.myName=pname;localStorage.setItem('poker-name',pname);}
+  state.roomId=roomId;state.roomName=name;state.buyin=buyin;state.sb=sb;state.bb=sb*2;state.maxPlayers=maxPlayers;
+  state.mySeatIdx=-1;state.seats=[];state.community=[];state.pot=0;state.phase='waiting';state.myCards=[null,null];state.myTurn=false;
+  connectWS(roomId);showTable();toast('🃏 Joining '+name+'…','info');
 }
 
 // ── WebSocket ──────────────────────────────────────────────────
-function connectWS(roomId) {
-  if (state.ws) { try { state.ws.close(); } catch(e){} }
-  var url = API_WS + roomId;
-  try {
-    var ws = new WebSocket(url);
-    state.ws = ws;
-
-    ws.onopen = function() {
-      toast('Connected to table', 'success');
-      addHistory('sys', 'Connected to ' + state.roomName);
-    };
-
-    ws.onmessage = function(e) {
-      try { handleWSMessage(JSON.parse(e.data)); } catch(err) {}
-    };
-
-    ws.onclose = function() {
-      toast('Disconnected from table', 'error');
-      addHistory('sys', 'Disconnected');
-    };
-
-    ws.onerror = function() {
-      // API server not running — simulate demo mode
-      simulateDemoGame();
-    };
-  } catch(e) {
-    simulateDemoGame();
-  }
+function connectWS(roomId){
+  if(state.ws){try{state.ws.close();}catch(e){}}
+  try{
+    var ws=new WebSocket(API_WS+roomId);state.ws=ws;
+    ws.onopen=function(){ws.send(JSON.stringify({type:'set_name',name:state.myName}));toast('Connected to table','success');addHistory('sys','Connected to '+state.roomName);};
+    ws.onmessage=function(e){try{handleWSMsg(JSON.parse(e.data));}catch(err){console.error(err);}};
+    ws.onclose=function(){state.myTurn=false;toast('Disconnected','error');addHistory('sys','Disconnected');updateActions();};
+    ws.onerror=function(){toast('Cannot connect to api-server at '+API_HTTP,'error');};
+  }catch(e){toast('WebSocket error','error');}
 }
 
-function handleWSMessage(msg) {
-  switch(msg.type) {
+function applyGS(s){
+  if(!s) return;
+  if(s.phase!=null)     state.phase    =s.phase;
+  if(s.pot!=null)       state.pot      =s.pot;
+  if(s.community)       state.community=s.community;
+  if(s.seats)           state.seats    =s.seats;
+  if(s.toCall!=null)    state.toCall   =s.toCall;
+  if(s.minRaise!=null)  state.minRaise =s.minRaise;
+  if(s.dealerSeat!=null)state.dealerSeat=s.dealerSeat;
+  if(s.actionSeat!=null)state.actionSeat=s.actionSeat;
+}
+
+function handleWSMsg(msg){
+  switch(msg.type){
     case 'room_state':
-      state.mySeat = msg.seat;
-      if (msg.state) applyState(msg.state);
-      ensureSeat(msg.seat);
-      document.getElementById('info-seat').textContent = 'Seat ' + (msg.seat + 1);
-      addHistory('sys', 'Joined seat ' + (msg.seat + 1));
-      updateTableUI();
-      break;
-
+      state.mySeatIdx=msg.mySeatIdx;
+      if(msg.buyin)state.buyin=msg.buyin;
+      if(msg.sb){state.sb=msg.sb;state.bb=msg.sb*2;}
+      applyGS(msg.state);
+      document.getElementById('info-seat').textContent='Seat '+(state.mySeatIdx+1);
+      addHistory('sys','Joined as '+escHtml(state.myName));
+      updateTableUI();break;
     case 'player_joined':
-      ensureSeat(msg.seat);
-      addHistory('sys', 'Player joined (seat ' + (msg.seat + 1) + ')');
-      document.getElementById('info-players').textContent = msg.playerCount + '/' + state.maxPlayers;
-      updateSeats();
-      break;
-
+      applyGS(msg.state);addHistory('sys',escHtml(msg.name)+' joined');updateTableUI();break;
     case 'player_left':
-      removeSeat(msg.seat);
-      addHistory('sys', 'Player left (seat ' + (msg.seat + 1) + ')');
-      document.getElementById('info-players').textContent = msg.playerCount + '/' + state.maxPlayers;
-      updateSeats();
-      break;
-
-    case 'action':
-      var label = ['fold','check','call','raise','all-in'][['fold','check','call','raise','allin'].indexOf(msg.action)] || msg.action;
-      addHistory('action', 'Seat ' + (msg.seat + 1) + ' → ' + label + (msg.amount ? ' ' + msg.amount + ' NIGHT' : ''));
-      if (msg.action === 'fold') markFolded(msg.seat);
-      if (msg.amount) { state.pot += parseInt(msg.amount); updatePot(); }
-      updateSeats();
-      break;
-
-    case 'state_update':
-      applyState(msg.state);
-      updateTableUI();
-      break;
-
+      applyGS(msg.state);addHistory('sys',escHtml(msg.name)+' left');updateTableUI();break;
+    case 'name_set':
+      applyGS(msg.state);updateSeats();break;
+    case 'hand_start':
+      state.myTurn=false;state.myCards=[null,null];
+      applyGS(msg.state);
+      toast('🃏 Hand #'+msg.handNum+' — cards dealt!','info');
+      addHistory('sys','— Hand #'+msg.handNum+' started');
+      updateTableUI();break;
+    case 'your_cards':
+      state.myCards=msg.cards.map(parseCard);
+      updateYourHand();
+      addHistory('action','You were dealt: '+msg.cards.join(' '));break;
+    case 'you_act':
+      state.myTurn=true;state.toCall=msg.toCall||0;state.minRaise=msg.minRaise||state.bb;
+      toast('🎯 Your turn'+(state.toCall>0?' — call '+state.toCall:' — check or raise'),'info');
+      var bi=document.getElementById('bet-amount');
+      if(bi){bi.min=state.toCall+state.minRaise;bi.placeholder='Min '+(state.toCall+state.minRaise);}
+      updateActions();break;
+    case 'action_result':
+      if(msg.actorSeat===state.mySeatIdx)state.myTurn=false;
+      applyGS(msg.state);
+      var aN=(state.seats.find(function(s){return s.seatIdx===msg.actorSeat;})||{}).name||'Seat?';
+      addHistory('action',escHtml(aN)+' → '+msg.action+(msg.amount?' '+msg.amount:''));
+      updateTableUI();break;
+    case 'phase_change':
+      state.myTurn=false;applyGS(msg.state);
+      toast('📋 '+msg.phase.charAt(0).toUpperCase()+msg.phase.slice(1),'info');
+      addHistory('sys','— '+msg.phase+': '+(msg.community||[]).join(' '));
+      updateTableUI();break;
+    case 'showdown':
+      applyGS(msg.state);
+      msg.results.forEach(function(r){
+        addHistory('action',escHtml(r.name)+': '+r.cards.join(' ')+' ('+r.handName+')'+(r.won?' 🏆 +'+r.amount+' NIGHT':''));
+      });
+      var w=msg.results.find(function(r){return r.won;});
+      if(w)toast('🏆 '+escHtml(w.name)+' wins with '+w.handName+'!','success');
+      updateTableUI();break;
+    case 'hand_over':
+      applyGS(msg.state);state.myTurn=false;
+      var wN=msg.winners.map(function(w){return escHtml(w.name);}).join(', ');
+      addHistory('sys','— Hand over: '+wN+' wins ('+msg.reason+')');
+      if(msg.winners.some(function(w){return w.seatIdx===state.mySeatIdx;}))toast('🎉 You win this hand!','success');
+      updateTableUI();break;
     case 'chat':
-      addChatMsg('Seat ' + (msg.seat + 1), msg.text);
-      break;
+      addChatMsg(escHtml(msg.name),msg.text);break;
+    case 'error':
+      toast('⚠ '+msg.msg,'error');break;
   }
-}
-
-function applyState(s) {
-  if (s.phase)     { state.phase     = s.phase; }
-  if (s.pot != null) { state.pot     = s.pot; }
-  if (s.community) { state.community = s.community; }
-  if (s.players)   { state.players   = s.players; }
-}
-
-// ── Seat management ───────────────────────────────────────────
-function ensureSeat(seat) {
-  if (!state.players.find(function(p){ return p.seat === seat; })) {
-    var isMe = seat === state.mySeat;
-    state.players.push({
-      seat:     seat,
-      name:     isMe ? state.myName : 'Player ' + (seat + 1),
-      stack:    state.buyin,
-      bet:      0,
-      active:   true,
-      folded:   false,
-      isWinner: false,
-      isMe:     isMe
-    });
-  }
-}
-
-function removeSeat(seat) {
-  state.players = state.players.filter(function(p){ return p.seat !== seat; });
-}
-
-function markFolded(seat) {
-  var p = state.players.find(function(p){ return p.seat === seat; });
-  if (p) p.folded = true;
 }
 
 // ── Actions ───────────────────────────────────────────────────
-function doAction(action) {
-  var amount = 0;
-  if (action === 'raise') {
-    amount = parseInt(document.getElementById('bet-amount').value) || 0;
-    if (!amount) { toast('Enter a bet amount', 'error'); return; }
-  }
-  var me = state.players.find(function(p){ return p.isMe; });
-  if (me) {
-    if (action === 'fold')  me.folded = true;
-    if (action === 'raise') { me.bet = amount; me.stack -= amount; state.pot += amount; }
-  }
-  if (state.ws && state.ws.readyState === 1) {
-    state.ws.send(JSON.stringify({ type:'action', seat: state.mySeat, action: action, amount: amount }));
-  }
-  addHistory('action', 'You → ' + action + (amount ? ' ' + amount + ' NIGHT' : ''));
-  updateSeats();
-  updatePot();
-}
-
-function setBetPct(pct) {
-  var amt = Math.round(state.pot * pct);
-  document.getElementById('bet-amount').value = amt;
-}
-
-function setBetAllIn() {
-  var me = state.players.find(function(p){ return p.isMe; });
-  if (me) document.getElementById('bet-amount').value = me.stack;
-}
-
-function sendChat() {
-  var inp = document.getElementById('chat-input');
-  var txt = inp.value.trim();
-  if (!txt) return;
-  inp.value = '';
-  addChatMsg('You', txt);
-  if (state.ws && state.ws.readyState === 1) {
-    state.ws.send(JSON.stringify({ type:'chat', seat: state.mySeat, text: txt }));
-  }
-}
-
-function leaveTable() {
-  if (state.ws) { try { state.ws.close(); } catch(e){} state.ws = null; }
-  showLobby();
-}
-
-// ── UI updates ────────────────────────────────────────────────
-function updateTableUI() {
-  updatePhaseBar();
-  updatePhaseLabel();
-  updateSeats();
-  updateCommunity();
-  updatePot();
+function doAction(action){
+  if(!state.myTurn){toast('Not your turn','error');return;}
+  var amount=0;
+  if(action==='raise'){amount=parseInt(document.getElementById('bet-amount').value)||0;if(!amount){toast('Enter a raise amount','error');return;}}
+  if(state.ws&&state.ws.readyState===1)state.ws.send(JSON.stringify({type:'action',action:action,amount:amount}));
+  if(action!=='raise')state.myTurn=false;
   updateActions();
-  updateInfoPanel();
-  updateYourHand();
 }
+function startHand(){if(state.ws&&state.ws.readyState===1)state.ws.send(JSON.stringify({type:'start_hand'}));}
+function setBetPct(pct){var inp=document.getElementById('bet-amount');if(inp)inp.value=Math.round(state.pot*pct);}
+function setBetAllIn(){var me=getMe();var inp=document.getElementById('bet-amount');if(me&&inp)inp.value=me.stack;}
+function sendChat(){
+  var inp=document.getElementById('chat-input'),txt=inp.value.trim();if(!txt)return;inp.value='';
+  if(state.ws&&state.ws.readyState===1)state.ws.send(JSON.stringify({type:'chat',text:txt}));
+  addChatMsg('You',txt);
+}
+function leaveTable(){if(state.ws){try{state.ws.close();}catch(e){}state.ws=null;}showLobby();}
 
-var PHASE_ORDER = ['waiting','preflop','flop','turn','river','showdown','finished'];
+// ── UI ────────────────────────────────────────────────────────
+function updateTableUI(){updatePhaseBar();updatePhaseLabel();updateSeats();updateCommunity();updatePot();updateActions();updateInfoPanel();updateYourHand();}
 
-function updatePhaseBar() {
-  var ids = ['ph-waiting','ph-preflop','ph-flop','ph-turn','ph-river','ph-showdown'];
-  var cur = PHASE_ORDER.indexOf(state.phase);
-  ids.forEach(function(id, i) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.className = 'phase-step' + (i === cur ? ' active' : i < cur ? ' done' : '');
+var PHASE_ORDER=['waiting','preflop','flop','turn','river','showdown','finished'];
+function updatePhaseBar(){
+  var ids=['ph-waiting','ph-preflop','ph-flop','ph-turn','ph-river','ph-showdown'];
+  var cur=PHASE_ORDER.indexOf(state.phase);
+  ids.forEach(function(id,i){var el=document.getElementById(id);if(el)el.className='phase-step'+(i===cur?' active':i<cur?' done':'');});
+}
+function updatePhaseLabel(){
+  var L={waiting:'Waiting for players…',preflop:'🃏 Pre-Flop',flop:'🂠 Flop',turn:'🂠 Turn',river:'🂠 River',showdown:'🏆 Showdown',finished:'✅ Hand complete'};
+  var lbl=document.getElementById('phase-label');
+  if(lbl)lbl.textContent=state.myTurn?'🎯 YOUR TURN — '+(L[state.phase]||state.phase):(L[state.phase]||state.phase);
+  var dot=document.getElementById('phase-dot');
+  if(dot){var c=state.myTurn?'var(--gold)':state.phase==='waiting'?'var(--muted)':'var(--green)';dot.style.background=c;dot.style.boxShadow='0 0 8px '+c;}
+}
+function updateSeats(){
+  var wrap=document.getElementById('seats'),html='';
+  var SP=['seat-0','seat-1','seat-2','seat-3','seat-4','seat-5','seat-6','seat-7','seat-8'];
+  var EM=['😎','🎭','🤠','👤','🎩','🧢','🎪','🃏','🌙'];
+  state.seats.forEach(function(p,idx){
+    var isMe=p.seatIdx===state.mySeatIdx,isAct=p.seatIdx===state.actionSeat,isDlr=p.seatIdx===state.dealerSeat;
+    var aCls='seat-avatar'+(isMe?' you':'')+(isAct&&!p.folded?' active':'')+(p.folded?' folded':'');
+    var bet=p.bet?'<div class="seat-bet">🪙 '+p.bet+'</div>':'';
+    var dBtn=isDlr?'<div class="dealer-btn">D</div>':'';
+    var cards=p.hasCards?(isMe?'<div class="seat-cards">'+renderCard(state.myCards[0])+renderCard(state.myCards[1])+'</div>':'<div class="seat-cards"><div class="card back" style="width:20px;height:28px;font-size:12px;"></div><div class="card back" style="width:20px;height:28px;font-size:12px;"></div></div>'):'';
+    var stk=p.stack.toLocaleString()+(p.allIn?' <span style="color:var(--red);font-size:9px;">ALL-IN</span>':'');
+    html+='<div class="seat '+SP[idx%9]+'">'+bet+'<div class="'+aCls+'" style="position:relative;">'+EM[idx%9]+dBtn+'</div>'
+      +'<div class="seat-name">'+escHtml(p.name)+(p.folded?' <span style="opacity:.5">(fold)</span>':'')+'</div>'
+      +'<div class="seat-stack">'+stk+' 🌙</div>'+cards+'</div>';
   });
+  wrap.innerHTML=html;
 }
-
-function updatePhaseLabel() {
-  var labels = {
-    waiting:  'Waiting for players…',
-    preflop:  '🃏 Pre-Flop — Cards dealt',
-    flop:     '🂠 Flop — 3 cards revealed',
-    turn:     '🂠 Turn — 4th card revealed',
-    river:    '🂠 River — Final card',
-    showdown: '🏆 Showdown — Reveal hands!',
-    finished: '✅ Hand complete'
-  };
-  var lbl = document.getElementById('phase-label');
-  if (lbl) lbl.textContent = labels[state.phase] || state.phase;
-  var dot = document.getElementById('phase-dot');
-  if (dot) {
-    dot.style.background = state.phase === 'showdown' ? 'var(--gold)'
-      : state.phase === 'finished' ? 'var(--green)'
-      : state.phase === 'waiting' ? 'var(--muted)' : 'var(--green)';
-    dot.style.boxShadow = 'none';
-    if (state.phase !== 'waiting') dot.style.boxShadow = '0 0 8px ' + dot.style.background;
+function updateCommunity(){
+  var shown={waiting:0,preflop:0,flop:3,turn:4,river:5,showdown:5,finished:5}[state.phase]||0;
+  for(var i=0;i<5;i++){
+    var el=document.getElementById('com-'+i);if(!el)continue;
+    el.style.opacity=(i>=3&&i>=shown)?'.3':'1';
+    renderCommunityCard(el,state.community[i],i<shown&&state.community[i]!=null);
   }
 }
-
-function updateSeats() {
-  var wrap = document.getElementById('seats');
-  var html = '';
-  var seatPositions = ['seat-0','seat-1','seat-2','seat-3','seat-4','seat-5','seat-6','seat-7','seat-8'];
-  state.players.forEach(function(p, idx) {
-    var cls = seatPositions[p.seat % 9];
-    var avatarCls = 'seat-avatar' + (p.isMe ? ' you' : '') + (p.active && !p.folded ? ' active' : '') + (p.folded ? ' folded' : '') + (p.isWinner ? ' winner' : '');
-    var emoji = p.isMe ? '😎' : ['🎭','🤠','👤','🎩','🧢','🎪','🃏','🌙'][p.seat % 8];
-    var betLabel = p.bet ? '<div class="seat-bet">🪙 ' + p.bet + '</div>' : '';
-    var dealerBtn = p.seat === state.dealerSeat ? '<div class="dealer-btn">D</div>' : '';
-    var cardHtml = p.isMe
-      ? '<div class="seat-cards">' + renderCard(state.myCards[0]) + renderCard(state.myCards[1]) + '</div>'
-      : p.active && !p.folded && state.phase !== 'waiting'
-        ? '<div class="seat-cards"><div class="card back" style="width:20px;height:28px;font-size:12px;"></div><div class="card back" style="width:20px;height:28px;font-size:12px;"></div></div>'
-        : '';
-    html += '<div class="seat ' + cls + '" style="position:absolute;">'
-      + betLabel
-      + '<div class="' + avatarCls + '" style="position:relative;">' + emoji + dealerBtn + '</div>'
-      + '<div class="seat-name">' + p.name + (p.folded ? ' (folded)' : '') + '</div>'
-      + '<div class="seat-stack">' + p.stack.toLocaleString() + ' 🌙</div>'
-      + cardHtml
-      + '</div>';
-  });
-  wrap.innerHTML = html;
+function updatePot(){var el=document.getElementById('pot-amount');if(el)el.textContent=state.pot.toLocaleString()+' NIGHT';}
+function updateActions(){
+  var btns=document.getElementById('action-btns'),betSec=document.getElementById('bet-section');
+  var waitMsg=document.getElementById('waiting-msg'),startBtn=document.getElementById('start-hand-btn');
+  var callBtn=document.getElementById('call-btn'),checkBtn=document.getElementById('check-btn');
+  var me=getMe(),canAct=state.myTurn&&me&&!me.folded;
+  var canStart=(state.phase==='waiting'||state.phase==='finished')&&state.seats.length>=2&&state.ws&&state.ws.readyState===1;
+  if(btns)    btns.style.display    =canAct?'flex':'none';
+  if(betSec)  betSec.style.display  =canAct?'':'none';
+  if(startBtn)startBtn.style.display=canStart?'':'none';
+  if(waitMsg) waitMsg.style.display =(canAct||canStart)?'none':'';
+  if(callBtn&&canAct)callBtn.textContent=state.toCall>0?'✓ Call '+state.toCall:'✓ Call';
+  if(checkBtn&&canAct)checkBtn.style.opacity=state.toCall>0?'0.35':'1';
 }
-
-function updateCommunity() {
-  var visible = {
-    waiting:0, preflop:0, flop:3, turn:4, river:5, showdown:5, finished:5
-  }[state.phase] || 0;
-  for (var i = 0; i < 5; i++) {
-    var el = document.getElementById('com-' + i);
-    if (!el) continue;
-    renderCommunityCard(el, state.community[i], i < visible && state.community[i] != null);
-  }
+function updateInfoPanel(){
+  var G=function(id){return document.getElementById(id);};
+  if(G('info-room'))   G('info-room').textContent   =state.roomName;
+  if(G('info-players'))G('info-players').textContent=state.seats.length+'/'+state.maxPlayers;
+  if(G('info-buyin'))  G('info-buyin').textContent  =state.buyin.toLocaleString()+' NIGHT';
+  if(G('info-blinds')) G('info-blinds').textContent =state.sb+' / '+state.bb+' NIGHT';
 }
-
-function updatePot() {
-  var el = document.getElementById('pot-amount');
-  if (el) el.textContent = state.pot.toLocaleString() + ' NIGHT';
-}
-
-function updateActions() {
-  var btns     = document.getElementById('action-btns');
-  var betSec   = document.getElementById('bet-section');
-  var waitMsg  = document.getElementById('waiting-msg');
-  var dealerBtns = document.getElementById('dealer-btns');
-  var inBettingRound = ['preflop','flop','turn','river'].indexOf(state.phase) >= 0;
-  var me = state.players.find(function(p){ return p.isMe; });
-  var canAct = inBettingRound && me && !me.folded;
-  var isDealer = state.mySeat === 0; // seat 0 = dealer/host
-  var handActive = ['preflop','flop','turn','river','showdown'].indexOf(state.phase) >= 0;
-  if (btns)       btns.style.display       = canAct ? 'flex' : 'none';
-  if (betSec)     betSec.style.display     = canAct ? '' : 'none';
-  if (dealerBtns) dealerBtns.style.display = (isDealer && handActive && state.phase !== 'showdown') ? '' : 'none';
-  if (waitMsg)    waitMsg.style.display    = (canAct || (isDealer && handActive)) ? 'none' : '';
-}
-
-function advancePhase() {
-  if (state.ws && state.ws.readyState === 1) {
-    state.ws.send(JSON.stringify({ type: 'phase_advance' }));
-  }
-  // Optimistic local update
-  var phases = ['waiting','preflop','flop','turn','river','showdown','finished'];
-  var cur = phases.indexOf(state.phase);
-  if (cur >= 0 && cur < phases.length - 1) {
-    state.phase = phases[cur + 1];
-    addHistory('sys', '— Phase advanced to ' + state.phase);
-    updateTableUI();
-  }
-}
-
-function updateInfoPanel() {
-  var el = function(id){ return document.getElementById(id); };
-  if (el('info-room'))    el('info-room').textContent    = state.roomName;
-  if (el('info-players')) el('info-players').textContent = state.players.length + '/' + state.maxPlayers;
-  if (el('info-buyin'))   el('info-buyin').textContent   = state.buyin.toLocaleString() + ' NIGHT';
-  if (el('info-blinds'))  el('info-blinds').textContent  = state.sb + ' / ' + state.bb + ' NIGHT';
-}
-
-function updateYourHand() {
-  var me = state.players.find(function(p){ return p.isMe; });
-  var lbl = document.getElementById('your-hand-label');
-  var stk = document.getElementById('your-stack-label');
-  var cards = document.getElementById('your-cards');
-  if (me && stk) stk.textContent = 'Stack: ' + me.stack.toLocaleString() + ' NIGHT';
-  if (state.phase === 'waiting') {
-    if (lbl) lbl.textContent = 'Waiting for hand to start…';
-    if (cards) cards.innerHTML = renderCard(null, true) + renderCard(null, true);
-  } else if (state.myCards[0] != null) {
-    if (lbl) lbl.textContent = '🔒 ZK committed on-chain — only you know your cards';
-    if (cards) cards.innerHTML = renderCard(state.myCards[0], true) + renderCard(state.myCards[1], true);
-  } else {
-    if (lbl) lbl.textContent = '🔒 Cards hidden — ZK committed';
-    if (cards) cards.innerHTML = renderCard(null, true) + renderCard(null, true);
+function updateYourHand(){
+  var me=getMe();
+  var lbl=document.getElementById('your-hand-label'),stk=document.getElementById('your-stack-label'),cards=document.getElementById('your-cards');
+  if(me&&stk)stk.textContent='Stack: '+me.stack.toLocaleString()+' NIGHT';
+  if(state.phase==='waiting'||state.phase==='finished'){
+    if(lbl)lbl.textContent=state.phase==='finished'?'Hand complete — click ▶ Start Hand for next round':'Waiting for hand to start…';
+    if(cards)cards.innerHTML=renderCard(null,true)+renderCard(null,true);
+  }else if(state.myCards[0]!=null){
+    if(lbl)lbl.textContent='🔒 ZK committed on-chain — only you see your cards';
+    if(cards)cards.innerHTML=renderCard(state.myCards[0],true)+renderCard(state.myCards[1],true);
+  }else{
+    if(lbl)lbl.textContent='🔒 Cards dealt — ZK committed';
+    if(cards)cards.innerHTML=renderCard(null,true)+renderCard(null,true);
   }
 }
 
 // ── Chat & History ─────────────────────────────────────────────
-function addChatMsg(who, text) {
-  var box = document.getElementById('chat-msgs');
-  if (!box) return;
-  var el = document.createElement('div');
-  el.className = 'chat-msg';
-  el.innerHTML = '<span class="who">' + who + ':</span> ' + text;
-  box.appendChild(el);
-  box.scrollTop = box.scrollHeight;
+function addChatMsg(who,text){
+  var box=document.getElementById('chat-msgs');if(!box)return;
+  var el=document.createElement('div');el.className='chat-msg';
+  el.innerHTML='<span class="who">'+who+':</span> '+escHtml(text);
+  box.appendChild(el);box.scrollTop=box.scrollHeight;
 }
-
-function addHistory(type, text) {
-  state.handHistory.unshift({ type: type, text: text });
-  var box = document.getElementById('hand-history');
-  if (!box) return;
-  if (state.handHistory.length === 1) box.innerHTML = '';
-  var el = document.createElement('div');
-  el.className = 'history-entry';
-  if (type === 'sys') {
-    el.innerHTML = '<span class="sys">— ' + text + '</span>';
-  } else {
-    el.innerHTML = '<span class="hl">' + text + '</span>';
-  }
-  box.insertBefore(el, box.firstChild);
-}
-
-// ── Demo game simulation ───────────────────────────────────────
-// Runs when api-server is not running — shows full game flow
-function simulateDemoGame() {
-  addHistory('sys', 'Demo mode — api-server not running');
-  toast('Demo mode — connect api-server for live multiplayer', 'info');
-
-  // Populate demo players
-  state.players = [
-    { seat:0, name:'You',       stack:975,  bet:25,  active:true,  folded:false, isWinner:false, isMe:true  },
-    { seat:1, name:'Player 2',  stack:950,  bet:50,  active:true,  folded:false, isWinner:false, isMe:false },
-    { seat:3, name:'Player 3',  stack:1000, bet:0,   active:true,  folded:false, isWinner:false, isMe:false },
-    { seat:5, name:'Player 4',  stack:1000, bet:0,   active:true,  folded:false, isWinner:false, isMe:false },
-  ];
-  state.mySeat   = 0;
-  state.pot      = 75;
-  state.phase    = 'preflop';
-  state.dealerSeat = 8;
-
-  // Give player demo cards
-  state.myCards = [36, 48]; // Ace of spades (48 = 3*13+9 = ♠A), King of spades (36+9)
-  // Actually let's compute: suit 3 = ♠, rank 12 = A → index = 3*13+12 = 51; rank 11 = K → 3*13+11 = 50
-  state.myCards = [51, 50]; // A♠ K♠
-
-  // Demo community (will reveal progressively)
-  var demoCommunity = [
-    2*13+12, // A♥
-    1*13+10, // Q♦
-    0*13+9,  // J♣
-    2*13+9,  // J♥
-    3*13+8   // 10♠
-  ];
-
-  updateTableUI();
-  document.getElementById('info-seat').textContent = 'Seat 1';
-
-  // Simulate game progression
-  var steps = [
-    { delay:2000,  fn: function(){ addChatMsg('System', 'Blinds posted. Pre-flop betting begins.'); } },
-    { delay:4000,  fn: function(){ addHistory('action','Player 2 → call 25 NIGHT'); state.pot = 100; updatePot(); } },
-    { delay:6000,  fn: function(){ addHistory('action','Player 3 → raise 150 NIGHT'); state.pot = 250; state.players[2].bet=150; state.players[2].stack=850; updateSeats(); updatePot(); } },
-    { delay:8000,  fn: function(){ addHistory('action','Player 4 → fold'); state.players[3].folded=true; updateSeats(); toast('Player 4 folded', 'info'); } },
-    { delay:10000, fn: function(){
-        state.phase = 'flop';
-        state.community = [demoCommunity[0], demoCommunity[1], demoCommunity[2]];
-        toast('🂠 Flop dealt!', 'success');
-        addHistory('sys','— Flop: A♥ Q♦ J♣');
-        addChatMsg('System','Flop revealed: A♥ Q♦ J♣');
-        updateTableUI();
-    }},
-    { delay:13000, fn: function(){
-        state.phase = 'turn';
-        state.community[3] = demoCommunity[3];
-        toast('🂠 Turn: J♥', 'success');
-        addHistory('sys','— Turn: J♥');
-        updateTableUI();
-    }},
-    { delay:16000, fn: function(){
-        state.phase = 'river';
-        state.community[4] = demoCommunity[4];
-        toast('🂠 River: 10♠', 'success');
-        addHistory('sys','— River: 10♠');
-        updateTableUI();
-    }},
-    { delay:19000, fn: function(){
-        state.phase = 'showdown';
-        toast('🏆 Showdown — ZK hand proofs verified!', 'success');
-        addHistory('sys','— ZK proofs submitted to NightPoker.compact');
-        addChatMsg('System','Showdown! ZK proofs verified on Midnight Network.');
-        updateTableUI();
-    }},
-    { delay:22000, fn: function(){
-        state.players[0].isWinner = true;
-        state.players[0].stack += state.pot;
-        state.phase = 'finished';
-        toast('🏆 You win! Royal Flush — pot: ' + state.pot + ' NIGHT', 'success');
-        addHistory('action', '🏆 YOU WIN — A♠K♠ Royal Flush · pot: ' + state.pot + ' NIGHT');
-        addChatMsg('System','🏆 Seat 1 wins with Royal Flush! ZK proof: hand committed at block 127,412.');
-        state.pot = 0;
-        updateTableUI();
-    }},
-  ];
-
-  steps.forEach(function(s){ setTimeout(s.fn, s.delay); });
+function addHistory(type,text){
+  var box=document.getElementById('hand-history');if(!box)return;
+  if(state.handHistory.length===0)box.innerHTML='';
+  state.handHistory.unshift({type:type,text:text});
+  var el=document.createElement('div');el.className='history-entry';
+  el.innerHTML=type==='sys'?'<span class="sys">— '+text+'</span>':'<span class="hl">'+text+'</span>';
+  box.insertBefore(el,box.firstChild);
+  while(state.handHistory.length>50&&box.lastChild)box.removeChild(box.lastChild);
 }
 
 // ── Init ──────────────────────────────────────────────────────

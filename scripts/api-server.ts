@@ -429,11 +429,207 @@ function getLendPos(address: string) {
 // ─── Biz store (night-biz) ────────────────────────────────────────────────────
 const _bizStore: Map<string, any> = new Map(); // creatorAddress → deployed token
 
-// ─── Poker rooms (night-poker WS) ────────────────────────────────────────────
-interface PokerMeta { id: string; name: string; buyin: number; sb: number; maxPlayers: number; createdAt: number; }
-interface PokerRoom { seats: Map<any, number>; state: { phase: string; pot: number; community: number[]; [k: string]: any }; }
-const _pokerRoomMeta: Map<string, PokerMeta> = new Map();
-const _pokerRooms:    Map<string, PokerRoom> = new Map();
+// ─── Poker Engine ─────────────────────────────────────────────────────────────
+interface PokerSeat {
+  ws: any; name: string; seatIdx: number;
+  stack: number; bet: number; cards: number[];
+  folded: boolean; allIn: boolean;
+}
+interface GameRoom {
+  id: string; name: string; buyin: number; sb: number;
+  maxPlayers: number; createdAt: number;
+  seats: PokerSeat[]; nextSeat: number;
+  deck: number[]; deckPtr: number;
+  community: number[];
+  pot: number; toCall: number; minRaise: number;
+  phase: string;
+  dealerSeat: number; actionSeat: number;
+  needToAct: Set<number>; // seatIdx values
+  handNum: number;
+}
+const _gameRooms: Map<string, GameRoom> = new Map();
+
+function pShuffle(): number[] {
+  const d = Array.from({length:52},(_,i)=>i);
+  for(let i=51;i>0;i--){const j=0|Math.random()*(i+1);[d[i],d[j]]=[d[j],d[i]];}
+  return d;
+}
+const P_RANKS=['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
+const P_SUITS=['c','d','h','s'];
+const cStr=(c:number)=>P_RANKS[c%13]+P_SUITS[0|c/13];
+
+function pEval5(h:number[]):number {
+  const R=h.map(c=>c%13).sort((a,b)=>b-a), S=h.map(c=>0|c/13);
+  const cnt=new Map<number,number>(); for(const r of R) cnt.set(r,(cnt.get(r)??0)+1);
+  const g=[...cnt.entries()].sort((a,b)=>b[1]-a[1]||b[0]-a[0]);
+  const fl=S.every(s=>s===S[0]);
+  let st=false,sh=R[0];
+  if(cnt.size===5&&R[0]-R[4]===4) st=true;
+  else if(R[0]===12&&R[1]===3&&R[2]===2&&R[3]===1&&R[4]===0){st=true;sh=3;}
+  const B=15, sc=(cat:number,...tb:number[])=>tb.reduce((s,v,i)=>s+v*B**(4-i),cat*B**5);
+  if(st&&fl) return sc(8,sh);
+  if(g[0][1]===4) return sc(7,g[0][0],g[1][0]);
+  if(g[0][1]===3&&g[1]&&g[1][1]===2) return sc(6,g[0][0],g[1][0]);
+  if(fl) return sc(5,...R);
+  if(st) return sc(4,sh);
+  if(g[0][1]===3) return sc(3,g[0][0],g[1]?.[0]??0,g[2]?.[0]??0);
+  if(g[0][1]===2&&g[1]&&g[1][1]===2) return sc(2,g[0][0],g[1][0],g[2]?.[0]??0);
+  if(g[0][1]===2) return sc(1,g[0][0],g[1]?.[0]??0,g[2]?.[0]??0,g[3]?.[0]??0);
+  return sc(0,...R);
+}
+function pBest7(c:number[]):number {
+  let b=-1;
+  for(let i=0;i<7;i++) for(let j=i+1;j<7;j++) b=Math.max(b,pEval5(c.filter((_,k)=>k!==i&&k!==j)));
+  return b;
+}
+const P_HAND_NAMES=['High Card','One Pair','Two Pair','Three of a Kind','Straight','Flush','Full House','Four of a Kind','Straight Flush'];
+const pHandName=(sc:number)=>P_HAND_NAMES[0|sc/15**5]??'Unknown';
+
+// Next non-folded seat after fromSeat (wraps); fi=-1 safe
+function pNextS(room:GameRoom,fromSeat:number):number {
+  const n=room.seats.length; if(n===0) return fromSeat;
+  const fi=room.seats.findIndex(s=>s.seatIdx===fromSeat);
+  const start=fi<0?-1:fi;
+  for(let i=1;i<n;i++){
+    const s=room.seats[(start+i+n)%n];
+    if(!s.folded) return s.seatIdx;
+  }
+  return fromSeat;
+}
+function pBy(room:GameRoom,si:number):PokerSeat|undefined { return room.seats.find(s=>s.seatIdx===si); }
+function pSend(s:PokerSeat,d:any){ if(s.ws.readyState===1) s.ws.send(JSON.stringify(d)); }
+function pBcast(room:GameRoom,d:any,skip?:any){
+  const m=JSON.stringify(d);
+  for(const s of room.seats) if(s.ws!==skip&&s.ws.readyState===1) s.ws.send(m);
+}
+function pPub(room:GameRoom){
+  return {
+    phase:room.phase, pot:room.pot, community:room.community.map(cStr),
+    toCall:room.toCall, minRaise:room.minRaise, dealerSeat:room.dealerSeat,
+    actionSeat:['waiting','showdown','finished'].includes(room.phase)?-1:room.actionSeat,
+    seats:room.seats.map(s=>({
+      seatIdx:s.seatIdx, name:s.name, stack:s.stack, bet:s.bet,
+      folded:s.folded, allIn:s.allIn,
+      hasCards:!s.folded&&!['waiting','finished'].includes(room.phase),
+    })),
+  };
+}
+
+function pStartHand(room:GameRoom){
+  const elig=room.seats.filter(s=>s.stack>0&&s.ws.readyState===1);
+  if(elig.length<2){ pBcast(room,{type:'error',msg:'Need 2+ players with chips'}); return; }
+  room.handNum++; room.deck=pShuffle(); room.deckPtr=0; room.community=[]; room.pot=0;
+  for(const s of room.seats){ s.bet=0; s.cards=[]; s.folded=s.stack<=0||s.ws.readyState!==1; s.allIn=false; }
+  // Rotate dealer past broke/disconnected
+  let tries=0, dn=room.dealerSeat;
+  do {
+    const ci=room.seats.findIndex(s=>s.seatIdx===dn);
+    dn=room.seats[(ci+1)%room.seats.length].seatIdx; tries++;
+  } while(pBy(room,dn)?.folded&&tries<room.seats.length);
+  room.dealerSeat=dn;
+  // Deal 2 cards
+  for(const s of room.seats) if(!s.folded) s.cards=[room.deck[room.deckPtr++],room.deck[room.deckPtr++]];
+  // Blinds
+  const actN=room.seats.filter(s=>!s.folded).length;
+  const sb=room.sb, bb=sb*2;
+  let sbSeat:number, bbSeat:number, firstSeat:number;
+  if(actN===2){ sbSeat=room.dealerSeat; bbSeat=pNextS(room,sbSeat); firstSeat=sbSeat; }
+  else { sbSeat=pNextS(room,room.dealerSeat); bbSeat=pNextS(room,sbSeat); firstSeat=pNextS(room,bbSeat); }
+  const sbP=pBy(room,sbSeat)!, bbP=pBy(room,bbSeat)!;
+  const sbA=Math.min(sb,sbP.stack); sbP.stack-=sbA; sbP.bet=sbA; sbP.allIn=sbP.stack===0; room.pot+=sbA;
+  const bbA=Math.min(bb,bbP.stack); bbP.stack-=bbA; bbP.bet=bbA; bbP.allIn=bbP.stack===0; room.pot+=bbA;
+  room.toCall=bb; room.minRaise=bb; room.actionSeat=firstSeat; room.phase='preflop';
+  room.needToAct=new Set(room.seats.filter(s=>!s.folded&&!s.allIn).map(s=>s.seatIdx));
+  for(const s of room.seats) if(!s.folded) pSend(s,{type:'your_cards',cards:s.cards.map(cStr),handNum:room.handNum});
+  pBcast(room,{type:'hand_start',state:pPub(room),handNum:room.handNum,sbSeat,bbSeat});
+  const actor=pBy(room,room.actionSeat);
+  if(actor) pSend(actor,{type:'you_act',toCall:room.toCall-actor.bet,minRaise:room.minRaise,pot:room.pot,actorSeat:room.actionSeat});
+  console.log(`  [poker/${room.id}] hand #${room.handNum} (${actN}p) dealer=${room.dealerSeat}`);
+}
+
+function pDoAction(room:GameRoom,ws:any,action:string,amount:number){
+  const actor=room.seats.find(s=>s.ws===ws);
+  if(!actor||actor.seatIdx!==room.actionSeat) return;
+  const si=actor.seatIdx, callAmt=room.toCall-actor.bet;
+  if(action==='fold'){
+    actor.folded=true; room.needToAct.delete(si);
+    const rem=room.seats.filter(s=>!s.folded);
+    if(rem.length===1){
+      rem[0].stack+=room.pot; room.pot=0;
+      pBcast(room,{type:'action_result',actorSeat:si,action:'fold',amount:0,pot:0,state:pPub(room)});
+      setTimeout(()=>pEndHand(room,rem,'fold'),300); return;
+    }
+  } else if(action==='check'){
+    if(callAmt>0){ pSend(actor,{type:'error',msg:'Cannot check — call '+callAmt+' or fold'}); return; }
+    room.needToAct.delete(si);
+  } else if(action==='call'){
+    const put=Math.min(callAmt,actor.stack); actor.stack-=put; actor.bet+=put; room.pot+=put;
+    if(actor.stack===0) actor.allIn=true; room.needToAct.delete(si);
+  } else if(action==='raise'){
+    const rTo=Math.max(amount,room.toCall+room.minRaise);
+    const put=Math.min(rTo-actor.bet,actor.stack); actor.stack-=put; actor.bet+=put; room.pot+=put;
+    if(actor.stack===0) actor.allIn=true;
+    room.minRaise=actor.bet-room.toCall; room.toCall=actor.bet;
+    room.needToAct=new Set(room.seats.filter(s=>!s.folded&&!s.allIn&&s.seatIdx!==si).map(s=>s.seatIdx));
+  } else return;
+  pBcast(room,{type:'action_result',actorSeat:si,action,amount,pot:room.pot,state:pPub(room)});
+  if(room.needToAct.size===0){ setTimeout(()=>pAdvPhase(room),600); return; }
+  const cur=room.seats.findIndex(s=>s.seatIdx===si);
+  let next=actor;
+  for(let i=1;i<room.seats.length;i++){
+    const nx=room.seats[(cur+i)%room.seats.length];
+    if(room.needToAct.has(nx.seatIdx)){ next=nx; break; }
+  }
+  room.actionSeat=next.seatIdx;
+  pSend(next,{type:'you_act',toCall:room.toCall-next.bet,minRaise:room.minRaise,pot:room.pot,actorSeat:next.seatIdx});
+}
+
+function pAdvPhase(room:GameRoom){
+  for(const s of room.seats) s.bet=0;
+  room.toCall=0; room.minRaise=room.sb*2;
+  const active=room.seats.filter(s=>!s.folded);
+  if(active.length<=1){ pShowdown(room); return; }
+  if(room.phase==='preflop'){
+    room.community.push(room.deck[room.deckPtr++],room.deck[room.deckPtr++],room.deck[room.deckPtr++]);
+    room.phase='flop';
+  } else if(room.phase==='flop'){
+    room.community.push(room.deck[room.deckPtr++]); room.phase='turn';
+  } else if(room.phase==='turn'){
+    room.community.push(room.deck[room.deckPtr++]); room.phase='river';
+  } else { pShowdown(room); return; }
+  pBcast(room,{type:'phase_change',phase:room.phase,community:room.community.map(cStr),state:pPub(room)});
+  const canAct=active.filter(s=>!s.allIn);
+  if(canAct.length<2){ setTimeout(()=>pAdvPhase(room),1500); return; }
+  const firstSeat=pNextS(room,room.dealerSeat);
+  room.actionSeat=firstSeat; room.needToAct=new Set(canAct.map(s=>s.seatIdx));
+  const actor=pBy(room,firstSeat);
+  if(actor) pSend(actor,{type:'you_act',toCall:0,minRaise:room.minRaise,pot:room.pot,actorSeat:firstSeat});
+}
+
+function pShowdown(room:GameRoom){
+  room.phase='showdown';
+  const active=room.seats.filter(s=>!s.folded);
+  if(active.length===1){ active[0].stack+=room.pot; room.pot=0; setTimeout(()=>pEndHand(room,active,'uncontested'),300); return; }
+  const scored=active.map(s=>({s,sc:pBest7([...s.cards,...room.community])})).sort((a,b)=>b.sc-a.sc);
+  const best=scored[0].sc; const winners=scored.filter(x=>x.sc===best);
+  const split=Math.floor(room.pot/winners.length); for(const w of winners) w.s.stack+=split;
+  pBcast(room,{
+    type:'showdown',
+    results:scored.map(x=>({
+      seatIdx:x.s.seatIdx, name:x.s.name, cards:x.s.cards.map(cStr),
+      handName:pHandName(x.sc), won:winners.some(w=>w.s===x.s),
+      amount:winners.some(w=>w.s===x.s)?split:0,
+    })),
+    pot:room.pot, community:room.community.map(cStr), state:pPub(room),
+  });
+  room.pot=0; setTimeout(()=>pEndHand(room,winners.map(w=>w.s),'showdown'),3000);
+}
+
+function pEndHand(room:GameRoom,winners:PokerSeat[],reason:string){
+  room.phase='finished';
+  pBcast(room,{type:'hand_over',winners:winners.map(w=>({seatIdx:w.seatIdx,name:w.name,stack:w.stack})),reason,state:pPub(room)});
+  console.log(`  [poker/${room.id}] hand #${room.handNum} → ${winners.map(w=>w.name).join(',')} (${reason})`);
+}
 
 const server = http.createServer(async (req, res) => {
   const url    = req.url ?? '/';
@@ -1080,10 +1276,12 @@ const server = http.createServer(async (req, res) => {
 
   // ── GET /api/poker/rooms ─────────────────────────────────────────────────────
   if (method === 'GET' && url === '/api/poker/rooms') {
-    const rooms = [..._pokerRoomMeta.values()].map(r => {
-      const room = _pokerRooms.get(r.id);
-      return { ...r, playerCount: room ? room.seats.size : 0, phase: room?.state.phase ?? 'waiting' };
-    }).filter(r => r.playerCount < r.maxPlayers || r.phase !== 'waiting');
+    const rooms = [..._gameRooms.values()].map(r => ({
+      id: r.id, name: r.name, buyin: r.buyin, sb: r.sb,
+      maxPlayers: r.maxPlayers, createdAt: r.createdAt,
+      playerCount: r.seats.filter(s => s.ws.readyState === 1).length,
+      phase: r.phase,
+    }));
     return json(res, 200, { rooms });
   }
 
@@ -1093,9 +1291,17 @@ const server = http.createServer(async (req, res) => {
     try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
     const { name = 'Night Table', buyin = 1000, sb = 25, maxPlayers = 6 } = body;
     const id = 'room-' + Math.random().toString(36).slice(2, 8);
-    _pokerRoomMeta.set(id, { id, name: String(name).slice(0, 32), buyin: Number(buyin), sb: Number(sb), maxPlayers: Math.min(9, Math.max(2, Number(maxPlayers))), createdAt: Date.now() });
+    const sbN=Number(sb), buyinN=Number(buyin), maxN=Math.min(9,Math.max(2,Number(maxPlayers)));
+    const room: GameRoom = {
+      id, name: String(name).slice(0,32), buyin: buyinN, sb: sbN,
+      maxPlayers: maxN, createdAt: Date.now(),
+      seats: [], nextSeat: 0, deck: [], deckPtr: 0, community: [],
+      pot: 0, toCall: 0, minRaise: sbN*2, phase: 'waiting',
+      dealerSeat: -1, actionSeat: -1, needToAct: new Set(), handNum: 0,
+    };
+    _gameRooms.set(id, room);
     console.log(`\n  [poker/create] "${name}" id=${id} buyin=${buyin} sb=${sb}`);
-    return json(res, 200, { ok: true, roomId: id, name, buyin: Number(buyin), sb: Number(sb), maxPlayers: Number(maxPlayers) });
+    return json(res, 200, { ok: true, roomId: id, name: room.name, buyin: buyinN, sb: sbN, maxPlayers: maxN });
   }
 
   json(res, 404, { error: 'Not found' });
@@ -1103,12 +1309,12 @@ const server = http.createServer(async (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🌙 Night Markets API Server`);
-  console.log(`   http://127.0.0.1:${PORT}/api/status`);
+  console.log(`   http://0.0.0.0:${PORT}/api/status`);
   console.log(`   Contract: ${CONTRACT_ADDRESS}`);
   console.log(`   Network:  Midnight preprod`);
-  console.log(`   Poker WS: ws://127.0.0.1:${PORT}/ws/poker/:roomId\n`);
+  console.log(`   Poker WS: ws://0.0.0.0:${PORT}/ws/poker/:roomId\n`);
 });
 
 // ─── WebSocket — Night Poker rooms ────────────────────────────────────────────
@@ -1122,80 +1328,72 @@ server.on('upgrade', (request, socket, head) => {
   }
 });
 
-const POKER_PHASES = ['waiting','preflop','flop','turn','river','showdown','finished'] as const;
-
 wss.on('connection', (ws, req) => {
-  const roomId = (req.url ?? '').replace('/ws/poker/', '').split('?')[0] || 'default';
-  if (!_pokerRooms.has(roomId)) {
-    _pokerRooms.set(roomId, { seats: new Map(), state: { phase:'waiting', pot:0, community:[] } });
+  const roomId = (req.url ?? '').replace('/ws/poker/', '').split('?')[0] || '';
+  const room = _gameRooms.get(roomId);
+  if (!room) {
+    ws.send(JSON.stringify({ type: 'error', msg: 'Room not found' }));
+    ws.close(); return;
   }
-  const room = _pokerRooms.get(roomId)!;
-  const meta = _pokerRoomMeta.get(roomId);
+  if (room.seats.filter(s => s.ws.readyState === 1).length >= room.maxPlayers) {
+    ws.send(JSON.stringify({ type: 'error', msg: 'Room is full' }));
+    ws.close(); return;
+  }
 
-  // Assign lowest available seat
-  const taken = new Set(room.seats.values());
-  let seat = 0;
-  while (taken.has(seat) && seat < 9) seat++;
-  room.seats.set(ws, seat);
+  const seatIdx = room.nextSeat++;
+  const seat: PokerSeat = { ws, name: `Player ${seatIdx+1}`, seatIdx, stack: room.buyin, bet: 0, cards: [], folded: false, allIn: false };
+  room.seats.push(seat);
+  if (room.dealerSeat < 0) room.dealerSeat = seatIdx;
+  console.log(`  [poker/${roomId}] ${seat.name} joined (${room.seats.length} total)`);
 
-  console.log(`\n  [poker/${roomId}] seat ${seat} joined (${room.seats.size} total)`);
-
-  const broadcast = (data: any, exclude?: any) => {
-    const msg = JSON.stringify(data);
-    for (const p of room.seats.keys()) {
-      if (p !== exclude && (p as any).readyState === 1) (p as any).send(msg);
-    }
-  };
-
-  ws.send(JSON.stringify({
-    type: 'room_state', roomId, seat, meta: meta ?? null,
-    state: { ...room.state, playerCount: room.seats.size },
-    playerCount: room.seats.size,
-  }));
-  broadcast({ type:'player_joined', seat, playerCount: room.seats.size }, ws);
+  ws.send(JSON.stringify({ type: 'room_state', roomId, mySeatIdx: seatIdx, state: pPub(room), buyin: room.buyin, sb: room.sb }));
+  pBcast(room, { type: 'player_joined', name: seat.name, seatIdx, state: pPub(room) }, ws);
 
   ws.on('message', raw => {
     try {
       const msg = JSON.parse(raw.toString());
-      const mySeat = room.seats.get(ws) ?? seat;
-
-      if (msg.type === 'action') {
-        if (msg.action !== 'fold' && msg.amount && Number(msg.amount) > 0) {
-          room.state.pot += Number(msg.amount);
+      const me = room.seats.find(s => s.ws === ws);
+      if (!me) return;
+      if (msg.type === 'set_name') {
+        me.name = String(msg.name).slice(0,20).replace(/[<>"]/g,'');
+        pBcast(room, { type: 'name_set', seatIdx: me.seatIdx, name: me.name, state: pPub(room) });
+      } else if (msg.type === 'start_hand') {
+        if (room.phase !== 'waiting' && room.phase !== 'finished') {
+          ws.send(JSON.stringify({ type: 'error', msg: 'Hand already in progress' })); return;
         }
-        broadcast({ type:'action', seat: mySeat, action: msg.action, amount: msg.amount, pot: room.state.pot });
-
-      } else if (msg.type === 'phase_advance') {
-        const cur = POKER_PHASES.indexOf(room.state.phase as any);
-        if (cur >= 0 && cur < POKER_PHASES.length - 1) {
-          room.state.phase = POKER_PHASES[cur + 1];
-          if (msg.community) room.state.community = msg.community;
-          if (msg.phase === 'showdown') room.state.pot = 0; // winner claimed
-          broadcast({ type:'state_update', state: { ...room.state, playerCount: room.seats.size } });
-          console.log(`  [poker/${roomId}] phase → ${room.state.phase}`);
-        }
-
-      } else if (msg.type === 'state_update') {
-        room.state = { ...room.state, ...msg.state };
-        broadcast({ type:'state_update', state: { ...room.state, playerCount: room.seats.size } });
-
+        pStartHand(room);
+      } else if (msg.type === 'action') {
+        if (['fold','check','call','raise'].includes(msg.action))
+          pDoAction(room, ws, msg.action, Number(msg.amount ?? 0));
       } else if (msg.type === 'chat') {
-        broadcast({ type:'chat', seat: mySeat, text: msg.text });
+        pBcast(room, { type: 'chat', name: me.name, text: String(msg.text).slice(0,200) });
       }
-    } catch { /* ignore malformed messages */ }
+    } catch { /* ignore malformed */ }
   });
 
   ws.on('close', () => {
-    const leavingSeat = room.seats.get(ws) ?? seat;
-    room.seats.delete(ws);
-    if (room.seats.size === 0) {
-      _pokerRooms.delete(roomId);
-      _pokerRoomMeta.delete(roomId);
-      console.log(`  [poker/${roomId}] room closed (empty)`);
-      return;
+    const idx = room.seats.findIndex(s => s.ws === ws);
+    if (idx < 0) return;
+    const gone = room.seats[idx];
+    const gsi = gone.seatIdx;
+    if (['preflop','flop','turn','river'].includes(room.phase) && !gone.folded) {
+      if (room.actionSeat === gsi) {
+        pDoAction(room, ws, 'fold', 0);
+      } else {
+        gone.folded = true;
+        room.needToAct.delete(gsi);
+        const rem = room.seats.filter(s => !s.folded);
+        if (rem.length === 1) { rem[0].stack += room.pot; room.pot = 0; setTimeout(() => pEndHand(room, rem, 'fold'), 300); }
+      }
     }
-    broadcast({ type:'player_left', seat: leavingSeat, playerCount: room.seats.size });
-    console.log(`  [poker/${roomId}] seat ${leavingSeat} left (${room.seats.size} remaining)`);
+    room.seats.splice(idx, 1);
+    room.needToAct.delete(gsi);
+    if (room.seats.length === 0) {
+      _gameRooms.delete(roomId);
+      console.log(`  [poker/${roomId}] room closed (empty)`); return;
+    }
+    pBcast(room, { type: 'player_left', name: gone.name, seatIdx: gsi, state: pPub(room) });
+    console.log(`  [poker/${roomId}] "${gone.name}" left (${room.seats.length} remaining)`);
   });
 });
 
