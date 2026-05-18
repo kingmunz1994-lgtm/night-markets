@@ -356,6 +356,7 @@ async function readBody(req: http.IncomingMessage): Promise<any> {
 const _listingStore:  Map<string, any>    = new Map();
 const _ratingStore:   Map<string, any[]>  = new Map();
 const _deliveryStore: Map<string, any>    = new Map();
+const _shippingStore: Map<string, any>    = new Map(); // orderId → buyer shipping address
 const _curveStore:    Map<string, any>    = new Map(); // tokenAddress → curve state
 const _nightIdStore:  Map<string, string> = new Map(); // "name.night" → address
 const _nightScoreStore: Map<string, number> = new Map(); // address → cumulative action score
@@ -717,6 +718,28 @@ const server = http.createServer(async (req, res) => {
           console.warn(`  ⚠ [release] no seller NIGHT address on contract for orderId=${orderId}`);
         }
 
+        // Mark listing as released, handle delivery type
+        let deliveryUrl: string | null = null;
+        let shippingAddress: any = null;
+        if (listing) {
+          listing.state = 'RELEASED';
+          _listingStore.set(String(orderId), listing);
+
+          if (listing.type === 'digital' && listing.deliveryUrl) {
+            // Digital: reveal the download URL to the buyer
+            deliveryUrl = listing.deliveryUrl;
+            console.log(`  📦 [release] digital delivery unlocked for orderId=${orderId}`);
+          } else if (listing.type === 'printful' || listing.type === 'physical') {
+            // Physical: surface the shipping address so seller can fulfil via Printful dashboard
+            shippingAddress = _shippingStore.get(String(orderId)) ?? null;
+            if (shippingAddress) {
+              console.log(`  📦 [release] shipping address available for fulfilment — ${shippingAddress.name}, ${shippingAddress.countryCode}`);
+            } else {
+              console.warn(`  ⚠ [release] no shipping address on file for orderId=${orderId}`);
+            }
+          }
+        }
+
         // Award Night Score to seller
         const seller = listing?.sellerId;
         if (seller) {
@@ -729,6 +752,9 @@ const server = http.createServer(async (req, res) => {
         return json(res, 200, {
           txId: r.public.txId, blockHeight: r.public.blockHeight, orderId,
           nightSentTo: sellerNightAddr || null,
+          // Delivery payload — only present when relevant
+          ...(deliveryUrl   ? { deliveryUrl }    : {}),
+          ...(shippingAddress ? { shippingAddress } : {}),
         });
       }
 
@@ -777,16 +803,71 @@ const server = http.createServer(async (req, res) => {
   if (method === 'POST' && url === '/api/listings/create') {
     let body: any;
     try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
-    const { id, title, cat, price, cond, desc, from: shipFrom, emoji, sellerId } = body;
+    const { id, title, cat, price, cond, desc, from: shipFrom, emoji, sellerId,
+            type, imageUrl, deliveryUrl, printfulVariantId, printfulProductId, sizes, sellerEmail } = body;
     if (!id || !title || !price) return json(res, 400, { error: 'id, title, price required' });
-    const listing = { id, title, cat, price, cond, desc, shipFrom, emoji, sellerId, state: 'OPEN', createdAt: Date.now() };
+    const listing = {
+      id, title, cat, price, cond, desc, shipFrom, emoji, sellerId,
+      type: type || 'physical',   // 'digital' | 'printful' | 'physical'
+      imageUrl: imageUrl || null,
+      deliveryUrl: deliveryUrl || null,       // secret — never returned to buyers
+      printfulVariantId: printfulVariantId || null,
+      printfulProductId: printfulProductId || null,
+      sizes: sizes || null,
+      sellerEmail: sellerEmail || null,
+      state: 'OPEN',
+      createdAt: Date.now(),
+    };
     _listingStore.set(id, listing);
-    return json(res, 200, { ok: true, listing });
+    return json(res, 200, { ok: true, listing: { ...listing, deliveryUrl: undefined } });
   }
 
   // ── GET /api/listings ──────────────────────────────────────────────────────────
   if (method === 'GET' && url === '/api/listings') {
-    return json(res, 200, { listings: [..._listingStore.values()] });
+    const listings = [..._listingStore.values()].map(({ deliveryUrl: _, ...pub }) => pub);
+    return json(res, 200, { listings });
+  }
+
+  // ── GET /api/listings/:id ──────────────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/api/listings/') && url.split('/').length === 4) {
+    const id = url.split('/')[3];
+    const listing = _listingStore.get(id);
+    if (!listing) return json(res, 404, { error: 'Listing not found' });
+    const { deliveryUrl: _, ...pub } = listing;
+    return json(res, 200, { listing: pub });
+  }
+
+  // ── POST /api/listings/shipping ───────────────────────────────────────────────
+  // Buyer submits shipping address after funding escrow for a physical/Printful listing.
+  if (method === 'POST' && url === '/api/listings/shipping') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { orderId, name, address1, address2, city, stateCode, countryCode, zip, email } = body;
+    if (!orderId || !name || !address1 || !countryCode) return json(res, 400, { error: 'orderId, name, address1, countryCode required' });
+    _shippingStore.set(String(orderId), { name, address1, address2: address2 || '', city: city || '', stateCode: stateCode || '', countryCode, zip: zip || '', email: email || '', at: Date.now() });
+    console.log(`  [shipping] orderId=${orderId} → ${name}, ${city}, ${countryCode}`);
+    return json(res, 200, { ok: true });
+  }
+
+  // ── GET /api/listings/shipping/:orderId ───────────────────────────────────────
+  // Seller retrieves buyer shipping address (to place Printful order).
+  if (method === 'GET' && url.startsWith('/api/listings/shipping/')) {
+    const orderId = url.replace('/api/listings/shipping/', '');
+    const shipping = _shippingStore.get(orderId);
+    if (!shipping) return json(res, 404, { error: 'No shipping address for this order' });
+    return json(res, 200, { shipping });
+  }
+
+  // ── GET /api/delivery/download/:orderId ───────────────────────────────────────
+  // Returns delivery URL for a released digital order.
+  if (method === 'GET' && url.startsWith('/api/delivery/download/')) {
+    const orderId = url.replace('/api/delivery/download/', '');
+    const listing = _listingStore.get(orderId);
+    if (!listing) return json(res, 404, { error: 'Listing not found' });
+    if (listing.type !== 'digital') return json(res, 400, { error: 'Not a digital listing' });
+    if (listing.state !== 'RELEASED') return json(res, 403, { error: 'Payment not yet released' });
+    if (!listing.deliveryUrl) return json(res, 404, { error: 'No delivery URL set for this listing' });
+    return json(res, 200, { deliveryUrl: listing.deliveryUrl });
   }
 
   // ── POST /api/ratings/submit ───────────────────────────────────────────────────

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Night Markets — Listing</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --void:#06040e; --depth:#0d0a1a; --surface:#110e22; --raised:#16122a; --card:#1b1630;
+  --rim:#1e1a34; --rim2:#2a2448; --rim3:#3d3566;
+  --text:#ece8ff; --text2:#b8b0d8; --muted:#6b6390; --faint:#3a3460;
+  --ink:#7c3aed; --plasma:#9d5cf6; --glow:#b97dff; --halo:rgba(124,58,237,.18);
+  --green:#00d68f; --red:#f43f5e; --gold:#f5c518; --blue:#38bdf8;
+  --serif:'Instrument Serif',Georgia,serif; --sans:'Geist','Helvetica Neue',sans-serif;
+  --mono:'Geist Mono','Fira Code',monospace;
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--void);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 15% 0%,rgba(124,58,237,.07),transparent 70%);pointer-events:none;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(6,4,14,.9);backdrop-filter:blur(40px);border-bottom:1px solid var(--rim);padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--ink),var(--plasma));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;box-shadow:0 0 16px rgba(124,58,237,.4);}
+.logo-text{font-size:15px;font-weight:800;letter-spacing:-.04em;}
+.logo-text em{font-style:normal;color:var(--plasma);}
+.back-btn{font-size:12px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .2s;}
+.back-btn:hover{color:var(--text);}
+
+.page{max-width:960px;margin:0 auto;padding:40px 24px 80px;}
+
+/* hero image */
+.listing-img{width:100%;height:340px;border-radius:20px;border:1px solid var(--rim2);overflow:hidden;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:32px;position:relative;}
+.listing-img img{width:100%;height:100%;object-fit:cover;}
+.listing-img-badges{position:absolute;top:16px;left:16px;display:flex;gap:8px;}
+.badge{font-size:9.5px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.8px;border-radius:20px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+.badge.digital{background:rgba(0,214,143,.15);color:var(--green);}
+.badge.printful{background:rgba(157,92,246,.15);color:var(--plasma);}
+.badge.physical{background:rgba(56,189,248,.1);color:var(--blue);}
+.badge.zk{background:rgba(124,58,237,.15);color:var(--glow);}
+
+/* two-col layout */
+@media(min-width:768px){.layout{display:grid;grid-template-columns:1fr 340px;gap:32px;align-items:start;}}
+
+.listing-title{font-family:var(--serif);font-size:34px;font-style:italic;line-height:1.15;letter-spacing:-.02em;margin-bottom:12px;}
+.listing-price{font-family:var(--serif);font-size:42px;font-style:italic;color:var(--glow);margin-bottom:6px;line-height:1;}
+.listing-price-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:20px;}
+.listing-desc{font-size:14px;color:var(--text2);line-height:1.8;font-weight:300;margin-bottom:24px;}
+.seller-row{display:flex;align-items:center;gap:10px;padding:14px;background:var(--surface);border:1px solid var(--rim);border-radius:12px;margin-bottom:24px;}
+.seller-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--ink),var(--plasma));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;}
+.seller-info{flex:1;min-width:0;}
+.seller-name{font-size:13px;font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.seller-meta{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.zk-proof-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px;}
+
+/* detail pills */
+.detail-row{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+.detail-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);}
+.detail-icon{width:28px;height:28px;background:var(--raised);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.detail-item strong{color:var(--text);margin-right:4px;}
+
+/* buy panel */
+.buy-panel{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:24px;position:sticky;top:80px;}
+.buy-price{font-family:var(--serif);font-size:36px;font-style:italic;color:var(--glow);margin-bottom:4px;line-height:1;}
+.buy-price-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:20px;}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .2s;font-family:var(--sans);width:100%;margin-bottom:8px;}
+.btn-buy{background:linear-gradient(135deg,var(--ink),var(--plasma));color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.3);}
+.btn-buy:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(124,58,237,.4);}
+.btn-buy:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-release{background:rgba(0,214,143,.1);color:var(--green);border:1px solid rgba(0,214,143,.25);}
+.btn-release:hover{background:rgba(0,214,143,.15);}
+.btn-release:disabled{opacity:.5;cursor:not-allowed;}
+.btn-dispute{background:rgba(244,63,94,.07);color:var(--red);border:1px solid rgba(244,63,94,.2);font-size:12px;padding:10px;}
+.btn-dispute:hover{background:rgba(244,63,94,.12);}
+.escrow-info{font-size:11px;color:var(--muted);line-height:1.7;font-family:var(--mono);margin-top:12px;}
+.escrow-info a{color:var(--plasma);text-decoration:none;}
+
+/* progress steps */
+.steps{margin:16px 0;}
+.step{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:12px;color:var(--muted);}
+.step.done{color:var(--green);}
+.step.active{color:var(--text);}
+.step-dot{width:18px;height:18px;border-radius:50%;background:var(--raised);border:1px solid var(--rim2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px;transition:all .3s;}
+.step.done .step-dot{background:var(--green);border-color:var(--green);color:#000;}
+.step.active .step-dot{background:var(--ink);border-color:var(--plasma);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.4);}50%{box-shadow:0 0 0 6px rgba(124,58,237,0);}}
+
+/* shipping form */
+.shipping-form{display:none;margin-top:16px;}
+.shipping-form.show{display:block;}
+.sf-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);}
+.sf-field{margin-bottom:10px;}
+.sf-field label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;}
+.sf-field input,.sf-field select{width:100%;background:var(--raised);border:1px solid var(--rim2);border-radius:7px;padding:8px 12px;font-size:12px;color:var(--text);font-family:var(--sans);outline:none;transition:border-color .2s;}
+.sf-field input:focus,.sf-field select:focus{border-color:var(--ink);}
+.sf-field input::placeholder{color:var(--faint);}
+.sf-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sf-field select option{background:var(--depth);}
+
+/* download / delivery box */
+.delivery-box{display:none;background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.25);border-radius:12px;padding:20px;margin-top:16px;text-align:center;}
+.delivery-box.show{display:block;}
+.delivery-icon{font-size:32px;margin-bottom:10px;}
+.delivery-title{font-size:15px;font-weight:700;color:var(--green);margin-bottom:6px;}
+.delivery-sub{font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6;}
+.btn-download{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--green);color:#000;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;transition:all .2s;cursor:pointer;border:none;font-family:var(--sans);}
+.btn-download:hover{filter:brightness(1.1);transform:translateY(-1px);}
+
+/* size picker */
+.size-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.size-btn{padding:7px 14px;background:var(--raised);border:1px solid var(--rim2);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text2);transition:all .2s;}
+.size-btn:hover{border-color:var(--rim3);}
+.size-btn.selected{border-color:var(--ink);background:rgba(124,58,237,.12);color:var(--glow);}
+
+/* loading / error */
+.loading-state{text-align:center;padding:80px 24px;color:var(--muted);}
+.loading-spinner{width:40px;height:40px;border:2px solid var(--rim2);border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-state{text-align:center;padding:80px 24px;}
+.error-icon{font-size:40px;margin-bottom:12px;}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(0,214,143,.3);color:var(--green);}
+.toast.err{border-color:rgba(244,63,94,.3);color:var(--red);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">
+    <div class="logo-mark">N</div>
+    <span class="logo-text"><em>Night</em> Markets</span>
+  </a>
+  <a class="back-btn" href="index.html">← Back to marketplace</a>
+</nav>
+
+<div class="page" id="main-content">
+  <div class="loading-state">
+    <div class="loading-spinner"></div>
+    <div>Loading listing…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = (()=>{
+  const s = new URLSearchParams(location.search).get('server');
+  return s ? `http://${s}` : 'http://localhost:3001';
+})();
+const params     = new URLSearchParams(location.search);
+const ORDER_ID   = params.get('id');
+let listing      = null;
+let escrowState  = 'idle'; // idle | funding | funded | releasing | released | disputed
+let selectedSize = null;
+
+// ── Load listing ───────────────────────────────────────────────────────────────
+async function loadListing() {
+  if (!ORDER_ID) { showError('No listing ID in URL.'); return; }
+  try {
+    const r = await fetch(`${API}/api/listings/${ORDER_ID}`);
+    if (!r.ok) { showError('Listing not found.'); return; }
+    const data = await r.json();
+    listing = data.listing;
+    document.title = `${listing.title} — Night Markets`;
+    renderListing();
+  } catch (e) {
+    showError('Could not connect to Night Markets server. Is it running?');
+  }
+}
+
+function showError(msg) {
+  document.getElementById('main-content').innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px;">Listing unavailable</div>
+      <div style="font-size:13px;color:var(--muted)">${msg}</div>
+      <a href="index.html" style="display:inline-block;margin-top:20px;font-size:13px;color:var(--plasma);">← Back to marketplace</a>
+    </div>`;
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderListing() {
+  const isDigital  = listing.type === 'digital';
+  const isPrintful = listing.type === 'printful';
+  const typeBadge  = isDigital ? 'digital' : isPrintful ? 'printful' : 'physical';
+  const typeLabel  = isDigital ? 'Digital Download' : isPrintful ? 'Printful Product' : 'Physical Item';
+  const typeEmoji  = isDigital ? '📥' : isPrintful ? '🖨️' : '📦';
+  const imgHtml    = listing.imageUrl
+    ? `<img src="${esc(listing.imageUrl)}" alt="${esc(listing.title)}" onerror="this.style.display='none'">`
+    : `<span>${typeEmoji}</span>`;
+
+  const sellerShort = listing.sellerId
+    ? (listing.sellerId.length > 20 ? listing.sellerId.slice(0,10)+'…'+listing.sellerId.slice(-6) : listing.sellerId)
+    : 'Anonymous';
+  const sellerInitial = sellerShort[0]?.toUpperCase() ?? 'S';
+
+  const sizeHtml = isPrintful && listing.sizes?.length
+    ? `<div style="margin-bottom:16px">
+         <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Select size</div>
+         <div class="size-picker">${listing.sizes.map(s=>`<div class="size-btn" onclick="selectSize('${esc(s)}')">${esc(s)}</div>`).join('')}</div>
+       </div>` : '';
+
+  const detailRows = [];
+  if (isDigital) detailRows.push(`<div class="detail-item"><div class="detail-icon">⚡</div><span><strong>Instant delivery</strong> Download link unlocked after payment release</span></div>`);
+  if (isPrintful) detailRows.push(`<div class="detail-item"><div class="detail-icon">🖨️</div><span><strong>Print on demand</strong> Printed &amp; shipped by Printful</span></div>`);
+  if (listing.shipFrom) detailRows.push(`<div class="detail-item"><div class="detail-icon">📍</div><span><strong>Ships from</strong> ${esc(listing.shipFrom)}</span></div>`);
+  detailRows.push(`<div class="detail-item"><div class="detail-icon">🔒</div><span><strong>ZK Escrow</strong> Funds locked until you confirm delivery</span></div>`);
+  detailRows.push(`<div class="detail-item"><div class="detail-icon">⊘</div><span><strong>1% fee</strong> vs eBay's 12.9% — seller keeps nearly everything</span></div>`);
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="listing-img" id="listing-img-box">
+      ${imgHtml}
+      <div class="listing-img-badges">
+        <span class="badge ${typeBadge}">${typeLabel}</span>
+        <span class="badge zk">ZK Escrow</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div>
+        <h1 class="listing-title">${esc(listing.title)}</h1>
+        <div class="listing-price">${Number(listing.price).toLocaleString()} <span style="font-size:24px;font-style:normal;color:var(--muted)">NIGHT</span></div>
+        <div class="listing-price-sub">≈ $${(Number(listing.price) * 0.04).toFixed(2)} USD · 1 NIGHT = $0.04</div>
+        <div class="listing-desc">${esc(listing.desc)}</div>
+
+        <div class="seller-row">
+          <div class="seller-avatar">${esc(sellerInitial)}</div>
+          <div class="seller-info">
+            <div class="seller-name">${esc(sellerShort)}</div>
+            <div class="seller-meta">⊘ ZK-verified seller · Night Markets escrow</div>
+          </div>
+        </div>
+
+        <div class="detail-row">${detailRows.join('')}</div>
+
+        <div class="zk-proof-row">
+          <span class="badge zk" style="font-size:9px;padding:3px 8px;">⊘ No identity leak</span>
+          <span class="badge zk" style="font-size:9px;padding:3px 8px;">⊘ Trustless release</span>
+          <span class="badge zk" style="font-size:9px;padding:3px 8px;">⊘ ZK dispute votes</span>
+        </div>
+      </div>
+
+      <!-- BUY PANEL -->
+      <div class="buy-panel" id="buy-panel">
+        <div class="buy-price">${Number(listing.price).toLocaleString()} <span style="font-size:20px;font-style:normal;color:var(--muted)">NIGHT</span></div>
+        <div class="buy-price-sub">≈ $${(Number(listing.price) * 0.04).toFixed(2)} USD · ZK Escrow · 1% fee</div>
+
+        ${sizeHtml}
+
+        <div class="steps" id="steps">
+          <div class="step active" id="step-0"><div class="step-dot">1</div><span>Fund escrow with NIGHT</span></div>
+          <div class="step" id="step-1"><div class="step-dot">2</div><span>${isDigital ? 'Receive your download' : isPrintful ? 'Submit shipping address' : 'Wait for tracking info'}</span></div>
+          <div class="step" id="step-2"><div class="step-dot">3</div><span>${isDigital ? 'Release payment' : 'Confirm delivery & release'}</span></div>
+        </div>
+
+        <button class="btn btn-buy" id="btn-fund" onclick="fundEscrow()">
+          🔒 Buy with ZK Escrow
+        </button>
+
+        <button class="btn btn-release" id="btn-release" style="display:none" onclick="releaseEscrow()">
+          ✅ ${isDigital ? 'Release & Download' : 'Confirm Delivery & Release'}
+        </button>
+
+        <button class="btn btn-dispute" id="btn-dispute" style="display:none" onclick="disputeEscrow()">
+          ⚠ Raise Dispute
+        </button>
+
+        <!-- Shipping form (shown after funding for physical/Printful) -->
+        <div class="shipping-form" id="shipping-form">
+          <div class="sf-title">${isPrintful ? 'Shipping address for your order' : 'Delivery address'}</div>
+          <div class="sf-field"><label>Full name</label><input id="sf-name" placeholder="Jane Smith" autocomplete="name"></div>
+          <div class="sf-row">
+            <div class="sf-field"><label>Address line 1</label><input id="sf-addr1" placeholder="123 Main St" autocomplete="address-line1"></div>
+            <div class="sf-field"><label>Address line 2</label><input id="sf-addr2" placeholder="Apt 4" autocomplete="address-line2"></div>
+          </div>
+          <div class="sf-row">
+            <div class="sf-field"><label>City</label><input id="sf-city" placeholder="Sydney" autocomplete="address-level2"></div>
+            <div class="sf-field"><label>State / Province</label><input id="sf-state" placeholder="NSW" autocomplete="address-level1"></div>
+          </div>
+          <div class="sf-row">
+            <div class="sf-field"><label>Country code</label><input id="sf-country" placeholder="AU" maxlength="2" style="text-transform:uppercase" autocomplete="country"></div>
+            <div class="sf-field"><label>Postcode / ZIP</label><input id="sf-zip" placeholder="2000" autocomplete="postal-code"></div>
+          </div>
+          <div class="sf-field"><label>Email for tracking</label><input id="sf-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+          <button class="btn btn-buy" style="margin-top:8px" onclick="submitShipping()">Submit Shipping Details →</button>
+        </div>
+
+        <!-- Download / delivery success -->
+        <div class="delivery-box" id="delivery-box">
+          <div class="delivery-icon">${isDigital ? '📥' : '📦'}</div>
+          <div class="delivery-title">${isDigital ? 'Download ready!' : 'Payment released!'}</div>
+          <div class="delivery-sub" id="delivery-sub"></div>
+          ${isDigital ? `<button class="btn-download" id="download-btn" onclick="openDelivery()">⬇ Download Now</button>` : ''}
+        </div>
+
+        <div class="escrow-info">
+          ⊘ Funds locked in ZK escrow on Midnight Network.<br>
+          You control release — seller can't claim without your approval.<br>
+          <a href="https://midnight.network" target="_blank">Learn about ZK escrow →</a>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── ZK state helpers ──────────────────────────────────────────────────────────
+function setStep(n) {
+  [0,1,2].forEach(i => {
+    const el = document.getElementById(`step-${i}`);
+    if (!el) return;
+    el.className = i < n ? 'step done' : i === n ? 'step active' : 'step';
+    el.querySelector('.step-dot').textContent = i < n ? '✓' : i+1;
+  });
+}
+
+function selectSize(s) {
+  selectedSize = s;
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('selected', b.textContent === s));
+}
+
+// ── Fund escrow ───────────────────────────────────────────────────────────────
+async function fundEscrow() {
+  if (listing.type === 'printful' && listing.sizes?.length && !selectedSize) {
+    toast('Please select a size first', 'err'); return;
+  }
+  const btn = document.getElementById('btn-fund');
+  btn.disabled = true;
+  const steps = [
+    'Generating ZK commitment…',
+    'Connecting to Midnight Network…',
+    'Locking funds in escrow…',
+    'Awaiting block confirmation…',
+  ];
+  let si = 0;
+  const iv = setInterval(() => { if (si < steps.length) btn.textContent = steps[si++]; else clearInterval(iv); }, 900);
+  try {
+    const amountMicro = BigInt(Math.round(Number(listing.price) * 1_000_000));
+    const r = await fetch(`${API}/api/escrow/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'fund', orderId: ORDER_ID, amountNight: amountMicro.toString(), buyerNightAddr: 'buyer_' + Math.random().toString(36).slice(2,10) }),
+    });
+    clearInterval(iv);
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Funding failed');
+
+    escrowState = 'funded';
+    setStep(1);
+    btn.style.display = 'none';
+    document.getElementById('btn-release').style.display = '';
+    document.getElementById('btn-dispute').style.display = '';
+
+    if (listing.type !== 'digital') {
+      // Show shipping form for physical/Printful
+      document.getElementById('shipping-form').classList.add('show');
+      toast('Escrow funded! Please submit your shipping address.', 'ok');
+    } else {
+      toast('Escrow funded! Release payment when ready to download.', 'ok');
+    }
+  } catch (e) {
+    clearInterval(iv);
+    btn.disabled = false;
+    btn.textContent = '🔒 Buy with ZK Escrow';
+    toast(e.message || 'Funding failed', 'err');
+  }
+}
+
+// ── Submit shipping address ───────────────────────────────────────────────────
+async function submitShipping() {
+  const name     = document.getElementById('sf-name').value.trim();
+  const address1 = document.getElementById('sf-addr1').value.trim();
+  const city     = document.getElementById('sf-city').value.trim();
+  const country  = document.getElementById('sf-country').value.trim().toUpperCase();
+  if (!name || !address1 || !country) { toast('Name, address and country are required', 'err'); return; }
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const r = await fetch(`${API}/api/listings/shipping`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId:     ORDER_ID,
+        name,
+        address1,
+        address2:    document.getElementById('sf-addr2').value.trim(),
+        city,
+        stateCode:   document.getElementById('sf-state').value.trim(),
+        countryCode: country,
+        zip:         document.getElementById('sf-zip').value.trim(),
+        email:       document.getElementById('sf-email').value.trim(),
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Failed to save shipping');
+    document.getElementById('shipping-form').innerHTML = '<div style="color:var(--green);font-size:12px;font-family:var(--mono);padding:12px;text-align:center">✓ Shipping address received. Release payment when item arrives.</div>';
+    setStep(2);
+    toast('Shipping address saved!', 'ok');
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Submit Shipping Details →';
+    toast(e.message || 'Failed to save shipping', 'err');
+  }
+}
+
+// ── Release escrow ────────────────────────────────────────────────────────────
+async function releaseEscrow() {
+  const btn = document.getElementById('btn-release');
+  btn.disabled = true;
+  const steps = [
+    'Verifying ZK proof…',
+    'Releasing escrow on-chain…',
+    'Transferring NIGHT to seller…',
+    'Finalising…',
+  ];
+  let si = 0;
+  const iv = setInterval(() => { if (si < steps.length) btn.textContent = steps[si++]; else clearInterval(iv); }, 900);
+  try {
+    const r = await fetch(`${API}/api/escrow/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'release', orderId: ORDER_ID }),
+    });
+    clearInterval(iv);
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Release failed');
+
+    escrowState = 'released';
+    setStep(3);
+    btn.style.display = 'none';
+    document.getElementById('btn-dispute').style.display = 'none';
+
+    const delivBox = document.getElementById('delivery-box');
+    const delivSub = document.getElementById('delivery-sub');
+    delivBox.classList.add('show');
+
+    if (listing.type === 'digital' && data.deliveryUrl) {
+      window._deliveryUrl = data.deliveryUrl;
+      delivSub.textContent = 'Payment released. Your download is ready.';
+    } else if (listing.type === 'digital') {
+      // Fallback: fetch from download endpoint
+      try {
+        const dr = await fetch(`${API}/api/delivery/download/${ORDER_ID}`);
+        const dd = await dr.json();
+        if (dd.deliveryUrl) { window._deliveryUrl = dd.deliveryUrl; }
+      } catch {}
+      delivSub.textContent = 'Payment released. Click below to download.';
+    } else {
+      delivSub.textContent = 'Payment released. The seller has been notified to fulfil your order.';
+    }
+    toast('Payment released!', 'ok');
+  } catch (e) {
+    clearInterval(iv);
+    btn.disabled = false;
+    btn.textContent = '✅ ' + (listing.type === 'digital' ? 'Release & Download' : 'Confirm Delivery & Release');
+    toast(e.message || 'Release failed', 'err');
+  }
+}
+
+function openDelivery() {
+  if (window._deliveryUrl) {
+    window.open(window._deliveryUrl, '_blank');
+  } else {
+    toast('Download URL not available — contact the seller', 'err');
+  }
+}
+
+// ── Dispute ───────────────────────────────────────────────────────────────────
+async function disputeEscrow() {
+  if (!confirm('Open a dispute? This will pause the escrow and notify the community for a vote.')) return;
+  const btn = document.getElementById('btn-dispute');
+  btn.disabled = true; btn.textContent = 'Opening dispute…';
+  try {
+    const r = await fetch(`${API}/api/escrow/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'dispute', orderId: ORDER_ID }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Dispute failed');
+    btn.textContent = '⚠ Dispute open — community vote in progress';
+    toast('Dispute opened. Community vote started.', 'ok');
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '⚠ Raise Dispute';
+    toast(e.message || 'Dispute failed', 'err');
+  }
+}
+
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = 'toast', 2800);
+}
+
+loadListing();
+</script>
+</body>
+</html>
