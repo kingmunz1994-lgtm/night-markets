@@ -81,6 +81,24 @@ select option{background:var(--depth);color:var(--text);}
 .size-chip input{width:14px;height:14px;accent-color:var(--ink);cursor:pointer;flex-shrink:0;}
 .size-chip:has(input:checked){border-color:var(--ink);background:rgba(124,58,237,.1);color:var(--glow);}
 
+/* Printful product picker */
+.pf-products{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;}
+.pf-product{background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:12px 10px;cursor:pointer;transition:all .2s;text-align:center;}
+.pf-product:hover{border-color:var(--rim3);}
+.pf-product.selected{border-color:var(--ink);background:rgba(124,58,237,.1);}
+.pf-product-emoji{font-size:22px;margin-bottom:6px;}
+.pf-product-name{font-size:11px;font-weight:700;margin-bottom:2px;}
+.pf-product-cost{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.pf-loading{font-size:12px;color:var(--muted);padding:16px;text-align:center;font-family:var(--mono);}
+.color-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s;position:relative;}
+.color-swatch.selected{border-color:var(--plasma);box-shadow:0 0 0 2px var(--ink);}
+.color-swatch[title="White"]{border-color:var(--rim2);}
+.pf-margin-box{background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:14px 16px;margin-top:12px;}
+.margin-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.margin-row:last-child{margin-bottom:0;}
+.margin-row.highlight{color:var(--green);font-weight:700;border-top:1px solid var(--rim);padding-top:8px;margin-top:4px;}
+
 /* image preview */
 .img-preview{width:100%;height:160px;border-radius:10px;border:1px dashed var(--rim2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--muted);font-size:12px;margin-top:8px;transition:all .2s;overflow:hidden;background:var(--raised);}
 .img-preview img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
@@ -243,26 +261,39 @@ select option{background:var(--depth);color:var(--text);}
 
       <!-- DELIVERY — printful -->
       <div class="section" id="section-printful" style="display:none;">
-        <div class="section-title">Printful product</div>
-        <div class="field">
-          <label>Printful Sync Product ID <span class="hint">from your Printful dashboard → Store → Products</span></label>
-          <input type="text" id="f-pf-product-id" placeholder="e.g. 12345678">
-        </div>
-        <div class="field">
-          <label>Available sizes</label>
-          <div class="sizes-grid">
-            <label class="size-chip"><input type="checkbox" value="XS" class="sz"> XS</label>
-            <label class="size-chip"><input type="checkbox" value="S"  class="sz" checked> S</label>
-            <label class="size-chip"><input type="checkbox" value="M"  class="sz" checked> M</label>
-            <label class="size-chip"><input type="checkbox" value="L"  class="sz" checked> L</label>
-            <label class="size-chip"><input type="checkbox" value="XL" class="sz" checked> XL</label>
-            <label class="size-chip"><input type="checkbox" value="2XL" class="sz"> 2XL</label>
-            <label class="size-chip"><input type="checkbox" value="One Size" class="sz"> One Size</label>
+        <div class="section-title">Drop your design</div>
+
+        <div class="field secret-field">
+          <label>Design file URL <span class="req">*</span> <span class="hint">print-ready PNG/SVG, min 300dpi, direct link</span></label>
+          <input type="url" id="f-design-url" placeholder="https://drive.google.com/... or Dropbox direct link" oninput="updateDesignPreview()">
+          <div class="secret-note">Buyers never see your design file URL — only the finished product.</div>
+          <div class="img-preview" id="design-preview" style="margin-top:8px">
+            <div class="img-preview-empty">🎨</div>
+            <div>Paste your design URL above to preview</div>
           </div>
         </div>
+
         <div class="field">
-          <label>Your Printful design URL <span class="hint">used to place the order automatically</span></label>
-          <input type="url" id="f-pf-design-url" placeholder="https://...">
+          <label>Base product <span class="req">*</span></label>
+          <div class="pf-products" id="pf-products">
+            <div class="pf-loading">Loading products…</div>
+          </div>
+        </div>
+
+        <div class="field" id="color-field" style="display:none">
+          <label>Colour</label>
+          <div class="color-grid" id="color-grid"></div>
+        </div>
+
+        <div class="field" id="sizes-field" style="display:none">
+          <label>Available sizes</label>
+          <div class="sizes-grid" id="pf-sizes"></div>
+        </div>
+
+        <div class="pf-margin-box" id="pf-margin-box" style="display:none">
+          <div class="margin-row"><span>Printful base cost</span><span id="pf-base-cost">—</span></div>
+          <div class="margin-row"><span>Your price</span><span id="pf-your-price">—</span></div>
+          <div class="margin-row highlight"><span>Your margin per sale</span><span id="pf-margin">—</span></div>
         </div>
       </div>
 
@@ -345,6 +376,81 @@ select option{background:var(--depth);color:var(--text);}
 <script>
 const API = (()=>{ const s=new URLSearchParams(location.search).get('server'); return s?`http://${s}`:'http://localhost:3001'; })();
 let selectedType = 'digital';
+let pfCatalog = [];
+let selectedProduct = null; // catalog item
+let selectedColor = null;
+
+// Load Printful catalog on page load
+async function loadPfCatalog() {
+  try {
+    const r = await fetch(`${API}/api/printful/catalog`);
+    const d = await r.json();
+    pfCatalog = d.catalog ?? [];
+    renderPfProducts();
+  } catch {
+    document.getElementById('pf-products').innerHTML = '<div class="pf-loading">Could not load products — is api-server running?</div>';
+  }
+}
+
+function renderPfProducts() {
+  const el = document.getElementById('pf-products');
+  el.innerHTML = pfCatalog.map(p => `
+    <div class="pf-product" data-id="${p.id}" onclick="selectPfProduct('${p.id}')">
+      <div class="pf-product-emoji">${p.emoji}</div>
+      <div class="pf-product-name">${p.name}</div>
+      <div class="pf-product-cost">from $${p.baseCostUSD}</div>
+    </div>`).join('');
+}
+
+function selectPfProduct(id) {
+  selectedProduct = pfCatalog.find(p => p.id === id);
+  if (!selectedProduct) return;
+  document.querySelectorAll('.pf-product').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+  // Colors
+  const colorEl = document.getElementById('color-grid');
+  const colorMap = { 'Black':'#111', 'White':'#fff', 'Navy':'#1a2a4a', 'Red':'#c0392b', 'Forest Green':'#2d6a4f', 'Dark Heather':'#4a4a4a', 'Natural':'#e8d5b0' };
+  colorEl.innerHTML = selectedProduct.colors.map(c => `<div class="color-swatch ${c===selectedProduct.colors[0]?'selected':''}" title="${c}" style="background:${colorMap[c]||'#888'}" onclick="selectColor('${c}')"></div>`).join('');
+  selectedColor = selectedProduct.colors[0];
+  document.getElementById('color-field').style.display = '';
+  // Sizes
+  const sizeEl = document.getElementById('pf-sizes');
+  sizeEl.innerHTML = selectedProduct.sizes.map((s,i) => `<label class="size-chip"><input type="checkbox" value="${s}" class="sz" ${i>0&&i<5?'checked':''}> ${s}</label>`).join('');
+  document.getElementById('sizes-field').style.display = '';
+  updateMarginBox();
+  // Update preview badge
+  const badge = document.getElementById('prev-badge');
+  badge.textContent = selectedProduct.name;
+  document.getElementById('prev-emoji').textContent = selectedProduct.emoji;
+}
+
+function selectColor(c) {
+  selectedColor = c;
+  document.querySelectorAll('.color-swatch').forEach(el => el.classList.toggle('selected', el.title === c));
+}
+
+function updateDesignPreview() {
+  const url = document.getElementById('f-design-url').value.trim();
+  const el = document.getElementById('design-preview');
+  if (url) {
+    el.innerHTML = `<img src="${url}" style="max-height:140px;max-width:100%;object-fit:contain;" onerror="this.parentElement.innerHTML='<div class=img-preview-empty>🎨</div><div>Could not load image</div>'">`;
+  } else {
+    el.innerHTML = '<div class="img-preview-empty">🎨</div><div>Paste your design URL above to preview</div>';
+  }
+}
+
+function updateMarginBox() {
+  if (!selectedProduct) return;
+  const price = Number(document.getElementById('f-price').value) || selectedProduct.suggestedPriceNIGHT;
+  const baseCostNIGHT = selectedProduct.baseCostNIGHT;
+  const marginNIGHT = price - baseCostNIGHT;
+  const marginUSD = (marginNIGHT * 0.04).toFixed(2);
+  document.getElementById('pf-base-cost').textContent = `$${selectedProduct.baseCostUSD} (${baseCostNIGHT} NIGHT)`;
+  document.getElementById('pf-your-price').textContent = `${price.toLocaleString()} NIGHT ≈ $${(price*0.04).toFixed(2)}`;
+  document.getElementById('pf-margin').textContent = marginNIGHT > 0 ? `${marginNIGHT.toLocaleString()} NIGHT ≈ $${marginUSD}` : 'Set a price above';
+  document.getElementById('pf-margin-box').style.display = '';
+}
+
+loadPfCatalog();
 
 function selectType(t) {
   selectedType = t;
@@ -392,6 +498,7 @@ function updateImagePreview() {
     document.getElementById('prev-title').textContent = title;
     document.getElementById('prev-desc').textContent  = desc;
     document.getElementById('prev-price').innerHTML   = price ? `${Number(price).toLocaleString()} <span>NIGHT</span>` : '— <span>NIGHT</span>';
+    if (selectedType === 'printful' && selectedProduct) updateMarginBox();
   });
 });
 
@@ -409,15 +516,16 @@ async function submitListing() {
   const sellerNightAddr = document.getElementById('f-seller-night-addr').value.trim();
   const sellerEmail = document.getElementById('f-seller-email').value.trim();
   const deliveryUrl = document.getElementById('f-delivery-url').value.trim();
-  const pfProductId = document.getElementById('f-pf-product-id').value.trim();
-  const pfDesignUrl = document.getElementById('f-pf-design-url').value.trim();
-  const shipFrom  = document.getElementById('f-ship-from')?.value.trim();
+  const designUrl   = document.getElementById('f-design-url')?.value.trim() ?? '';
+  const shipFrom    = document.getElementById('f-ship-from')?.value.trim();
 
   if (!title)    { toast('Title is required', 'err'); return; }
   if (!desc)     { toast('Description is required', 'err'); return; }
   if (!price || isNaN(Number(price)) || Number(price) < 1) { toast('Enter a valid price in NIGHT', 'err'); return; }
   if (!sellerId) { toast('Your wallet address is required', 'err'); return; }
   if (selectedType === 'digital' && !deliveryUrl) { toast('Delivery URL is required for digital listings', 'err'); return; }
+  if (selectedType === 'printful' && !selectedProduct) { toast('Choose a product first', 'err'); return; }
+  if (selectedType === 'printful' && !designUrl) { toast('Paste your design URL', 'err'); return; }
 
   const selectedSizes = [...document.querySelectorAll('.sz:checked')].map(c => c.value);
 
@@ -443,9 +551,10 @@ async function submitListing() {
         sellerEmail:        sellerEmail || null,
         type:               selectedType,
         deliveryUrl:        selectedType === 'digital' ? deliveryUrl : null,
-        printfulProductId:  selectedType === 'printful' ? pfProductId : null,
-        printfulDesignUrl:  selectedType === 'printful' ? pfDesignUrl : null,
-        sizes:              selectedType === 'printful' ? selectedSizes : null,
+        printfulProductType: selectedType === 'printful' ? selectedProduct?.id : null,
+        designUrl:           selectedType === 'printful' ? designUrl : null,
+        printfulColor:       selectedType === 'printful' ? selectedColor : null,
+        sizes:               selectedType === 'printful' ? selectedSizes : null,
         shipFrom:           shipFrom || null,
         emoji:              selectedType === 'digital' ? '📥' : selectedType === 'printful' ? '🖨️' : '📦',
       }),
@@ -475,7 +584,7 @@ async function submitListing() {
     const note = selectedType === 'digital'
       ? '⊘ Your delivery URL is encrypted in the server and only revealed to the buyer when you release the escrow.'
       : selectedType === 'printful'
-      ? '⊘ When the buyer funds escrow, they submit their shipping address. You will see it in your seller dashboard when you release payment.'
+      ? '⊘ When you release the escrow, Night Markets automatically places the Printful order using the buyer\'s shipping address. Nothing else needed.'
       : '⊘ When the buyer funds escrow, ship the item and provide tracking. Release is manual — buyer confirms delivery.';
     document.getElementById('seller-note').textContent = note;
     toast('Listing created!', 'ok');

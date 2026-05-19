@@ -357,7 +357,82 @@ const _listingStore:  Map<string, any>    = new Map();
 const _ratingStore:   Map<string, any[]>  = new Map();
 const _deliveryStore: Map<string, any>    = new Map();
 const _shippingStore: Map<string, any>    = new Map(); // orderId → buyer shipping address
+const _pfOrderStore:  Map<string, any>    = new Map(); // orderId → Printful order result
 const _curveStore:    Map<string, any>    = new Map(); // tokenAddress → curve state
+
+// ─── Printful integration ─────────────────────────────────────────────────────
+const PF_TOKEN = process.env.PRINTFUL_API_TOKEN ?? '';
+
+// Base product catalog — sellers drop their design onto these blanks
+const PF_CATALOG = [
+  { id: 'tshirt',  pfId: 71,  name: 'Unisex T-Shirt',     brand: 'Bella+Canvas 3001', baseCostUSD: 12, emoji: '👕', colors: ['Black','White','Navy','Red','Forest Green'], sizes: ['XS','S','M','L','XL','2XL'] },
+  { id: 'hoodie',  pfId: 380, name: 'Unisex Hoodie',       brand: 'Gildan 18500',      baseCostUSD: 18, emoji: '🧥', colors: ['Black','White','Navy','Dark Heather'],       sizes: ['XS','S','M','L','XL','2XL'] },
+  { id: 'mug',     pfId: 19,  name: 'White Glossy Mug',    brand: '11oz Ceramic',      baseCostUSD: 8,  emoji: '☕', colors: ['White'],                                     sizes: ['11oz','15oz'] },
+  { id: 'tote',    pfId: 2,   name: 'Canvas Tote Bag',     brand: 'Natural Canvas',    baseCostUSD: 9,  emoji: '🛍️', colors: ['Natural','Black'],                           sizes: ['One Size'] },
+  { id: 'cap',     pfId: 74,  name: 'Structured Dad Cap',  brand: 'Classic Cap',       baseCostUSD: 10, emoji: '🧢', colors: ['Black','White','Navy'],                      sizes: ['One Size'] },
+  { id: 'poster',  pfId: 1,   name: 'Poster',              brand: 'Matte Print',       baseCostUSD: 7,  emoji: '🖼️', colors: ['White'],                                    sizes: ['12×18"','18×24"','24×36"'] },
+];
+const NIGHT_USD = 0.04; // 1 NIGHT = $0.04
+
+async function pfCall(path: string, opts: RequestInit = {}): Promise<any> {
+  if (!PF_TOKEN) throw new Error('PRINTFUL_API_TOKEN not configured — add it to .env');
+  const r = await fetch('https://api.printful.com' + path, {
+    ...opts,
+    headers: { 'Authorization': `Bearer ${PF_TOKEN}`, 'Content-Type': 'application/json', ...(opts.headers ?? {}) },
+  });
+  const d = await r.json() as any;
+  if (!r.ok) throw new Error(d?.error?.message ?? `Printful ${r.status}`);
+  return d.result ?? d;
+}
+
+// Cache of pfId → { color → { size → variantId } }
+const _pfVariantCache = new Map<number, Record<string, Record<string, number>>>();
+
+async function pfGetVariantId(pfId: number, color: string, size: string): Promise<number> {
+  if (!_pfVariantCache.has(pfId)) {
+    const data = await pfCall(`/catalog/products/${pfId}`);
+    const variants: any[] = data.variants ?? [];
+    const map: Record<string, Record<string, number>> = {};
+    for (const v of variants) {
+      const c = v.color ?? 'Default';
+      if (!map[c]) map[c] = {};
+      map[c][v.size ?? 'One Size'] = v.id;
+    }
+    _pfVariantCache.set(pfId, map);
+  }
+  const byColor = _pfVariantCache.get(pfId)!;
+  // fuzzy color match
+  const colorKey = Object.keys(byColor).find(k => k.toLowerCase().includes(color.toLowerCase())) ?? Object.keys(byColor)[0];
+  const bySizeMap = byColor[colorKey] ?? {};
+  return bySizeMap[size] ?? Object.values(bySizeMap)[0];
+}
+
+async function pfPlaceOrder(listing: any, shipping: any, size: string): Promise<any> {
+  const cat = PF_CATALOG.find(p => p.id === listing.printfulProductType);
+  if (!cat) throw new Error(`Unknown product type: ${listing.printfulProductType}`);
+  const variantId = await pfGetVariantId(cat.pfId, listing.printfulColor ?? cat.colors[0], size || cat.sizes[0]);
+  if (!variantId) throw new Error('Could not find Printful variant for this size/color');
+  return pfCall('/orders', {
+    method: 'POST',
+    body: JSON.stringify({
+      recipient: {
+        name:         shipping.name,
+        address1:     shipping.address1,
+        address2:     shipping.address2 ?? '',
+        city:         shipping.city ?? '',
+        state_code:   shipping.stateCode ?? '',
+        country_code: shipping.countryCode,
+        zip:          shipping.zip ?? '',
+        email:        shipping.email ?? '',
+      },
+      items: [{
+        variant_id: variantId,
+        quantity:   1,
+        files: [{ type: 'front', url: listing.designUrl }],
+      }],
+    }),
+  });
+}
 const _nightIdStore:  Map<string, string> = new Map(); // "name.night" → address
 const _nightScoreStore: Map<string, number> = new Map(); // address → cumulative action score
 const _scoreEventLog:   any[]              = [];         // full event history
@@ -729,13 +804,26 @@ const server = http.createServer(async (req, res) => {
             // Digital: reveal the download URL to the buyer
             deliveryUrl = listing.deliveryUrl;
             console.log(`  📦 [release] digital delivery unlocked for orderId=${orderId}`);
-          } else if (listing.type === 'printful' || listing.type === 'physical') {
-            // Physical: surface the shipping address so seller can fulfil via Printful dashboard
+          } else if (listing.type === 'printful') {
+            // Printful: auto-place order via API using buyer's shipping address
+            shippingAddress = _shippingStore.get(String(orderId)) ?? null;
+            if (shippingAddress && listing.designUrl) {
+              try {
+                const pfOrder = await pfPlaceOrder(listing, shippingAddress, shippingAddress.size ?? listing.sizes?.[0] ?? 'M');
+                _pfOrderStore.set(String(orderId), pfOrder);
+                console.log(`  🖨️  [release] Printful order #${pfOrder.id} placed — ${shippingAddress.name}, ${shippingAddress.countryCode}`);
+              } catch (pfErr: any) {
+                console.error(`  ⚠ [release] Printful order failed for ${orderId}:`, pfErr.message ?? pfErr);
+              }
+            } else if (!shippingAddress) {
+              console.warn(`  ⚠ [release] no shipping address on file for orderId=${orderId}`);
+            } else {
+              console.warn(`  ⚠ [release] no design URL on listing for orderId=${orderId}`);
+            }
+          } else if (listing.type === 'physical') {
             shippingAddress = _shippingStore.get(String(orderId)) ?? null;
             if (shippingAddress) {
-              console.log(`  📦 [release] shipping address available for fulfilment — ${shippingAddress.name}, ${shippingAddress.countryCode}`);
-            } else {
-              console.warn(`  ⚠ [release] no shipping address on file for orderId=${orderId}`);
+              console.log(`  📦 [release] shipping address available for manual fulfilment — ${shippingAddress.name}, ${shippingAddress.countryCode}`);
             }
           }
         }
@@ -753,8 +841,9 @@ const server = http.createServer(async (req, res) => {
           txId: r.public.txId, blockHeight: r.public.blockHeight, orderId,
           nightSentTo: sellerNightAddr || null,
           // Delivery payload — only present when relevant
-          ...(deliveryUrl   ? { deliveryUrl }    : {}),
-          ...(shippingAddress ? { shippingAddress } : {}),
+          ...(deliveryUrl    ? { deliveryUrl }                               : {}),
+          ...(shippingAddress ? { shippingAddress }                           : {}),
+          ...(_pfOrderStore.has(String(orderId)) ? { printfulOrder: { id: _pfOrderStore.get(String(orderId))?.id, status: _pfOrderStore.get(String(orderId))?.status } } : {}),
         });
       }
 
@@ -868,6 +957,33 @@ const server = http.createServer(async (req, res) => {
     if (listing.state !== 'RELEASED') return json(res, 403, { error: 'Payment not yet released' });
     if (!listing.deliveryUrl) return json(res, 404, { error: 'No delivery URL set for this listing' });
     return json(res, 200, { deliveryUrl: listing.deliveryUrl });
+  }
+
+  // ── GET /api/printful/catalog ──────────────────────────────────────────────────
+  // Returns base product catalog sellers can drop their design onto.
+  if (method === 'GET' && url === '/api/printful/catalog') {
+    return json(res, 200, { catalog: PF_CATALOG.map(p => ({
+      ...p,
+      suggestedPriceNIGHT: Math.ceil((p.baseCostUSD * 2.5) / NIGHT_USD), // 2.5x markup suggestion
+      baseCostNIGHT:       Math.ceil(p.baseCostUSD / NIGHT_USD),
+    })) });
+  }
+
+  // ── GET /api/printful/order/:orderId ──────────────────────────────────────────
+  // Returns Printful order status for a released listing.
+  if (method === 'GET' && url.startsWith('/api/printful/order/')) {
+    const orderId = url.replace('/api/printful/order/', '');
+    const pfOrder = _pfOrderStore.get(orderId);
+    if (!pfOrder) return json(res, 404, { error: 'No Printful order for this listing' });
+    // Optionally refresh status from Printful API
+    if (PF_TOKEN && pfOrder.id) {
+      try {
+        const fresh = await pfCall(`/orders/${pfOrder.id}`);
+        _pfOrderStore.set(orderId, fresh);
+        return json(res, 200, { order: { id: fresh.id, status: fresh.status, tracking: fresh.shipments?.[0]?.tracking_url ?? null } });
+      } catch { /* return cached */ }
+    }
+    return json(res, 200, { order: { id: pfOrder.id, status: pfOrder.status, tracking: pfOrder.shipments?.[0]?.tracking_url ?? null } });
   }
 
   // ── POST /api/ratings/submit ───────────────────────────────────────────────────
