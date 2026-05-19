@@ -893,15 +893,16 @@ const server = http.createServer(async (req, res) => {
     let body: any;
     try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
     const { id, title, cat, price, cond, desc, from: shipFrom, emoji, sellerId,
-            type, imageUrl, deliveryUrl, printfulVariantId, printfulProductId, sizes, sellerEmail } = body;
+            type, imageUrl, deliveryUrl, printfulProductType, designUrl, printfulColor, sizes, sellerEmail } = body;
     if (!id || !title || !price) return json(res, 400, { error: 'id, title, price required' });
     const listing = {
       id, title, cat, price, cond, desc, shipFrom, emoji, sellerId,
       type: type || 'physical',   // 'digital' | 'printful' | 'physical'
       imageUrl: imageUrl || null,
       deliveryUrl: deliveryUrl || null,       // secret — never returned to buyers
-      printfulVariantId: printfulVariantId || null,
-      printfulProductId: printfulProductId || null,
+      printfulProductType: printfulProductType || null,
+      designUrl: designUrl || null,
+      printfulColor: printfulColor || null,
       sizes: sizes || null,
       sellerEmail: sellerEmail || null,
       state: 'OPEN',
