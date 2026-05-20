@@ -735,7 +735,9 @@ const server = http.createServer(async (req, res) => {
     let body: any;
     try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON body' }); }
 
-    const action = url.replace('/api/escrow/', '');
+    // Support both URL-based routing (/api/escrow/fund) and body-based (/api/escrow/action + body.action)
+    const routeAction = url.replace('/api/escrow/', '');
+    const action = routeAction === 'action' ? (body?.action ?? '') : routeAction;
 
     try {
       // Returns the server's custodial NIGHT address — buyers send NIGHT here before funding.
@@ -766,6 +768,13 @@ const server = http.createServer(async (req, res) => {
         // NIGHT custody: buyer must have already sent NIGHT to appState.address before calling this.
         // The contract records the ZK authorization; the server holds the funds.
         const r = await appState.contract.callTx.fundEscrow(oidBytes, amt, addrBytes);
+        // Track funding time for the 14-day expiry window
+        const fundListing = _listingStore.get(String(orderId));
+        if (fundListing) {
+          fundListing.state = 'FUNDED';
+          fundListing.fundedAt = Date.now();
+          _listingStore.set(String(orderId), fundListing);
+        }
         return json(res, 200, {
           txId: r.public.txId, blockHeight: r.public.blockHeight, orderId,
           note: 'Escrow funded on-chain. NIGHT should have been sent to server wallet before this call.',
@@ -879,6 +888,34 @@ const server = http.createServer(async (req, res) => {
           txId: r.public.txId, blockHeight: r.public.blockHeight, orderId,
           nightSentTo: buyerNightAddr || null,
         });
+      }
+
+      if (action === 'expire') {
+        // Seller claims payment after 14-day deadline — buyer failed to release or dispute
+        const { orderId } = body;
+        if (!orderId) return json(res, 400, { error: 'orderId required' });
+        const expListing = _listingStore.get(String(orderId));
+        if (!expListing) return json(res, 404, { error: 'Listing not found' });
+        if (expListing.state !== 'FUNDED') return json(res, 400, { error: 'Escrow is not in FUNDED state' });
+        const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
+        const fundedAt = expListing.fundedAt ?? 0;
+        if (Date.now() - fundedAt < FOURTEEN_DAYS) {
+          const daysLeft = ((FOURTEEN_DAYS - (Date.now() - fundedAt)) / 86_400_000).toFixed(1);
+          return json(res, 400, { error: `Deadline not reached — ${daysLeft} days remaining` });
+        }
+        const oidBytes = toBytes32(String(orderId));
+        console.log(`\n  [expire] orderId="${orderId}" — deadline passed, releasing to seller`);
+        const r = await appState.contract.callTx.expireEscrow(oidBytes);
+        const sellerNightAddr: string = r.public.result ?? '';
+        const amt = expListing?.price ? BigInt(Math.round(Number(expListing.price) * 1_000_000)) : 1_000_000n;
+        if (sellerNightAddr) {
+          sendNight(sellerNightAddr, amt).catch(err =>
+            console.error(`  ⚠ sendNight (expire) failed for ${orderId}:`, err.message ?? err)
+          );
+        }
+        expListing.state = 'RELEASED';
+        _listingStore.set(String(orderId), expListing);
+        return json(res, 200, { txId: r.public.txId, blockHeight: r.public.blockHeight, orderId, nightSentTo: sellerNightAddr || null });
       }
 
       return json(res, 404, { error: `Unknown action: ${action}` });

@@ -96,9 +96,11 @@ export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>, buyerNightA
   const addr = disclose(buyerNightAddr);
   const state = escrow_state.lookup(oid);
   assert(state == EscrowState.OPEN, "not open");
+  // Verify buyer is paying the listed price — prevents underpaying or overpaying exploits
+  const listedAmt = amount_night.lookup(oid);
+  assert(amt == listedAmt, "amount mismatch");
   buyer_commit.insert(oid, c);
   buyer_addr.insert(oid, addr);
-  amount_night.insert(oid, amt);
   escrow_state.insert(oid, EscrowState.FUNDED);
   round.increment(1);
   return c;
@@ -120,12 +122,15 @@ export circuit releaseEscrow(orderId: Bytes<32>): Bytes<32> {
 
 export circuit disputeEscrow(orderId: Bytes<32>): Boolean {
   assertNotPaused();
-  const callerCom = callerCommitment(pad(32, "buyer"));
   const oid = disclose(orderId);
-  const storedCom = buyer_commit.lookup(oid);
-  assert(disclose(callerCom) == storedCom, "not authorized");
   const state = escrow_state.lookup(oid);
   assert(state == EscrowState.FUNDED, "not funded");
+  // Either party can raise a dispute — seller needs recourse if buyer goes silent
+  const buyerCom  = callerCommitment(pad(32, "buyer"));
+  const sellerCom = callerCommitment(pad(32, "seller"));
+  const callerIsB = disclose(buyerCom)  == buyer_commit.lookup(oid);
+  const callerIsS = disclose(sellerCom) == seller_commit.lookup(oid);
+  assert(callerIsB || callerIsS, "not authorized");
   escrow_state.insert(oid, EscrowState.DISPUTED);
   round.increment(1);
   return true;
@@ -143,6 +148,23 @@ export circuit refundEscrow(orderId: Bytes<32>): Bytes<32> {
   escrow_state.insert(oid, EscrowState.REFUNDED);
   round.increment(1);
   return buyer_addr.lookup(oid);
+}
+
+// Seller calls this after the 14-day escrow deadline if buyer has neither released
+// nor disputed. Time enforcement is validated server-side (Stage 1 semi-trusted
+// architecture). Stage 2 will add on-chain block height verification once the
+// Compact kernel exposes that primitive.
+export circuit expireEscrow(orderId: Bytes<32>): Bytes<32> {
+  assertNotPaused();
+  const callerCom = callerCommitment(pad(32, "seller"));
+  const oid = disclose(orderId);
+  const storedCom = seller_commit.lookup(oid);
+  assert(disclose(callerCom) == storedCom, "not authorized");
+  const state = escrow_state.lookup(oid);
+  assert(state == EscrowState.FUNDED, "not funded");
+  escrow_state.insert(oid, EscrowState.RELEASED);
+  round.increment(1);
+  return seller_addr.lookup(oid);
 }
 
 export circuit castVote(proposalId: Bytes<32>, choice: Uint<8>): Boolean {
