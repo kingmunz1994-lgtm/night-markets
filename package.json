@@ -20,7 +20,8 @@
     "probe": "node --env-file=.env --import tsx scripts/probe.ts",
     "serve": "npx serve . -p 3000 --no-cache",
     "proof-server": "docker run -p 6300:6300 midnightntwrk/proof-server:8.0.3 midnight-proof-server -v",
-    "set-address": "node --import tsx scripts/set-contract-address.ts"
+    "set-address": "node --import tsx scripts/set-contract-address.ts",
+    "test": "npx tsx scripts/test-api.ts"
   },
   "dependencies": {
     "@midnight-ntwrk/compact-js": "2.5.0",

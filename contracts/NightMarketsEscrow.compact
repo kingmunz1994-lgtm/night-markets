@@ -20,6 +20,10 @@ export ledger amount_night:  Map<Bytes<32>, Uint<64>>;
 // by the commitment checks. Empty = address not yet provided.
 export ledger seller_addr:   Map<Bytes<32>, Bytes<32>>;  // orderId → seller NIGHT address
 export ledger buyer_addr:    Map<Bytes<32>, Bytes<32>>;  // orderId → buyer NIGHT address
+// Structured event log: orderId → last event type
+// 0=CREATED 1=FUNDED 2=RELEASED 3=DISPUTED 4=REFUNDED 5=EXPIRED
+// Indexers watch `round` for activity, then query last_event[orderId] + escrow_state[orderId]
+export ledger last_event:    Map<Bytes<32>, Uint<8>>;
 ledger round: Counter;
 export ledger vote_for:     Map<Bytes<32>, Uint<64>>;
 export ledger vote_against: Map<Bytes<32>, Uint<64>>;
@@ -83,6 +87,7 @@ export circuit createListing(orderId: Bytes<32>, amountNight: Uint<64>, sellerNi
   seller_commit.insert(oid, c);
   seller_addr.insert(oid, addr);
   amount_night.insert(oid, amt);
+  last_event.insert(oid, 0 as Uint<8>);
   round.increment(1);
   return c;
 }
@@ -102,6 +107,7 @@ export circuit fundEscrow(orderId: Bytes<32>, amountNight: Uint<64>, buyerNightA
   buyer_commit.insert(oid, c);
   buyer_addr.insert(oid, addr);
   escrow_state.insert(oid, EscrowState.FUNDED);
+  last_event.insert(oid, 1 as Uint<8>);
   round.increment(1);
   return c;
 }
@@ -116,6 +122,7 @@ export circuit releaseEscrow(orderId: Bytes<32>): Bytes<32> {
   const state = escrow_state.lookup(oid);
   assert(state == EscrowState.FUNDED, "not funded");
   escrow_state.insert(oid, EscrowState.RELEASED);
+  last_event.insert(oid, 2 as Uint<8>);
   round.increment(1);
   return seller_addr.lookup(oid);
 }
@@ -132,6 +139,7 @@ export circuit disputeEscrow(orderId: Bytes<32>): Boolean {
   const callerIsS = disclose(sellerCom) == seller_commit.lookup(oid);
   assert(callerIsB || callerIsS, "not authorized");
   escrow_state.insert(oid, EscrowState.DISPUTED);
+  last_event.insert(oid, 3 as Uint<8>);
   round.increment(1);
   return true;
 }
@@ -146,6 +154,7 @@ export circuit refundEscrow(orderId: Bytes<32>): Bytes<32> {
   const state = escrow_state.lookup(oid);
   assert(state == EscrowState.OPEN || state == EscrowState.DISPUTED, "invalid state");
   escrow_state.insert(oid, EscrowState.REFUNDED);
+  last_event.insert(oid, 4 as Uint<8>);
   round.increment(1);
   return buyer_addr.lookup(oid);
 }
@@ -163,6 +172,7 @@ export circuit expireEscrow(orderId: Bytes<32>): Bytes<32> {
   const state = escrow_state.lookup(oid);
   assert(state == EscrowState.FUNDED, "not funded");
   escrow_state.insert(oid, EscrowState.RELEASED);
+  last_event.insert(oid, 5 as Uint<8>);
   round.increment(1);
   return seller_addr.lookup(oid);
 }
