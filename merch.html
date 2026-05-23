@@ -153,9 +153,8 @@ async function loadMerch() {
       const usd = (item.price * 0.04).toFixed(2);
       const brand = CATALOG_BRANDS[item.printfulProductType] ?? 'Printful';
       const sizes = Array.isArray(item.sizes) ? item.sizes : [];
-      const listingUrl = `/listing?id=${item.id}&server=${SERVER_PARAM}`;
       return `
-        <a class="product-card" href="${listingUrl}">
+        <a class="product-card" href="javascript:void(0)" onclick="openListing('${item.id}')">
           <div class="card-img" style="${item.designUrl ? `background-image:url('${item.designUrl}');background-size:contain;background-repeat:no-repeat;background-position:center;background-color:var(--raised);` : ''}">
             ${!item.designUrl ? `<span>${item.emoji ?? '🌙'}</span>` : ''}
             <div class="card-badge">⊘ ZK Escrow</div>
@@ -178,6 +177,13 @@ async function loadMerch() {
   } catch {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;font-family:var(--mono);font-size:13px;">Could not load merch — is api-server running?</div>';
   }
+}
+
+function openListing(id) {
+  sessionStorage.setItem('nm_listing_id', id);
+  sessionStorage.setItem('nm_server', SERVER_PARAM);
+  // Use listing.html explicitly — serve may redirect to /listing but sessionStorage survives
+  window.location.href = `listing.html?id=${encodeURIComponent(id)}&server=${encodeURIComponent(SERVER_PARAM)}`;
 }
 
 loadMerch();

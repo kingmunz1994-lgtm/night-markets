@@ -161,12 +161,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(6,4,14,.9);backdrop-filter
 <div class="toast" id="toast"></div>
 
 <script>
-const API = (()=>{
-  const s = new URLSearchParams(location.search).get('server');
-  return s ? `http://${s}` : 'http://localhost:3001';
-})();
-const params     = new URLSearchParams(location.search);
-const ORDER_ID   = params.get('id');
+const params = new URLSearchParams(location.search);
+// Serve can strip query params when redirecting listing.html → /listing.
+// sessionStorage is the reliable fallback set by merch.html before navigating.
+const ORDER_ID = params.get('id') || sessionStorage.getItem('nm_listing_id') || null;
+const _server  = params.get('server') || sessionStorage.getItem('nm_server') || null;
+const API = _server ? `http://${_server}` : 'http://localhost:3001';
+// Clear sessionStorage once consumed so stale data doesn't bleed into future navigations
+if (ORDER_ID) sessionStorage.removeItem('nm_listing_id');
 let listing      = null;
 let escrowState  = 'idle'; // idle | funding | funded | releasing | released | disputed
 let selectedSize = null;
