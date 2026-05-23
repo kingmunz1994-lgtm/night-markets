@@ -486,7 +486,7 @@ async function pfCreateMockup(pfId: number, color: string, designUrl: string, si
     body: JSON.stringify({
       variant_ids: [variantId],
       format: 'jpg',
-      files: [{ placement: 'front', image_url: designUrl, position: { area_width: 1800, area_height: 2100, width: 1800, height: 1800, top: 150, left: 0 } }],
+      files: [{ placement: 'front', image_url: designUrl }],
     }),
   });
   const taskKey = task.task_key;
