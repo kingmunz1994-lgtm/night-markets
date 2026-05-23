@@ -155,8 +155,8 @@ async function loadMerch() {
       const listingUrl = `listing.html?id=${item.id}&server=${SERVER_PARAM}`;
       return `
         <a class="product-card" href="${listingUrl}">
-          <div class="card-img">
-            <span>${item.emoji ?? '🌙'}</span>
+          <div class="card-img" style="${item.designUrl ? `background-image:url('${item.designUrl}');background-size:contain;background-repeat:no-repeat;background-position:center;background-color:var(--raised);` : ''}">
+            ${!item.designUrl ? `<span>${item.emoji ?? '🌙'}</span>` : ''}
             <div class="card-badge">⊘ ZK Escrow</div>
           </div>
           <div class="card-body">
