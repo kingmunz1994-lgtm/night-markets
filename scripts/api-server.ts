@@ -359,6 +359,7 @@ const _ratingStore:   Map<string, any[]>  = new Map();
 const _deliveryStore: Map<string, any>    = new Map();
 const _shippingStore: Map<string, any>    = new Map(); // orderId → buyer shipping address
 const _pfOrderStore:  Map<string, any>    = new Map(); // orderId → Printful order result
+const _waitlistStore: Map<string, any>    = new Map(); // email:listingId → entry
 const _curveStore:    Map<string, any>    = new Map(); // tokenAddress → curve state
 
 // ─── Printful integration ─────────────────────────────────────────────────────
@@ -1750,6 +1751,93 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=31536000' });
     fs.createReadStream(filepath).pipe(res);
     return;
+  }
+
+  // ── POST /api/waitlist ────────────────────────────────────────────────────────
+  if (method === 'POST' && url === '/api/waitlist') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { email, listingId, title } = body;
+    if (!email || !String(email).includes('@')) return json(res, 400, { error: 'Valid email required' });
+    const entry = { email: String(email), listingId: String(listingId ?? ''), title: String(title ?? ''), at: Date.now() };
+    if (!(_waitlistStore as any).has) (_waitlistStore as any).size; // ensure exists
+    _waitlistStore.set(`${email}:${listingId}`, entry);
+    console.log(`  📬 [waitlist] ${email} → ${listingId}`);
+    return json(res, 200, { ok: true });
+  }
+
+  // ── GET /api/admin/orders ─────────────────────────────────────────────────────
+  // Returns all listings with shipping addresses, printful order status, and escrow state.
+  // Simple key check — not cryptographically secure, just keeps it off public crawlers.
+  if (method === 'GET' && url.startsWith('/api/admin/orders')) {
+    const adminKey = new URL('http://x' + url).searchParams.get('key');
+    if (adminKey !== (process.env.ADMIN_KEY ?? 'nightmarkets-admin')) {
+      return json(res, 401, { error: 'Invalid admin key' });
+    }
+    const orders = [..._listingStore.values()].map(listing => {
+      const shipping = _shippingStore.get(listing.id) ?? null;
+      const pfOrder  = _pfOrderStore.get(listing.id) ?? null;
+      return {
+        id:            listing.id,
+        title:         listing.title,
+        price:         listing.price,
+        state:         listing.state ?? 'OPEN',
+        type:          listing.type,
+        isNMOfficial:  listing.isNMOfficial ?? false,
+        sellerId:      listing.sellerId,
+        createdAt:     listing.createdAt,
+        fundedAt:      listing.fundedAt ?? null,
+        shipping:      shipping,
+        printfulOrder: pfOrder ? { id: pfOrder.id, status: pfOrder.status, trackingUrl: pfOrder.shipments?.[0]?.tracking_url ?? null } : null,
+      };
+    });
+    const stats = {
+      total:    orders.length,
+      open:     orders.filter(o => o.state === 'OPEN').length,
+      funded:   orders.filter(o => o.state === 'FUNDED').length,
+      released: orders.filter(o => o.state === 'RELEASED').length,
+      revenueNIGHT: orders.filter(o => o.state === 'RELEASED').reduce((s, o) => s + Number(o.price), 0),
+    };
+    const waitlist = [..._waitlistStore.values()];
+    return json(res, 200, { orders, stats, waitlist });
+  }
+
+  // ── POST /api/admin/fulfill ───────────────────────────────────────────────────
+  // Admin manually triggers Printful order placement for a funded listing.
+  if (method === 'POST' && url === '/api/admin/fulfill') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { key, orderId, size } = body;
+    if (key !== (process.env.ADMIN_KEY ?? 'nightmarkets-admin')) return json(res, 401, { error: 'Invalid admin key' });
+    const listing = _listingStore.get(String(orderId));
+    if (!listing) return json(res, 404, { error: 'Listing not found' });
+    const shipping = _shippingStore.get(String(orderId));
+    if (!shipping) return json(res, 400, { error: 'No shipping address for this order yet' });
+    try {
+      const pfOrder = await pfPlaceOrder(listing, shipping, size ?? shipping.size ?? listing.sizes?.[0] ?? 'M');
+      _pfOrderStore.set(String(orderId), pfOrder);
+      listing.state = 'FULFILLED';
+      _listingStore.set(String(orderId), listing);
+      console.log(`  📦 [admin/fulfill] Printful order #${pfOrder.id} placed for ${orderId}`);
+      return json(res, 200, { ok: true, printfulOrderId: pfOrder.id, status: pfOrder.status });
+    } catch (e: any) {
+      return json(res, 500, { error: e.message });
+    }
+  }
+
+  // ── POST /api/admin/mark-released ────────────────────────────────────────────
+  // Admin marks an order as released (for pre-mainnet manual escrow).
+  if (method === 'POST' && url === '/api/admin/mark-released') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { key, orderId } = body;
+    if (key !== (process.env.ADMIN_KEY ?? 'nightmarkets-admin')) return json(res, 401, { error: 'Invalid admin key' });
+    const listing = _listingStore.get(String(orderId));
+    if (!listing) return json(res, 404, { error: 'Listing not found' });
+    listing.state = 'RELEASED';
+    listing.releasedAt = Date.now();
+    _listingStore.set(String(orderId), listing);
+    return json(res, 200, { ok: true, orderId, state: 'RELEASED' });
   }
 
   json(res, 404, { error: 'Not found' });

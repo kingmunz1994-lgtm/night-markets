@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Night Markets — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --void:#06040e; --depth:#0d0a1a; --surface:#110e22; --raised:#16122a; --card:#1b1630;
+  --rim:#1e1a34; --rim2:#2a2448; --rim3:#3d3566;
+  --text:#ece8ff; --text2:#b8b0d8; --muted:#6b6390; --faint:#3a3460;
+  --ink:#7c3aed; --plasma:#9d5cf6; --glow:#b97dff;
+  --green:#00d68f; --red:#f43f5e; --gold:#f5c518; --blue:#38bdf8; --orange:#fb923c;
+  --serif:'Instrument Serif',Georgia,serif; --sans:'Geist','Helvetica Neue',sans-serif;
+  --mono:'Geist Mono','Fira Code',monospace;
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--void);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(124,58,237,.08),transparent 60%);pointer-events:none;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(6,4,14,.92);backdrop-filter:blur(40px);border-bottom:1px solid var(--rim);padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--ink),var(--plasma));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;box-shadow:0 0 16px rgba(124,58,237,.4);}
+.logo-text{font-size:15px;font-weight:800;letter-spacing:-.04em;}
+.logo-text em{font-style:normal;color:var(--plasma);}
+.nav-right{display:flex;gap:16px;align-items:center;}
+.nav-link{font-size:12px;color:var(--muted);text-decoration:none;font-weight:500;transition:color .2s;}
+.nav-link:hover{color:var(--text);}
+.admin-badge{font-size:10px;font-weight:700;font-family:var(--mono);background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:20px;padding:3px 10px;color:var(--plasma);}
+
+.page{max-width:1200px;margin:0 auto;padding:40px 24px 80px;}
+
+/* Lock screen */
+.lock-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 58px);}
+.lock-box{background:var(--card);border:1px solid var(--rim2);border-radius:20px;padding:40px;max-width:400px;width:100%;text-align:center;}
+.lock-icon{font-size:40px;margin-bottom:16px;}
+.lock-title{font-family:var(--serif);font-size:24px;font-style:italic;margin-bottom:8px;}
+.lock-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.lock-input{width:100%;background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--text);font-family:var(--mono);outline:none;margin-bottom:12px;transition:border-color .2s;}
+.lock-input:focus{border-color:var(--ink);}
+.lock-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--ink),var(--plasma));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .2s;}
+.lock-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,58,237,.3);}
+.lock-err{font-size:12px;color:var(--red);margin-top:8px;font-family:var(--mono);}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:32px;}
+@media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:540px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:var(--card);border:1px solid var(--rim2);border-radius:14px;padding:18px;}
+.stat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:8px;}
+.stat-val{font-family:var(--serif);font-size:28px;font-style:italic;color:var(--glow);}
+.stat-val.green{color:var(--green);}
+.stat-val.blue{color:var(--blue);}
+.stat-val.orange{color:var(--orange);}
+
+/* Filter tabs */
+.filter-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;align-items:center;}
+.filter-btn{padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--rim2);font-size:11px;font-weight:600;font-family:var(--mono);color:var(--muted);cursor:pointer;transition:all .2s;}
+.filter-btn:hover{border-color:var(--rim3);color:var(--text2);}
+.filter-btn.active{background:rgba(124,58,237,.12);border-color:var(--ink);color:var(--plasma);}
+.refresh-btn{margin-left:auto;padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--rim2);font-size:11px;font-weight:600;font-family:var(--mono);color:var(--muted);cursor:pointer;transition:all .2s;}
+.refresh-btn:hover{border-color:var(--rim3);color:var(--text);}
+
+/* Orders table */
+.orders-section{}
+.section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:16px;}
+
+.order-card{background:var(--card);border:1px solid var(--rim2);border-radius:16px;padding:20px;margin-bottom:12px;transition:border-color .2s;}
+.order-card:hover{border-color:var(--rim3);}
+.order-card.funded{border-left:3px solid var(--orange);}
+.order-card.released{border-left:3px solid var(--green);}
+.order-card.fulfilled{border-left:3px solid var(--blue);}
+.order-card.open{border-left:3px solid var(--rim3);}
+
+.order-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:12px;}
+.order-emoji{width:44px;height:44px;background:var(--raised);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.order-meta{flex:1;min-width:0;}
+.order-title{font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;}
+.order-id{font-size:11px;font-family:var(--mono);color:var(--muted);}
+.order-badges{display:flex;gap:6px;margin-left:auto;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.8px;border-radius:20px;padding:4px 10px;}
+.badge.open{background:rgba(61,53,102,.4);color:var(--muted);}
+.badge.funded{background:rgba(251,146,60,.12);color:var(--orange);}
+.badge.released{background:rgba(0,214,143,.12);color:var(--green);}
+.badge.fulfilled{background:rgba(56,189,248,.12);color:var(--blue);}
+.badge.official{background:rgba(124,58,237,.12);color:var(--plasma);}
+
+.order-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+@media(max-width:700px){.order-body{grid-template-columns:1fr 1fr;}}
+@media(max-width:450px){.order-body{grid-template-columns:1fr;}}
+.order-section{font-size:12px;}
+.order-section-title{font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:6px;}
+.order-section-val{color:var(--text2);line-height:1.6;}
+.order-section-val strong{color:var(--text);display:block;}
+
+.order-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.action-btn{padding:8px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:var(--mono);cursor:pointer;border:none;transition:all .2s;text-transform:uppercase;letter-spacing:.5px;}
+.btn-fulfill{background:linear-gradient(135deg,var(--ink),var(--plasma));color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.2);}
+.btn-fulfill:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,58,237,.3);}
+.btn-release{background:rgba(0,214,143,.1);color:var(--green);border:1px solid rgba(0,214,143,.25);}
+.btn-release:hover{background:rgba(0,214,143,.16);}
+.btn-copy{background:var(--surface);color:var(--muted);border:1px solid var(--rim2);}
+.btn-copy:hover{color:var(--text2);border-color:var(--rim3);}
+.btn-track{background:rgba(56,189,248,.08);color:var(--blue);border:1px solid rgba(56,189,248,.2);}
+.btn-track:hover{background:rgba(56,189,248,.14);}
+action-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.empty-state{text-align:center;padding:60px 24px;color:var(--muted);font-family:var(--mono);font-size:13px;}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(0,214,143,.3);color:var(--green);}
+.toast.err{border-color:rgba(244,63,94,.3);color:var(--red);}
+
+.loading-spinner{width:32px;height:32px;border:2px solid var(--rim2);border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.tracking-link{color:var(--blue);text-decoration:none;font-size:11px;font-family:var(--mono);}
+.tracking-link:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">
+    <div class="logo-mark">N</div>
+    <span class="logo-text"><em>Night</em> Markets</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="merch.html">Merch</a>
+    <a class="nav-link" href="sell.html">Sell</a>
+    <span class="admin-badge">⊘ Admin</span>
+  </div>
+</nav>
+
+<!-- Lock screen -->
+<div id="lock-screen" class="lock-screen">
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <div class="lock-title">Admin Access</div>
+    <div class="lock-sub">Night Markets seller dashboard. Enter your admin key to continue.</div>
+    <input type="password" class="lock-input" id="admin-key-input" placeholder="Admin key…" onkeydown="if(event.key==='Enter')unlock()">
+    <button class="lock-btn" onclick="unlock()">Unlock Dashboard →</button>
+    <div class="lock-err" id="lock-err"></div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="page" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-family:var(--mono);margin-bottom:6px;">Night Markets</div>
+      <div style="font-family:var(--serif);font-size:32px;font-style:italic;line-height:1;">Seller Dashboard</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-family:var(--mono);" id="last-refresh"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-label">Total Listings</div><div class="stat-val" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Open</div><div class="stat-val" id="stat-open">—</div></div>
+    <div class="stat-card"><div class="stat-label">Funded / Pending</div><div class="stat-val orange" id="stat-funded">—</div></div>
+    <div class="stat-card"><div class="stat-label">Released</div><div class="stat-val green" id="stat-released">—</div></div>
+    <div class="stat-card"><div class="stat-label">Revenue (NIGHT)</div><div class="stat-val blue" id="stat-revenue">—</div></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setFilter('all')">All</button>
+    <button class="filter-btn" onclick="setFilter('funded')">⚡ Needs Action</button>
+    <button class="filter-btn" onclick="setFilter('released')">✅ Released</button>
+    <button class="filter-btn" onclick="setFilter('fulfilled')">📦 Fulfilled</button>
+    <button class="filter-btn" onclick="setFilter('open')">Open</button>
+    <button class="refresh-btn" onclick="loadOrders()">↻ Refresh</button>
+  </div>
+
+  <!-- Orders -->
+  <div class="section-title">Orders</div>
+  <div id="orders-list">
+    <div class="empty-state"><div class="loading-spinner"></div>Loading orders…</div>
+  </div>
+
+  <div style="margin-top:40px;">
+    <div class="section-title">Waitlist Signups</div>
+    <div id="waitlist-list" style="font-size:12px;color:var(--muted);font-family:var(--mono);">—</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = (()=>{ const s=new URLSearchParams(location.search).get('server'); return s?`http://${s}`:'http://localhost:3001'; })();
+let ADMIN_KEY = '';
+let allOrders = [];
+let activeFilter = 'all';
+
+const EMOJIS = { tshirt:'👕', hoodie:'🧥', mug:'☕', tote:'🛍️', cap:'🧢', poster:'🖼️', digital:'📥', physical:'📦' };
+
+function unlock() {
+  const key = document.getElementById('admin-key-input').value.trim();
+  if (!key) { document.getElementById('lock-err').textContent = 'Enter your admin key'; return; }
+  ADMIN_KEY = key;
+  loadOrders();
+}
+
+async function loadOrders() {
+  try {
+    const r = await fetch(`${API}/api/admin/orders?key=${encodeURIComponent(ADMIN_KEY)}`);
+    if (r.status === 401) {
+      document.getElementById('lock-err').textContent = 'Invalid admin key — try again';
+      ADMIN_KEY = '';
+      return;
+    }
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+
+    // Switch to dashboard
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = '';
+
+    allOrders = data.orders;
+    renderStats(data.stats);
+    renderOrders();
+    renderWaitlist(data.waitlist ?? []);
+    document.getElementById('last-refresh').textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    if (!ADMIN_KEY) return;
+    document.getElementById('lock-err').textContent = 'Could not connect to api-server on port 3001';
+  }
+}
+
+function renderStats(s) {
+  document.getElementById('stat-total').textContent = s.total;
+  document.getElementById('stat-open').textContent = s.open;
+  document.getElementById('stat-funded').textContent = s.funded;
+  document.getElementById('stat-released').textContent = s.released;
+  document.getElementById('stat-revenue').textContent = s.revenueNIGHT.toLocaleString();
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderOrders();
+}
+
+function renderOrders() {
+  const list = document.getElementById('orders-list');
+  let orders = allOrders;
+  if (activeFilter === 'funded')    orders = orders.filter(o => o.state === 'FUNDED');
+  else if (activeFilter === 'released') orders = orders.filter(o => o.state === 'RELEASED');
+  else if (activeFilter === 'fulfilled') orders = orders.filter(o => o.state === 'FULFILLED');
+  else if (activeFilter === 'open') orders = orders.filter(o => o.state === 'OPEN');
+
+  // Sort: funded first, then by createdAt desc
+  orders = [...orders].sort((a,b) => {
+    const priority = { FUNDED:0, RELEASED:1, FULFILLED:2, OPEN:3 };
+    const pa = priority[a.state] ?? 4, pb = priority[b.state] ?? 4;
+    if (pa !== pb) return pa - pb;
+    return (b.createdAt ?? 0) - (a.createdAt ?? 0);
+  });
+
+  if (!orders.length) {
+    list.innerHTML = `<div class="empty-state">No orders in this category yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = orders.map(o => renderOrderCard(o)).join('');
+}
+
+function renderOrderCard(o) {
+  const stateClass = (o.state ?? 'open').toLowerCase();
+  const emoji = EMOJIS[o.printfulProductType ?? o.type] ?? '📦';
+  const usd = (Number(o.price) * 0.04).toFixed(2);
+  const ago = o.createdAt ? timeAgo(o.createdAt) : '—';
+  const fundedAgo = o.fundedAt ? timeAgo(o.fundedAt) : null;
+
+  const shippingHtml = o.shipping
+    ? `<strong>${esc(o.shipping.name)}</strong>${esc(o.shipping.address1)}${o.shipping.address2 ? ', ' + esc(o.shipping.address2) : ''}<br>${esc(o.shipping.city)} ${esc(o.shipping.stateCode)} ${esc(o.shipping.zip)}<br>${esc(o.shipping.countryCode)}${o.shipping.email ? `<br><a href="mailto:${esc(o.shipping.email)}" style="color:var(--plasma);font-size:11px;">${esc(o.shipping.email)}</a>` : ''}`
+    : '<span style="color:var(--faint)">No shipping address yet</span>';
+
+  const printfulHtml = o.printfulOrder
+    ? `<strong>#${o.printfulOrder.id}</strong>Status: ${o.printfulOrder.status}${o.printfulOrder.trackingUrl ? `<br><a class="tracking-link" href="${esc(o.printfulOrder.trackingUrl)}" target="_blank">Track shipment →</a>` : ''}`
+    : '<span style="color:var(--faint)">Not placed yet</span>';
+
+  const actionButtons = [];
+  if (o.state === 'FUNDED' && !o.printfulOrder && o.shipping) {
+    actionButtons.push(`<button class="action-btn btn-fulfill" onclick="fulfillOrder('${esc(o.id)}')">🖨️ Place Printful Order</button>`);
+  }
+  if (o.state === 'FUNDED') {
+    actionButtons.push(`<button class="action-btn btn-release" onclick="markReleased('${esc(o.id)}')">✅ Mark Released</button>`);
+  }
+  if (o.printfulOrder?.trackingUrl) {
+    actionButtons.push(`<button class="action-btn btn-track" onclick="window.open('${esc(o.printfulOrder.trackingUrl)}','_blank')">📦 Track</button>`);
+  }
+  if (o.shipping?.name) {
+    actionButtons.push(`<button class="action-btn btn-copy" onclick="copyShipping('${esc(o.id)}')">📋 Copy Address</button>`);
+  }
+
+  return `
+    <div class="order-card ${stateClass}">
+      <div class="order-header">
+        <div class="order-emoji">${emoji}</div>
+        <div class="order-meta">
+          <div class="order-title">${esc(o.title)}</div>
+          <div class="order-id">${esc(o.id)} · ${Number(o.price).toLocaleString()} NIGHT (≈ $${usd}) · ${ago}</div>
+        </div>
+        <div class="order-badges">
+          <span class="badge ${stateClass}">${o.state ?? 'OPEN'}</span>
+          ${o.isNMOfficial ? '<span class="badge official">⊘ Official</span>' : ''}
+        </div>
+      </div>
+      <div class="order-body">
+        <div class="order-section">
+          <div class="order-section-title">Escrow State</div>
+          <div class="order-section-val">
+            <strong>${o.state ?? 'OPEN'}</strong>
+            ${o.fundedAt ? `Funded ${timeAgo(o.fundedAt)}` : ''}
+            ${o.state === 'FUNDED' && !o.shipping ? '<br><span style="color:var(--orange);font-size:11px;">⚡ Waiting for shipping address</span>' : ''}
+            ${o.state === 'FUNDED' && o.shipping && !o.printfulOrder ? '<br><span style="color:var(--orange);font-size:11px;">⚡ Ready to fulfill</span>' : ''}
+          </div>
+        </div>
+        <div class="order-section">
+          <div class="order-section-title">Shipping Address</div>
+          <div class="order-section-val">${shippingHtml}</div>
+        </div>
+        <div class="order-section">
+          <div class="order-section-title">Printful Order</div>
+          <div class="order-section-val">${printfulHtml}</div>
+        </div>
+      </div>
+      ${actionButtons.length ? `<div class="order-actions">${actionButtons.join('')}</div>` : ''}
+    </div>`;
+}
+
+async function fulfillOrder(orderId) {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Placing order…';
+  try {
+    const r = await fetch(`${API}/api/admin/fulfill`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: ADMIN_KEY, orderId }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    toast(`✓ Printful order #${data.printfulOrderId} placed!`, 'ok');
+    setTimeout(loadOrders, 800);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '🖨️ Place Printful Order';
+    toast(e.message || 'Failed to place order', 'err');
+  }
+}
+
+async function markReleased(orderId) {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Marking…';
+  try {
+    const r = await fetch(`${API}/api/admin/mark-released`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: ADMIN_KEY, orderId }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    toast('✓ Order marked as released', 'ok');
+    setTimeout(loadOrders, 500);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '✅ Mark Released';
+    toast(e.message || 'Failed', 'err');
+  }
+}
+
+function copyShipping(orderId) {
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order?.shipping) return;
+  const s = order.shipping;
+  const text = `${s.name}\n${s.address1}${s.address2 ? '\n'+s.address2 : ''}\n${s.city} ${s.stateCode} ${s.zip}\n${s.countryCode}${s.email ? '\n'+s.email : ''}`;
+  navigator.clipboard?.writeText(text).then(() => toast('Address copied to clipboard', 'ok')).catch(() => toast('Copy failed', 'err'));
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h/24)}d ago`;
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = 'toast', 3000);
+}
+
+function renderWaitlist(list) {
+  const el = document.getElementById('waitlist-list');
+  if (!list.length) { el.textContent = 'No signups yet.'; return; }
+  el.innerHTML = list.map(w => `
+    <div style="padding:10px 14px;background:var(--card);border:1px solid var(--rim2);border-radius:8px;margin-bottom:6px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+      <span style="color:var(--text2)">${esc(w.email)}</span>
+      <span style="color:var(--muted)">${esc(w.title || w.listingId)}</span>
+      <span style="color:var(--faint);margin-left:auto;">${timeAgo(w.at)}</span>
+    </div>`).join('');
+}
+
+// Auto-refresh every 30s while unlocked
+setInterval(() => { if (ADMIN_KEY) loadOrders(); }, 30000);
+</script>
+</body>
+</html>

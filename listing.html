@@ -31,9 +31,22 @@ nav{position:sticky;top:0;z-index:100;background:rgba(6,4,14,.9);backdrop-filter
 .page{max-width:960px;margin:0 auto;padding:40px 24px 80px;}
 
 /* hero image */
-.listing-img{width:100%;height:340px;border-radius:20px;border:1px solid var(--rim2);overflow:hidden;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:32px;position:relative;}
-.listing-img img{width:100%;height:100%;object-fit:cover;}
+.listing-img{width:100%;height:380px;border-radius:20px;border:1px solid var(--rim2);overflow:hidden;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:32px;position:relative;}
+.listing-img img{width:100%;height:100%;object-fit:contain;background:var(--surface);}
 .listing-img-badges{position:absolute;top:16px;left:16px;display:flex;gap:8px;}
+/* waitlist panel */
+.waitlist-panel{background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(157,92,246,.04));border:1px solid rgba(124,58,237,.2);border-radius:12px;padding:16px;margin-top:16px;}
+.waitlist-title{font-size:12px;font-weight:700;color:var(--glow);margin-bottom:4px;}
+.waitlist-sub{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5;}
+.waitlist-row{display:flex;gap:8px;}
+.waitlist-input{flex:1;background:var(--raised);border:1px solid var(--rim2);border-radius:7px;padding:8px 12px;font-size:12px;color:var(--text);font-family:var(--sans);outline:none;transition:border-color .2s;}
+.waitlist-input:focus{border-color:var(--ink);}
+.waitlist-input::placeholder{color:var(--faint);}
+.waitlist-btn{padding:8px 14px;background:linear-gradient(135deg,var(--ink),var(--plasma));color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.waitlist-btn:hover{transform:translateY(-1px);}
+.mainnet-notice{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:10px;padding:8px 12px;background:rgba(124,58,237,.05);border-radius:7px;border:1px solid rgba(124,58,237,.1);}
+.mainnet-dot{width:6px;height:6px;border-radius:50%;background:var(--plasma);box-shadow:0 0 6px var(--plasma);animation:glow-pulse 1.5s ease-in-out infinite;}
+@keyframes glow-pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 .badge{font-size:9.5px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.8px;border-radius:20px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;}
 .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
 .badge.digital{background:rgba(0,214,143,.15);color:var(--green);}
@@ -307,7 +320,22 @@ function renderListing() {
           ${isDigital ? `<button class="btn-download" id="download-btn" onclick="openDelivery()">⬇ Download Now</button>` : ''}
         </div>
 
-        <div class="escrow-info">
+        <div class="waitlist-panel" id="waitlist-panel">
+          <div class="waitlist-title">🌙 Reserve yours at mainnet</div>
+          <div class="waitlist-sub">ZK Escrow goes live on Midnight mainnet. Join the waitlist and we'll notify you the moment you can buy with NIGHT tokens.</div>
+          <div class="waitlist-row">
+            <input class="waitlist-input" id="waitlist-email" type="email" placeholder="your@email.com">
+            <button class="waitlist-btn" onclick="joinWaitlist()">Notify me →</button>
+          </div>
+          <div id="waitlist-success" style="display:none;font-size:12px;color:var(--green);font-family:var(--mono);margin-top:8px;">✓ You're on the list — we'll email you at launch.</div>
+        </div>
+
+        <div class="mainnet-notice">
+          <span class="mainnet-dot"></span>
+          Midnight mainnet launching 2026 · ZK escrow goes live then
+        </div>
+
+        <div class="escrow-info" style="margin-top:10px;">
           ⊘ Funds locked in ZK escrow on Midnight Network.<br>
           You control release — seller can't claim without your approval.<br>
           <a href="https://midnight.network" target="_blank">Learn about ZK escrow →</a>
@@ -506,6 +534,22 @@ function toast(msg, type='ok') {
   el.className = `toast show ${type}`;
   clearTimeout(el._t);
   el._t = setTimeout(() => el.className = 'toast', 2800);
+}
+
+function joinWaitlist() {
+  const email = document.getElementById('waitlist-email')?.value?.trim();
+  if (!email || !email.includes('@')) { toast('Enter a valid email address', 'err'); return; }
+  // Store locally and send to API (best-effort)
+  const waitlist = JSON.parse(localStorage.getItem('nm_waitlist') || '[]');
+  if (!waitlist.includes(email)) { waitlist.push(email); localStorage.setItem('nm_waitlist', JSON.stringify(waitlist)); }
+  fetch(`${API}/api/waitlist`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, listingId: ORDER_ID, title: listing?.title }),
+  }).catch(() => {}); // fire-and-forget, API endpoint optional
+  document.getElementById('waitlist-email').style.display = 'none';
+  document.querySelector('.waitlist-btn').style.display = 'none';
+  document.getElementById('waitlist-success').style.display = '';
+  toast('You\'re on the list! 🌙', 'ok');
 }
 
 loadListing();
