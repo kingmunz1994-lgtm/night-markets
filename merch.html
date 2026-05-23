@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Night Markets Merch</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --void:#06040e; --depth:#0d0a1a; --surface:#110e22; --raised:#16122a; --card:#1b1630;
+  --rim:#1e1a34; --rim2:#2a2448; --rim3:#3d3566;
+  --text:#ece8ff; --text2:#b8b0d8; --muted:#6b6390; --faint:#3a3460;
+  --ink:#7c3aed; --plasma:#9d5cf6; --glow:#b97dff; --halo:rgba(124,58,237,.18);
+  --green:#00d68f; --red:#f43f5e; --gold:#f5c518; --blue:#38bdf8;
+  --serif:'Instrument Serif',Georgia,serif; --sans:'Geist','Helvetica Neue',sans-serif;
+  --mono:'Geist Mono','Fira Code',monospace;
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--void);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 85% 0%,rgba(124,58,237,.07),transparent 70%);pointer-events:none;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(6,4,14,.9);backdrop-filter:blur(40px);border-bottom:1px solid var(--rim);padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--ink),var(--plasma));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;box-shadow:0 0 16px rgba(124,58,237,.4);}
+.logo-text{font-size:15px;font-weight:800;letter-spacing:-.04em;}
+.logo-text em{font-style:normal;color:var(--plasma);}
+.nav-links{display:flex;gap:16px;align-items:center;}
+.nav-link{font-size:12px;color:var(--muted);text-decoration:none;font-weight:500;transition:color .2s;}
+.nav-link:hover{color:var(--text);}
+.nav-link.active{color:var(--plasma);}
+
+.page{max-width:1100px;margin:0 auto;padding:56px 24px 80px;}
+
+.hero{text-align:center;margin-bottom:56px;}
+.eyebrow{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-family:var(--mono);display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;}
+.eyebrow::before,.eyebrow::after{content:'';width:20px;height:1px;background:var(--ink);}
+h1{font-family:var(--serif);font-size:52px;font-style:italic;line-height:1.1;letter-spacing:-.02em;margin-bottom:14px;}
+h1 em{font-style:normal;color:var(--glow);}
+.subtitle{font-size:16px;color:var(--text2);font-weight:300;line-height:1.6;max-width:540px;margin:0 auto 28px;}
+.hero-badges{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
+.hero-badge{background:var(--surface);border:1px solid var(--rim2);border-radius:20px;padding:6px 14px;font-size:11px;font-weight:600;font-family:var(--mono);color:var(--muted);display:flex;align-items:center;gap:5px;}
+.hero-badge span{color:var(--plasma);}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:520px){.grid{grid-template-columns:1fr;}}
+
+.product-card{background:var(--card);border:1px solid var(--rim2);border-radius:18px;overflow:hidden;transition:all .25s;text-decoration:none;color:var(--text);display:flex;flex-direction:column;}
+.product-card:hover{border-color:var(--rim3);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4);}
+.card-img{aspect-ratio:4/3;background:var(--raised);display:flex;align-items:center;justify-content:center;font-size:64px;position:relative;overflow:hidden;}
+.card-img img{width:100%;height:100%;object-fit:cover;}
+.card-badge{position:absolute;top:12px;left:12px;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.3);border-radius:20px;padding:4px 10px;font-size:9px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--plasma);backdrop-filter:blur(10px);}
+.card-body{padding:18px;flex:1;display:flex;flex-direction:column;gap:10px;}
+.card-name{font-size:16px;font-weight:700;letter-spacing:-.02em;}
+.card-desc{font-size:12px;color:var(--muted);line-height:1.6;flex:1;}
+.card-meta{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+.card-price{font-family:var(--serif);font-size:22px;font-style:italic;color:var(--glow);}
+.card-price small{font-family:var(--sans);font-size:11px;color:var(--muted);font-style:normal;margin-left:3px;}
+.card-brand{font-size:10px;font-family:var(--mono);color:var(--muted);}
+.btn-buy{display:block;width:100%;text-align:center;padding:12px;background:linear-gradient(135deg,var(--ink),var(--plasma));color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:all .2s;margin-top:14px;box-shadow:0 4px 16px rgba(124,58,237,.25);}
+.btn-buy:hover{box-shadow:0 8px 24px rgba(124,58,237,.4);transform:translateY(-1px);}
+
+.sizes-row{display:flex;flex-wrap:wrap;gap:4px;}
+.size-pill{padding:3px 8px;border-radius:20px;background:var(--raised);border:1px solid var(--rim2);font-size:10px;font-weight:600;font-family:var(--mono);color:var(--muted);}
+
+.note{margin-top:48px;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:14px;padding:20px 24px;display:flex;gap:14px;align-items:flex-start;}
+.note-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.note-text{font-size:13px;color:var(--text2);line-height:1.7;}
+.note-text strong{color:var(--glow);}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--rim2);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(0,214,143,.3);color:var(--green);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">
+    <div class="logo-mark">N</div>
+    <span class="logo-text"><em>Night</em> Markets</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Browse</a>
+    <a class="nav-link" href="sell.html">Sell</a>
+    <a class="nav-link active" href="merch.html">Merch</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="hero">
+    <div class="eyebrow">Official Collection</div>
+    <h1>Wear the<br><em>Night.</em></h1>
+    <p class="subtitle">Official Night Markets branded merch. Each purchase is a ZK-verified escrow transaction. Printed and shipped by Printful.</p>
+    <div class="hero-badges">
+      <div class="hero-badge"><span>⊘</span> ZK Escrow</div>
+      <div class="hero-badge"><span>🖨️</span> Printed by Printful</div>
+      <div class="hero-badge"><span>🌙</span> Pay in NIGHT tokens</div>
+    </div>
+  </div>
+
+  <div class="grid" id="merch-grid">
+    <div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;font-family:var(--mono);font-size:13px;">Loading…</div>
+  </div>
+
+  <div class="note">
+    <div class="note-icon">🌙</div>
+    <div class="note-text">
+      <strong>How it works:</strong> Click any item to open the listing page. Fund the ZK escrow with NIGHT tokens, submit your shipping address, and the seller releases the escrow. Night Markets automatically places the Printful order — your merch ships straight to you.<br>
+      Want to sell your own branded merch? <a href="sell.html" style="color:var(--plasma)">Create a Printful listing →</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = (()=>{ const s=new URLSearchParams(location.search).get('server'); return s?`http://${s}`:'http://localhost:3001'; })();
+const SERVER_PARAM = new URLSearchParams(location.search).get('server') || 'localhost:3001';
+
+const CATALOG_BRANDS = {
+  tshirt: 'Bella+Canvas 3001 · Unisex', hoodie: 'Gildan 18500 · Unisex',
+  mug: '11oz Ceramic', tote: 'Natural Canvas Tote', cap: 'Structured Dad Cap', poster: 'Matte Print',
+};
+
+async function loadMerch() {
+  const grid = document.getElementById('merch-grid');
+  try {
+    const r = await fetch(`${API}/api/listings?type=merch`);
+    const d = await r.json();
+    const items = d.listings ?? [];
+    if (!items.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;font-family:var(--mono);font-size:13px;">No merch listings found — is api-server running?</div>';
+      return;
+    }
+    grid.innerHTML = items.map(item => {
+      const usd = (item.price * 0.04).toFixed(2);
+      const brand = CATALOG_BRANDS[item.printfulProductType] ?? 'Printful';
+      const sizes = Array.isArray(item.sizes) ? item.sizes : [];
+      const listingUrl = `listing.html?id=${item.id}&server=${SERVER_PARAM}`;
+      return `
+        <a class="product-card" href="${listingUrl}">
+          <div class="card-img">
+            <span>${item.emoji ?? '🌙'}</span>
+            <div class="card-badge">⊘ ZK Escrow</div>
+          </div>
+          <div class="card-body">
+            <div class="card-name">${item.title}</div>
+            <div class="card-desc">${item.desc ?? ''}</div>
+            ${sizes.length ? `<div class="sizes-row">${sizes.map(s=>`<span class="size-pill">${s}</span>`).join('')}</div>` : ''}
+            <div class="card-meta">
+              <div class="card-price">${Number(item.price).toLocaleString()} <small>NIGHT</small></div>
+              <div class="card-brand">${brand}</div>
+            </div>
+            <div class="card-meta" style="font-size:11px;color:var(--muted);font-family:var(--mono);">
+              ≈ $${usd} USD at 0.04/NIGHT
+            </div>
+            <span class="btn-buy">Buy with ZK Escrow →</span>
+          </div>
+        </a>`;
+    }).join('');
+  } catch {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;font-family:var(--mono);font-size:13px;">Could not load merch — is api-server running?</div>';
+  }
+}
+
+loadMerch();
+</script>
+</body>
+</html>

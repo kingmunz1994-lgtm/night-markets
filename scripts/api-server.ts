@@ -433,6 +433,77 @@ async function pfPlaceOrder(listing: any, shipping: any, size: string): Promise<
     }),
   });
 }
+// ─── Shopify integration ──────────────────────────────────────────────────────
+async function shopifyCall(shop: string, token: string, path: string, opts: RequestInit = {}): Promise<any> {
+  const base = shop.startsWith('http') ? shop.replace(/\/$/, '') : `https://${shop.replace(/\/$/, '')}`;
+  const r = await fetch(`${base}/admin/api/2024-01${path}`, {
+    ...opts,
+    headers: { 'X-Shopify-Access-Token': token, 'Content-Type': 'application/json', ...(opts.headers ?? {}) },
+  });
+  const d = await r.json() as any;
+  if (!r.ok) throw new Error(typeof d?.errors === 'string' ? d.errors : JSON.stringify(d?.errors) ?? `Shopify ${r.status}`);
+  return d;
+}
+
+async function shopifyCreateOrder(listing: any, shipping: any): Promise<any> {
+  const { shopifyShop, shopifyToken, shopifyVariantId, title, id } = listing;
+  if (!shopifyShop || !shopifyToken) throw new Error('Listing missing Shopify credentials');
+  const nameParts = (shipping.name ?? '').split(' ');
+  return shopifyCall(shopifyShop, shopifyToken, '/orders.json', {
+    method: 'POST',
+    body: JSON.stringify({
+      order: {
+        line_items: [{ variant_id: shopifyVariantId ? Number(shopifyVariantId) : undefined, quantity: 1, title }],
+        shipping_address: {
+          first_name: nameParts[0] ?? '',
+          last_name:  nameParts.slice(1).join(' ') || nameParts[0] ?? '',
+          address1:   shipping.address1 ?? '',
+          address2:   shipping.address2 ?? '',
+          city:       shipping.city ?? '',
+          province:   shipping.stateCode ?? '',
+          country:    shipping.countryCode ?? '',
+          zip:        shipping.zip ?? '',
+        },
+        email:            shipping.email ?? '',
+        financial_status: 'paid',
+        tags:             'night-markets',
+        note:             `Night Markets ZK escrow — Order ID: ${id}`,
+      },
+    }),
+  });
+}
+
+// ─── Printful mockup generator ────────────────────────────────────────────────
+const _mockupCache = new Map<string, string>(); // `${pfId}:${color}:${designUrl}` → mockupUrl
+
+async function pfCreateMockup(pfId: number, color: string, designUrl: string, size: string): Promise<string> {
+  const cacheKey = `${pfId}:${color}:${designUrl}`;
+  if (_mockupCache.has(cacheKey)) return _mockupCache.get(cacheKey)!;
+  const variantId = await pfGetVariantId(pfId, color, size);
+  if (!variantId) throw new Error('Could not resolve variant for mockup');
+  const task = await pfCall(`/mockup-generator/create-task/${pfId}`, {
+    method: 'POST',
+    body: JSON.stringify({
+      variant_ids: [variantId],
+      format: 'jpg',
+      files: [{ placement: 'front', image_url: designUrl, position: { area_width: 1800, area_height: 2100, width: 1800, height: 1800, top: 150, left: 0 } }],
+    }),
+  });
+  const taskKey = task.task_key;
+  if (!taskKey) throw new Error('Printful mockup task returned no task_key');
+  // Poll up to 30 s (6 × 5 s)
+  for (let i = 0; i < 6; i++) {
+    await new Promise(r => setTimeout(r, 5_000));
+    const result = await pfCall(`/mockup-generator/task?task_key=${taskKey}`);
+    if (result.status === 'completed') {
+      const url: string = result.mockups?.[0]?.mockup_url ?? result.mockups?.[0]?.url ?? '';
+      if (url) { _mockupCache.set(cacheKey, url); return url; }
+    }
+    if (result.status === 'error') throw new Error(`Printful mockup failed: ${result.error ?? 'unknown'}`);
+  }
+  throw new Error('Printful mockup timed out — retry in a moment');
+}
+
 const _nightIdStore:  Map<string, string> = new Map(); // "name.night" → address
 const _nightScoreStore: Map<string, number> = new Map(); // address → cumulative action score
 const _scoreEventLog:   any[]              = [];         // full event history
@@ -469,6 +540,30 @@ const _tokenStore: Map<string, any> = new Map();
   if (!_curveStore.has(address)) {
     _curveStore.set(address, { tokenAddress:address, nightReserve:t.nr, tokenReserve:t.tr, totalBuys:t.buys, totalSells:t.sells, graduated:t.nr>=85_000_000n, privacy:true, createdAt:Date.now() });
   }
+});
+
+// ─── Night Markets official merch (pre-seeded Printful listings) ─────────────
+const NM_DESIGN_URL = process.env.NM_DESIGN_URL ?? '';
+[
+  { id:'nm-merch-tee',    type:'tshirt',  name:'Night Markets Tee',     emoji:'👕', price:750,  cat:'clothing'     },
+  { id:'nm-merch-hoodie', type:'hoodie',  name:'Night Markets Hoodie',  emoji:'🧥', price:1250, cat:'clothing'     },
+  { id:'nm-merch-mug',    type:'mug',     name:'Night Markets Mug',     emoji:'☕', price:375,  cat:'accessories'  },
+  { id:'nm-merch-tote',   type:'tote',    name:'Night Markets Tote',    emoji:'🛍️', price:450, cat:'accessories'  },
+  { id:'nm-merch-cap',    type:'cap',     name:'Night Markets Cap',     emoji:'🧢', price:500,  cat:'clothing'     },
+  { id:'nm-merch-poster', type:'poster',  name:'Night Markets Poster',  emoji:'🖼️', price:375, cat:'home'         },
+].forEach(m => {
+  if (_listingStore.has(m.id)) return;
+  const cat = PF_CATALOG.find(p => p.id === m.type)!;
+  _listingStore.set(m.id, {
+    id: m.id, title: m.name, cat: m.cat, price: m.price,
+    desc: `Official Night Markets branded ${m.name.replace('Night Markets ', '')}. ZK-verified purchase, printed & shipped by Printful.`,
+    emoji: m.emoji, sellerId: 'nightmarkets.io',
+    type: 'printful', printfulProductType: m.type,
+    designUrl: NM_DESIGN_URL || null,
+    printfulColor: cat?.colors[0] ?? 'Black',
+    sizes: cat?.sizes ?? ['M'],
+    state: 'OPEN', isNMOfficial: true, createdAt: Date.now(),
+  });
 });
 
 // ─── Task store (night-work) ──────────────────────────────────────────────────
@@ -829,6 +924,19 @@ const server = http.createServer(async (req, res) => {
             } else {
               console.warn(`  ⚠ [release] no design URL on listing for orderId=${orderId}`);
             }
+          } else if (listing.type === 'shopify') {
+            // Shopify: create a paid order in the seller's store using buyer's shipping address
+            shippingAddress = _shippingStore.get(String(orderId)) ?? null;
+            if (shippingAddress && listing.shopifyShop && listing.shopifyToken) {
+              try {
+                const shOrder = await shopifyCreateOrder(listing, shippingAddress);
+                console.log(`  🛍️  [release] Shopify order #${shOrder?.order?.id} created — ${shippingAddress.name}, ${shippingAddress.countryCode}`);
+              } catch (shErr: any) {
+                console.error(`  ⚠ [release] Shopify order failed for ${orderId}:`, shErr.message ?? shErr);
+              }
+            } else if (!shippingAddress) {
+              console.warn(`  ⚠ [release] no shipping address on file for orderId=${orderId}`);
+            }
           } else if (listing.type === 'physical') {
             shippingAddress = _shippingStore.get(String(orderId)) ?? null;
             if (shippingAddress) {
@@ -930,11 +1038,12 @@ const server = http.createServer(async (req, res) => {
     let body: any;
     try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
     const { id, title, cat, price, cond, desc, from: shipFrom, emoji, sellerId,
-            type, imageUrl, deliveryUrl, printfulProductType, designUrl, printfulColor, sizes, sellerEmail } = body;
+            type, imageUrl, deliveryUrl, printfulProductType, designUrl, printfulColor, sizes, sellerEmail,
+            shopifyShop, shopifyToken, shopifyProductId, shopifyVariantId, shopifyVariantTitle } = body;
     if (!id || !title || !price) return json(res, 400, { error: 'id, title, price required' });
     const listing = {
       id, title, cat, price, cond, desc, shipFrom, emoji, sellerId,
-      type: type || 'physical',   // 'digital' | 'printful' | 'physical'
+      type: type || 'physical',   // 'digital' | 'printful' | 'physical' | 'shopify'
       imageUrl: imageUrl || null,
       deliveryUrl: deliveryUrl || null,       // secret — never returned to buyers
       printfulProductType: printfulProductType || null,
@@ -942,16 +1051,27 @@ const server = http.createServer(async (req, res) => {
       printfulColor: printfulColor || null,
       sizes: sizes || null,
       sellerEmail: sellerEmail || null,
+      // Shopify — token is secret (same treatment as deliveryUrl)
+      shopifyShop: shopifyShop || null,
+      shopifyToken: shopifyToken || null,     // never returned to buyers
+      shopifyProductId: shopifyProductId || null,
+      shopifyVariantId: shopifyVariantId || null,
+      shopifyVariantTitle: shopifyVariantTitle || null,
       state: 'OPEN',
       createdAt: Date.now(),
     };
     _listingStore.set(id, listing);
-    return json(res, 200, { ok: true, listing: { ...listing, deliveryUrl: undefined } });
+    const { deliveryUrl: _d, shopifyToken: _t, ...pub } = listing;
+    return json(res, 200, { ok: true, listing: pub });
   }
 
   // ── GET /api/listings ──────────────────────────────────────────────────────────
-  if (method === 'GET' && url === '/api/listings') {
-    const listings = [..._listingStore.values()].map(({ deliveryUrl: _, ...pub }) => pub);
+  if (method === 'GET' && (url === '/api/listings' || url.startsWith('/api/listings?'))) {
+    const params = new URL('http://x' + url).searchParams;
+    const typeFilter = params.get('type');
+    let listings = [..._listingStore.values()].map(({ deliveryUrl: _, shopifyToken: __, ...pub }) => pub);
+    if (typeFilter === 'merch')    listings = listings.filter(l => l.isNMOfficial);
+    else if (typeFilter)           listings = listings.filter(l => l.type === typeFilter);
     return json(res, 200, { listings });
   }
 
@@ -960,7 +1080,7 @@ const server = http.createServer(async (req, res) => {
     const id = url.split('/')[3];
     const listing = _listingStore.get(id);
     if (!listing) return json(res, 404, { error: 'Listing not found' });
-    const { deliveryUrl: _, ...pub } = listing;
+    const { deliveryUrl: _, shopifyToken: __, ...pub } = listing;
     return json(res, 200, { listing: pub });
   }
 
@@ -1022,6 +1142,50 @@ const server = http.createServer(async (req, res) => {
       } catch { /* return cached */ }
     }
     return json(res, 200, { order: { id: pfOrder.id, status: pfOrder.status, tracking: pfOrder.shipments?.[0]?.tracking_url ?? null } });
+  }
+
+  // ── POST /api/printful/mockup ──────────────────────────────────────────────────
+  // Creates a product mockup via Printful API. Requires PF_TOKEN + public design URL.
+  if (method === 'POST' && url === '/api/printful/mockup') {
+    if (!PF_TOKEN) return json(res, 400, { error: 'PRINTFUL_API_TOKEN not configured in .env' });
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { productId, color = 'Black', designUrl, size } = body;
+    if (!productId || !designUrl) return json(res, 400, { error: 'productId and designUrl required' });
+    const cat = PF_CATALOG.find(p => p.id === productId);
+    if (!cat) return json(res, 400, { error: `Unknown productId: ${productId}. Valid: ${PF_CATALOG.map(p=>p.id).join(', ')}` });
+    try {
+      const mockupUrl = await pfCreateMockup(cat.pfId, color, designUrl, size || cat.sizes[0]);
+      return json(res, 200, { ok: true, mockupUrl });
+    } catch (err: any) {
+      return json(res, 500, { error: err.message ?? 'Mockup generation failed' });
+    }
+  }
+
+  // ── GET /api/shopify/products ──────────────────────────────────────────────────
+  // Proxies Shopify Admin API product list for a seller's store.
+  if (method === 'GET' && url.startsWith('/api/shopify/products')) {
+    const params = new URL('http://x' + url).searchParams;
+    const shop  = params.get('shop')  ?? '';
+    const token = params.get('token') ?? '';
+    if (!shop || !token) return json(res, 400, { error: 'shop and token query params required' });
+    try {
+      const data = await shopifyCall(shop, token, '/products.json?limit=50&status=active');
+      const products = (data.products ?? []).map((p: any) => ({
+        id:       String(p.id),
+        title:    p.title,
+        image:    p.image?.src ?? p.images?.[0]?.src ?? null,
+        variants: (p.variants ?? []).map((v: any) => ({
+          id:    String(v.id),
+          title: v.title,
+          price: v.price,
+          sku:   v.sku ?? '',
+        })),
+      }));
+      return json(res, 200, { products });
+    } catch (err: any) {
+      return json(res, 400, { error: err.message ?? 'Could not fetch Shopify products — check shop URL and token' });
+    }
   }
 
   // ── POST /api/ratings/submit ───────────────────────────────────────────────────

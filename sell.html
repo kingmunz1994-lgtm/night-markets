@@ -39,7 +39,7 @@ h1 em{font-style:normal;color:var(--glow);}
 .subtitle{font-size:15px;color:var(--text2);font-weight:300;line-height:1.6;}
 
 /* type tabs */
-.type-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:32px;}
+.type-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:32px;}
 .type-tab{background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:18px 16px;cursor:pointer;transition:all .2s;text-align:left;}
 .type-tab:hover{border-color:var(--rim2);}
 .type-tab.selected{border-color:var(--ink);background:rgba(124,58,237,.08);}
@@ -154,9 +154,30 @@ select option{background:var(--depth);color:var(--text);}
   .layout{display:grid;grid-template-columns:1fr 300px;gap:32px;align-items:start;}
   .form-col{min-width:0;}
 }
+/* mockup preview */
+.mockup-preview{width:100%;max-height:200px;object-fit:contain;border-radius:10px;margin-top:10px;display:none;}
+.mockup-preview.show{display:block;}
+.btn-mockup{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(124,58,237,.12);border:1px solid var(--ink);border-radius:8px;font-size:12px;font-weight:700;color:var(--plasma);cursor:pointer;transition:all .2s;margin-top:10px;}
+.btn-mockup:hover{background:rgba(124,58,237,.2);}
+.btn-mockup:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Shopify product picker */
+.shopify-products{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;max-height:320px;overflow-y:auto;}
+.shopify-product{background:var(--raised);border:1px solid var(--rim2);border-radius:10px;padding:10px;cursor:pointer;transition:all .2s;display:flex;gap:10px;align-items:center;}
+.shopify-product:hover{border-color:var(--rim3);}
+.shopify-product.selected{border-color:var(--ink);background:rgba(124,58,237,.1);}
+.shopify-product-img{width:44px;height:44px;border-radius:6px;object-fit:cover;background:var(--surface);flex-shrink:0;}
+.shopify-product-info{min-width:0;}
+.shopify-product-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shopify-product-variants{font-size:11px;color:var(--muted);margin-top:2px;}
+.shopify-variant-sel{width:100%;background:var(--raised);border:1px solid var(--rim2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text);font-family:var(--sans);outline:none;margin-top:8px;}
+.shopify-variant-sel:focus{border-color:var(--ink);}
+.preview-badge.shopify{background:rgba(245,197,24,.1);color:var(--gold);}
+
 @media(max-width:600px){
   .field-row{grid-template-columns:1fr;}
-  .type-tabs{grid-template-columns:1fr;}
+  .type-tabs{grid-template-columns:1fr 1fr;}
+  .shopify-products{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -170,6 +191,7 @@ select option{background:var(--depth);color:var(--text);}
   <div class="nav-links">
     <a class="nav-link" href="index.html">Browse</a>
     <a class="nav-link active" href="sell.html">Sell</a>
+    <a class="nav-link" href="merch.html">Merch</a>
   </div>
 </nav>
 
@@ -199,6 +221,11 @@ select option{background:var(--depth);color:var(--text);}
           <div class="tab-icon">📦</div>
           <div class="tab-title">Physical Item</div>
           <div class="tab-desc">You ship it yourself. Buyer releases on delivery.</div>
+        </div>
+        <div class="type-tab" data-type="shopify" onclick="selectType('shopify')">
+          <div class="tab-icon">🛍️</div>
+          <div class="tab-title">Shopify Store</div>
+          <div class="tab-desc">Import from your Shopify store. Order created on release.</div>
         </div>
       </div>
 
@@ -271,6 +298,8 @@ select option{background:var(--depth);color:var(--text);}
             <div class="img-preview-empty">🎨</div>
             <div>Paste your design URL above to preview</div>
           </div>
+          <button type="button" class="btn-mockup" id="btn-mockup" onclick="generateMockup()" disabled>🖼️ Generate mockup</button>
+          <img class="mockup-preview" id="mockup-preview" alt="Mockup preview">
         </div>
 
         <div class="field">
@@ -308,6 +337,33 @@ select option{background:var(--depth);color:var(--text);}
           <div class="field">
             <label>Estimated delivery</label>
             <input type="text" id="f-eta" placeholder="e.g. 5–10 business days">
+          </div>
+        </div>
+      </div>
+
+      <!-- SHOPIFY -->
+      <div class="section" id="section-shopify" style="display:none;">
+        <div class="section-title">Your Shopify store</div>
+        <div class="field">
+          <label>Store URL <span class="req">*</span></label>
+          <input type="text" id="f-shopify-shop" placeholder="your-store.myshopify.com">
+        </div>
+        <div class="field secret-field">
+          <label>Admin API access token <span class="req">*</span></label>
+          <input type="password" id="f-shopify-token" placeholder="shpat_…">
+          <div class="secret-note">Stored server-side only — never exposed to buyers. Used to place orders on release.</div>
+        </div>
+        <div class="field">
+          <button type="button" class="btn btn-ghost" style="width:auto;padding:10px 20px;" onclick="importShopifyProducts()">Import products →</button>
+        </div>
+        <div id="shopify-products-wrap" style="display:none">
+          <div class="field">
+            <label>Select product <span class="req">*</span></label>
+            <div class="shopify-products" id="shopify-products"></div>
+          </div>
+          <div class="field" id="shopify-variant-field" style="display:none">
+            <label>Variant</label>
+            <select class="shopify-variant-sel" id="shopify-variant-sel" onchange="selectShopifyVariant()"></select>
           </div>
         </div>
       </div>
@@ -377,8 +433,11 @@ select option{background:var(--depth);color:var(--text);}
 const API = (()=>{ const s=new URLSearchParams(location.search).get('server'); return s?`http://${s}`:'http://localhost:3001'; })();
 let selectedType = 'digital';
 let pfCatalog = [];
-let selectedProduct = null; // catalog item
+let selectedProduct = null; // Printful catalog item
 let selectedColor = null;
+let shopifyProducts = [];
+let selectedShopifyProduct = null;
+let selectedShopifyVariant = null;
 
 // Load Printful catalog on page load
 async function loadPfCatalog() {
@@ -417,6 +476,7 @@ function selectPfProduct(id) {
   sizeEl.innerHTML = selectedProduct.sizes.map((s,i) => `<label class="size-chip"><input type="checkbox" value="${s}" class="sz" ${i>0&&i<5?'checked':''}> ${s}</label>`).join('');
   document.getElementById('sizes-field').style.display = '';
   updateMarginBox();
+  updateDesignPreviewAndMockupBtn();
   // Update preview badge
   const badge = document.getElementById('prev-badge');
   badge.textContent = selectedProduct.name;
@@ -436,6 +496,7 @@ function updateDesignPreview() {
   } else {
     el.innerHTML = '<div class="img-preview-empty">🎨</div><div>Paste your design URL above to preview</div>';
   }
+  updateDesignPreviewAndMockupBtn();
 }
 
 function updateMarginBox() {
@@ -458,18 +519,109 @@ function selectType(t) {
   document.getElementById('section-digital').style.display  = t === 'digital'  ? '' : 'none';
   document.getElementById('section-printful').style.display = t === 'printful' ? '' : 'none';
   document.getElementById('section-physical').style.display = t === 'physical' ? '' : 'none';
-  const badges  = { digital:'digital', printful:'printful', physical:'physical' };
-  const labels  = { digital:'Instant Download', printful:'Printed & Shipped', physical:'Self-ship Escrow' };
-  const emojis  = { digital:'📥', printful:'🖨️', physical:'📦' };
-  const badge   = document.getElementById('prev-badge');
-  badge.className = `preview-badge ${badges[t]}`;
-  badge.textContent = { digital:'Digital', printful:'Printful', physical:'Physical' }[t];
+  document.getElementById('section-shopify').style.display  = t === 'shopify'  ? '' : 'none';
+  const labels = { digital:'Instant Download', printful:'Printed & Shipped', physical:'Self-ship Escrow', shopify:'Shopify Order' };
+  const emojis = { digital:'📥', printful:'🖨️', physical:'📦', shopify:'🛍️' };
+  const badge  = document.getElementById('prev-badge');
+  badge.className = `preview-badge ${t}`;
+  badge.textContent = { digital:'Digital', printful:'Printful', physical:'Physical', shopify:'Shopify' }[t];
   document.getElementById('prev-type-badge').textContent = labels[t];
   document.getElementById('prev-emoji').textContent = emojis[t];
   // update cat default
   const cat = document.getElementById('f-cat');
   if (t === 'digital' && cat.value === 'clothing') cat.value = 'ebooks';
-  if (t === 'printful') cat.value = 'clothing';
+  if (t === 'printful' || t === 'shopify') cat.value = 'clothing';
+}
+
+// ── Printful mockup ─────────────────────────────────────────────────────────
+function updateDesignPreviewAndMockupBtn() {
+  const url = document.getElementById('f-design-url').value.trim();
+  const btn = document.getElementById('btn-mockup');
+  btn.disabled = !(url && selectedProduct);
+}
+
+async function generateMockup() {
+  const designUrl = document.getElementById('f-design-url').value.trim();
+  if (!designUrl || !selectedProduct) { toast('Paste a design URL and choose a product first', 'err'); return; }
+  const btn = document.getElementById('btn-mockup');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+  try {
+    const r = await fetch(`${API}/api/printful/mockup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId: selectedProduct.id, color: selectedColor || selectedProduct.colors[0], designUrl }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Mockup failed');
+    const img = document.getElementById('mockup-preview');
+    img.src = d.mockupUrl;
+    img.classList.add('show');
+    toast('Mockup ready!', 'ok');
+  } catch (e) {
+    toast(e.message || 'Mockup generation failed', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🖼️ Generate mockup';
+  }
+}
+
+// ── Shopify product import ──────────────────────────────────────────────────
+async function importShopifyProducts() {
+  const shop  = document.getElementById('f-shopify-shop').value.trim();
+  const token = document.getElementById('f-shopify-token').value.trim();
+  if (!shop || !token) { toast('Enter store URL and access token', 'err'); return; }
+  toast('Importing products…', 'ok');
+  try {
+    const r = await fetch(`${API}/api/shopify/products?shop=${encodeURIComponent(shop)}&token=${encodeURIComponent(token)}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Import failed');
+    shopifyProducts = d.products ?? [];
+    if (!shopifyProducts.length) { toast('No active products found in your store', 'err'); return; }
+    renderShopifyProducts();
+    document.getElementById('shopify-products-wrap').style.display = '';
+    toast(`${shopifyProducts.length} products imported`, 'ok');
+  } catch (e) {
+    toast(e.message || 'Could not connect to Shopify', 'err');
+  }
+}
+
+function renderShopifyProducts() {
+  const el = document.getElementById('shopify-products');
+  el.innerHTML = shopifyProducts.map(p => `
+    <div class="shopify-product" data-id="${p.id}" onclick="selectShopifyProduct('${p.id}')">
+      ${p.image ? `<img class="shopify-product-img" src="${p.image}" onerror="this.style.display='none'">` : '<div class="shopify-product-img" style="display:flex;align-items:center;justify-content:center;font-size:22px;">🛍️</div>'}
+      <div class="shopify-product-info">
+        <div class="shopify-product-name">${p.title}</div>
+        <div class="shopify-product-variants">${p.variants.length} variant${p.variants.length !== 1 ? 's' : ''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectShopifyProduct(id) {
+  selectedShopifyProduct = shopifyProducts.find(p => p.id === id);
+  selectedShopifyVariant = selectedShopifyProduct?.variants[0] ?? null;
+  if (!selectedShopifyProduct) return;
+  document.querySelectorAll('.shopify-product').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+  // Populate variant selector
+  const sel = document.getElementById('shopify-variant-sel');
+  sel.innerHTML = selectedShopifyProduct.variants.map(v =>
+    `<option value="${v.id}" data-price="${v.price}" data-title="${v.title}">${v.title} — $${v.price}</option>`
+  ).join('');
+  document.getElementById('shopify-variant-field').style.display = selectedShopifyProduct.variants.length > 1 ? '' : 'none';
+  // Auto-fill title + image
+  if (!document.getElementById('f-title').value) document.getElementById('f-title').value = selectedShopifyProduct.title;
+  if (selectedShopifyProduct.image) document.getElementById('f-image').value = selectedShopifyProduct.image;
+  updateImagePreview();
+  // Update preview
+  document.getElementById('prev-badge').textContent = 'Shopify';
+  document.getElementById('prev-emoji').textContent = '🛍️';
+}
+
+function selectShopifyVariant() {
+  const sel = document.getElementById('shopify-variant-sel');
+  const id = sel.value;
+  selectedShopifyVariant = selectedShopifyProduct?.variants.find(v => v.id === id) ?? null;
 }
 
 function updateImagePreview() {
@@ -523,9 +675,14 @@ async function submitListing() {
   if (!desc)     { toast('Description is required', 'err'); return; }
   if (!price || isNaN(Number(price)) || Number(price) < 1) { toast('Enter a valid price in NIGHT', 'err'); return; }
   if (!sellerId) { toast('Your wallet address is required', 'err'); return; }
-  if (selectedType === 'digital' && !deliveryUrl) { toast('Delivery URL is required for digital listings', 'err'); return; }
-  if (selectedType === 'printful' && !selectedProduct) { toast('Choose a product first', 'err'); return; }
-  if (selectedType === 'printful' && !designUrl) { toast('Paste your design URL', 'err'); return; }
+  const shopifyShop  = document.getElementById('f-shopify-shop')?.value.trim() ?? '';
+  const shopifyToken = document.getElementById('f-shopify-token')?.value.trim() ?? '';
+  if (selectedType === 'digital'  && !deliveryUrl)          { toast('Delivery URL is required for digital listings', 'err'); return; }
+  if (selectedType === 'printful' && !selectedProduct)      { toast('Choose a base product first', 'err'); return; }
+  if (selectedType === 'printful' && !designUrl)            { toast('Paste your design file URL', 'err'); return; }
+  if (selectedType === 'shopify'  && !shopifyShop)          { toast('Enter your Shopify store URL', 'err'); return; }
+  if (selectedType === 'shopify'  && !shopifyToken)         { toast('Enter your Shopify Admin API token', 'err'); return; }
+  if (selectedType === 'shopify'  && !selectedShopifyProduct) { toast('Import and select a product first', 'err'); return; }
 
   const selectedSizes = [...document.querySelectorAll('.sz:checked')].map(c => c.value);
 
@@ -555,8 +712,13 @@ async function submitListing() {
         designUrl:           selectedType === 'printful' ? designUrl : null,
         printfulColor:       selectedType === 'printful' ? selectedColor : null,
         sizes:               selectedType === 'printful' ? selectedSizes : null,
-        shipFrom:           shipFrom || null,
-        emoji:              selectedType === 'digital' ? '📥' : selectedType === 'printful' ? '🖨️' : '📦',
+        shopifyShop:         selectedType === 'shopify' ? shopifyShop : null,
+        shopifyToken:        selectedType === 'shopify' ? shopifyToken : null,
+        shopifyProductId:    selectedType === 'shopify' ? selectedShopifyProduct?.id : null,
+        shopifyVariantId:    selectedType === 'shopify' ? (selectedShopifyVariant?.id ?? selectedShopifyProduct?.variants[0]?.id) : null,
+        shopifyVariantTitle: selectedType === 'shopify' ? (selectedShopifyVariant?.title ?? '') : null,
+        shipFrom:            shipFrom || null,
+        emoji:               { digital:'📥', printful:'🖨️', physical:'📦', shopify:'🛍️' }[selectedType] ?? '📦',
       }),
     });
     const data = await res.json();
@@ -585,6 +747,8 @@ async function submitListing() {
       ? '⊘ Your delivery URL is encrypted in the server and only revealed to the buyer when you release the escrow.'
       : selectedType === 'printful'
       ? '⊘ When you release the escrow, Night Markets automatically places the Printful order using the buyer\'s shipping address. Nothing else needed.'
+      : selectedType === 'shopify'
+      ? '⊘ When you release the escrow, Night Markets creates a paid order in your Shopify store using the buyer\'s shipping address.'
       : '⊘ When the buyer funds escrow, ship the item and provide tracking. Release is manual — buyer confirms delivery.';
     document.getElementById('seller-note').textContent = note;
     toast('Listing created!', 'ok');
