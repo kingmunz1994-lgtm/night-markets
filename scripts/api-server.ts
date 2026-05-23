@@ -456,7 +456,7 @@ async function shopifyCreateOrder(listing: any, shipping: any): Promise<any> {
         line_items: [{ variant_id: shopifyVariantId ? Number(shopifyVariantId) : undefined, quantity: 1, title }],
         shipping_address: {
           first_name: nameParts[0] ?? '',
-          last_name:  nameParts.slice(1).join(' ') || nameParts[0] ?? '',
+          last_name:  (nameParts.slice(1).join(' ') || nameParts[0]) ?? '',
           address1:   shipping.address1 ?? '',
           address2:   shipping.address2 ?? '',
           city:       shipping.city ?? '',
