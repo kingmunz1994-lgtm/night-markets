@@ -152,7 +152,7 @@ async function loadMerch() {
       const usd = (item.price * 0.04).toFixed(2);
       const brand = CATALOG_BRANDS[item.printfulProductType] ?? 'Printful';
       const sizes = Array.isArray(item.sizes) ? item.sizes : [];
-      const listingUrl = `listing.html?id=${item.id}&server=${SERVER_PARAM}`;
+      const listingUrl = `/listing?id=${item.id}&server=${SERVER_PARAM}`;
       return `
         <a class="product-card" href="${listingUrl}">
           <div class="card-img" style="${item.designUrl ? `background-image:url('${item.designUrl}');background-size:contain;background-repeat:no-repeat;background-position:center;background-color:var(--raised);` : ''}">

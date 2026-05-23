@@ -160,16 +160,21 @@ let selectedSize = null;
 
 // ── Load listing ───────────────────────────────────────────────────────────────
 async function loadListing() {
-  if (!ORDER_ID) { showError('No listing ID in URL.'); return; }
+  if (!ORDER_ID) { showError('No listing ID in URL. Try going back to the <a href="merch.html" style="color:var(--plasma)">merch page</a>.'); return; }
   try {
     const r = await fetch(`${API}/api/listings/${ORDER_ID}`);
-    if (!r.ok) { showError('Listing not found.'); return; }
+    if (!r.ok) {
+      let errMsg = 'Listing not found.';
+      try { const d = await r.json(); errMsg = d.error || errMsg; } catch {}
+      showError(`${errMsg} (id: ${ORDER_ID})`);
+      return;
+    }
     const data = await r.json();
     listing = data.listing;
     document.title = `${listing.title} — Night Markets`;
     renderListing();
   } catch (e) {
-    showError('Could not connect to Night Markets server. Is it running?');
+    showError(`Could not reach Night Markets API at ${API}. Make sure api-server is running on port 3001.`);
   }
 }
 
@@ -193,8 +198,9 @@ function renderListing() {
   const typeBadge  = isDigital ? 'digital' : isPrintful ? 'printful' : 'physical';
   const typeLabel  = isDigital ? 'Digital Download' : isPrintful ? 'Printful Product' : 'Physical Item';
   const typeEmoji  = isDigital ? '📥' : isPrintful ? '🖨️' : '📦';
-  const imgHtml    = listing.imageUrl
-    ? `<img src="${esc(listing.imageUrl)}" alt="${esc(listing.title)}" onerror="this.style.display='none'">`
+  const heroImg    = listing.imageUrl || listing.designUrl || null;
+  const imgHtml    = heroImg
+    ? `<img src="${esc(heroImg)}" alt="${esc(listing.title)}" style="object-fit:${listing.designUrl && !listing.imageUrl ? 'contain' : 'cover'}" onerror="this.style.display='none'">`
     : `<span>${typeEmoji}</span>`;
 
   const sellerShort = listing.sellerId
@@ -349,7 +355,10 @@ async function fundEscrow() {
     });
     clearInterval(iv);
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'Funding failed');
+    if (!r.ok) {
+      if (r.status === 503) throw new Error('ZK Escrow goes live at mainnet — join the waitlist to be first.');
+      throw new Error(data.error || 'Funding failed');
+    }
 
     escrowState = 'funded';
     setStep(1);
