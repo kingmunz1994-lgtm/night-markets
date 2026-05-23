@@ -18,7 +18,7 @@
     "transact": "node --env-file=.env --import tsx scripts/transact.ts",
     "full-flow": "node --env-file=.env --import tsx scripts/full-flow.ts",
     "probe": "node --env-file=.env --import tsx scripts/probe.ts",
-    "serve": "npx serve . -p 3000 --no-cache",
+    "serve": "npx serve . -p 3000",
     "proof-server": "docker run -p 6300:6300 midnightntwrk/proof-server:8.0.3 midnight-proof-server -v",
     "set-address": "node --import tsx scripts/set-contract-address.ts",
     "test": "npx tsx scripts/test-api.ts"
