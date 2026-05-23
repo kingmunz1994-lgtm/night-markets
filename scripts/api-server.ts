@@ -1796,4 +1796,8 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-await init();
+if (process.env.WALLET_SYNC_DISABLED === '1') {
+  console.log('  ⚠️  Wallet sync disabled — listings, merch & Printful work; contract calls unavailable');
+} else {
+  await init();
+}

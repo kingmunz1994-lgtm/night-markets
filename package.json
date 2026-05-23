@@ -11,7 +11,7 @@
     "compile:nightfun-oz": "compact compile contracts/NightFunToken.compact contracts/managed/night-fun-token-oz",
     "start": "npx tsx scripts/nightid-api.ts",
     "night-fun": "node --env-file=.env --import tsx scripts/night-fun.ts",
-    "api-server": "node --env-file=.env --import tsx scripts/api-server.ts",
+    "api-server": "node --max-old-space-size=8192 --env-file=.env --import tsx scripts/api-server.ts",
     "nightid-api": "node --env-file=.env --import tsx scripts/nightid-api.ts",
     "dust-sponsor": "node --env-file=.env --import tsx scripts/dust-sponsor.ts",
     "deploy": "node --env-file=.env --import tsx scripts/deploy.ts",
