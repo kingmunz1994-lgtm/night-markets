@@ -360,6 +360,7 @@ const _deliveryStore: Map<string, any>    = new Map();
 const _shippingStore: Map<string, any>    = new Map(); // orderId → buyer shipping address
 const _pfOrderStore:  Map<string, any>    = new Map(); // orderId → Printful order result
 const _waitlistStore: Map<string, any>    = new Map(); // email:listingId → entry
+const _mockupStatus:  Map<string, string> = new Map(); // listingId → 'pending'|'ok'|'error'
 const _curveStore:    Map<string, any>    = new Map(); // tokenAddress → curve state
 
 // ─── Printful integration ─────────────────────────────────────────────────────
@@ -504,6 +505,42 @@ async function pfCreateMockup(pfId: number, color: string, designUrl: string, si
     if (result.status === 'error') throw new Error(`Printful mockup failed: ${result.error ?? 'unknown'}`);
   }
   throw new Error('Printful mockup timed out — retry in a moment');
+}
+
+// ─── Printful mockup warmup ───────────────────────────────────────────────────
+async function warmMerchMockups(designUrl?: string): Promise<void> {
+  const url = designUrl ?? NM_DESIGN_URL;
+  if (!url) {
+    console.log('  ℹ️  NM_DESIGN_URL not set — skipping mockup warmup (add to .env to enable)');
+    return;
+  }
+  if (!PF_TOKEN) {
+    console.log('  ℹ️  PRINTFUL_API_TOKEN not set — skipping mockup warmup');
+    return;
+  }
+  const officials = [..._listingStore.entries()].filter(([, l]) => l.isNMOfficial);
+  if (!officials.length) return;
+  console.log(`  🖼️  Auto-generating Printful mockups for ${officials.length} NM merch items…`);
+  for (const [id, listing] of officials) {
+    if (listing.imageUrl) { _mockupStatus.set(id, 'ok'); continue; }
+    _mockupStatus.set(id, 'pending');
+    const cat = PF_CATALOG.find(p => p.id === listing.printfulProductType);
+    if (!cat) { _mockupStatus.set(id, 'error'); continue; }
+    const size = cat.sizes[Math.floor(cat.sizes.length / 2)] ?? cat.sizes[0];
+    // Stagger requests 4 s apart to respect Printful rate limits
+    await new Promise(r => setTimeout(r, 4_000));
+    pfCreateMockup(cat.pfId, cat.colors[0], url, size)
+      .then(mockupUrl => {
+        const l = _listingStore.get(id);
+        if (l) { l.imageUrl = mockupUrl; l.mockupUrl = mockupUrl; _listingStore.set(id, l); }
+        _mockupStatus.set(id, 'ok');
+        console.log(`  ✓ Mockup ready: ${listing.title}`);
+      })
+      .catch(e => {
+        _mockupStatus.set(id, 'error');
+        console.warn(`  ⚠️  Mockup failed: ${listing.title}: ${e.message}`);
+      });
+  }
 }
 
 const _nightIdStore:  Map<string, string> = new Map(); // "name.night" → address
@@ -1840,6 +1877,32 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { ok: true, orderId, state: 'RELEASED' });
   }
 
+  // ── POST /api/merch/regenerate-mockups ───────────────────────────────────────
+  if (method === 'POST' && url === '/api/merch/regenerate-mockups') {
+    let body: any = {};
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { key, designUrl } = body;
+    if (key !== (process.env.ADMIN_KEY ?? 'nightmarkets-admin')) return json(res, 403, { error: 'Invalid admin key' });
+    // Clear cached mockups so they get regenerated
+    for (const [id, l] of _listingStore) {
+      if (l.isNMOfficial) { delete l.imageUrl; delete l.mockupUrl; _listingStore.set(id, l); _mockupStatus.delete(id); }
+    }
+    // Also clear the pfCreateMockup cache for fresh results
+    _mockupCache.clear();
+    warmMerchMockups(designUrl ?? undefined).catch(e => console.warn('warmMerchMockups:', e.message));
+    return json(res, 200, { ok: true, message: 'Mockup regeneration started — check /api/merch/mockup-status' });
+  }
+
+  // ── GET /api/merch/mockup-status ─────────────────────────────────────────────
+  if (method === 'GET' && url === '/api/merch/mockup-status') {
+    const status: Record<string, any> = {};
+    for (const [id, s] of _mockupStatus) {
+      const l = _listingStore.get(id);
+      status[id] = { state: s, title: l?.title, imageUrl: l?.imageUrl ?? null };
+    }
+    return json(res, 200, { status, total: _mockupStatus.size });
+  }
+
   json(res, 404, { error: 'Not found' });
 });
 
@@ -1851,6 +1914,8 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`   Contract: ${CONTRACT_ADDRESS}`);
   console.log(`   Network:  Midnight preprod`);
   console.log(`   Poker WS: ws://0.0.0.0:${PORT}/ws/poker/:roomId\n`);
+  // Auto-generate Printful mockups in background after stores are fully seeded
+  setTimeout(() => warmMerchMockups().catch(e => console.warn('warmMerchMockups:', e.message)), 2_000);
 });
 
 // ─── WebSocket — Night Poker rooms ────────────────────────────────────────────

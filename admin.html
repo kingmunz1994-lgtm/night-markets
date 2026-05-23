@@ -120,6 +120,24 @@ action-btn:disabled{opacity:.5;cursor:not-allowed;}
 
 .tracking-link{color:var(--blue);text-decoration:none;font-size:11px;font-family:var(--mono);}
 .tracking-link:hover{text-decoration:underline;}
+
+/* Mockup panel */
+.mockup-panel{background:var(--surface);border:1px solid var(--rim2);border-radius:16px;padding:20px 24px;margin-top:40px;}
+.mockup-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.mockup-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+@media(max-width:700px){.mockup-grid{grid-template-columns:repeat(3,1fr);}}
+.mockup-item{text-align:center;font-family:var(--mono);}
+.mockup-thumb{width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;background:var(--raised);border:1px solid var(--rim2);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:6px;}
+.mockup-thumb img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
+.mockup-name{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.mockup-state{font-size:9px;font-weight:700;}
+.mockup-state.ok{color:var(--green);}
+.mockup-state.pending{color:var(--orange);}
+.mockup-state.error{color:var(--red);}
+.mockup-state.none{color:var(--faint);}
+.btn-regen{padding:8px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:var(--mono);cursor:pointer;border:1px solid rgba(124,58,237,.3);background:rgba(124,58,237,.1);color:var(--plasma);transition:all .2s;}
+.btn-regen:hover{background:rgba(124,58,237,.18);border-color:var(--ink);}
+.btn-regen:disabled{opacity:.5;cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -183,6 +201,20 @@ action-btn:disabled{opacity:.5;cursor:not-allowed;}
     <div class="empty-state"><div class="loading-spinner"></div>Loading orders…</div>
   </div>
 
+  <!-- Mockup Status Panel -->
+  <div class="mockup-panel">
+    <div class="mockup-panel-header">
+      <div>
+        <div class="section-title" style="margin-bottom:4px;">Printful Mockup Images</div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">Auto-generated on server start via Printful API · Requires NM_DESIGN_URL + PRINTFUL_API_TOKEN</div>
+      </div>
+      <button class="btn-regen" id="regen-btn" onclick="regenerateMockups()">🖼️ Regenerate All</button>
+    </div>
+    <div class="mockup-grid" id="mockup-grid">
+      <div style="grid-column:1/-1;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px;padding:20px;">Loading mockup status…</div>
+    </div>
+  </div>
+
   <div style="margin-top:40px;">
     <div class="section-title">Waitlist Signups</div>
     <div id="waitlist-list" style="font-size:12px;color:var(--muted);font-family:var(--mono);">—</div>
@@ -225,6 +257,7 @@ async function loadOrders() {
     renderStats(data.stats);
     renderOrders();
     renderWaitlist(data.waitlist ?? []);
+    loadMockupStatus();
     document.getElementById('last-refresh').textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
   } catch (e) {
     if (!ADMIN_KEY) return;
@@ -413,6 +446,69 @@ function renderWaitlist(list) {
       <span style="color:var(--muted)">${esc(w.title || w.listingId)}</span>
       <span style="color:var(--faint);margin-left:auto;">${timeAgo(w.at)}</span>
     </div>`).join('');
+}
+
+async function loadMockupStatus() {
+  try {
+    const r = await fetch(`${API}/api/merch/mockup-status`);
+    const data = await r.json();
+    renderMockupStatus(data.status ?? {});
+  } catch {
+    document.getElementById('mockup-grid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px;padding:20px;">Could not load mockup status — is api-server running?</div>';
+  }
+}
+
+function renderMockupStatus(status) {
+  const grid = document.getElementById('mockup-grid');
+  const ids = Object.keys(status);
+  if (!ids.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px;padding:20px;">No mockup data yet — server may still be warming up.</div>';
+    return;
+  }
+  const stateLabels = { ok: '✓ Ready', pending: '⏳ Generating…', error: '✗ Failed', none: '— Not started' };
+  grid.innerHTML = ids.map(id => {
+    const item = status[id];
+    const s = item.state ?? 'none';
+    const imgHtml = item.imageUrl
+      ? `<div class="mockup-thumb"><img src="${esc(item.imageUrl)}" alt="${esc(item.title)}"></div>`
+      : `<div class="mockup-thumb"><span>${s === 'pending' ? '⏳' : s === 'error' ? '✗' : '·'}</span></div>`;
+    const shortName = (item.title ?? id).replace('Night Markets ', '');
+    return `
+      <div class="mockup-item">
+        ${imgHtml}
+        <div class="mockup-name">${esc(shortName)}</div>
+        <div class="mockup-state ${s}">${stateLabels[s] ?? s}</div>
+      </div>`;
+  }).join('');
+}
+
+async function regenerateMockups() {
+  const btn = document.getElementById('regen-btn');
+  btn.disabled = true; btn.textContent = '⏳ Starting…';
+  try {
+    const r = await fetch(`${API}/api/merch/regenerate-mockups`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: ADMIN_KEY }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    toast('✓ Mockup regeneration started — refreshing status…', 'ok');
+    // Poll status every 8 s for up to 2 min while pending
+    let polls = 0;
+    const poll = setInterval(async () => {
+      polls++;
+      await loadMockupStatus();
+      const grid = document.getElementById('mockup-grid');
+      if (polls > 15 || !grid.textContent.includes('Generating')) clearInterval(poll);
+    }, 8_000);
+    setTimeout(loadMockupStatus, 2000);
+  } catch (e) {
+    toast(e.message || 'Failed to start regeneration', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '🖼️ Regenerate All';
+  }
 }
 
 // Auto-refresh every 30s while unlocked
