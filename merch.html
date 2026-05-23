@@ -104,7 +104,21 @@ h1 em{font-style:normal;color:var(--glow);}
     <div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;font-family:var(--mono);font-size:13px;">Loading…</div>
   </div>
 
-  <div class="note">
+  <div class="note" id="upload-box" style="flex-direction:column;gap:12px;">
+    <div style="display:flex;gap:14px;align-items:flex-start;">
+      <div class="note-icon">🎨</div>
+      <div class="note-text">
+        <strong>Update design:</strong> Upload a new Night Markets logo (PNG with transparent background works best on coloured products).
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="file" id="design-upload" accept="image/png,image/jpeg" style="font-size:12px;color:var(--text2);">
+      <button onclick="uploadDesign()" style="padding:8px 16px;background:linear-gradient(135deg,var(--ink),var(--plasma));color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Upload & Apply →</button>
+      <span id="upload-status" style="font-size:11px;font-family:var(--mono);color:var(--muted);"></span>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:12px;">
     <div class="note-icon">🌙</div>
     <div class="note-text">
       <strong>How it works:</strong> Click any item to open the listing page. Fund the ZK escrow with NIGHT tokens, submit your shipping address, and the seller releases the escrow. Night Markets automatically places the Printful order — your merch ships straight to you.<br>
@@ -166,6 +180,33 @@ async function loadMerch() {
 }
 
 loadMerch();
+
+async function uploadDesign() {
+  const file = document.getElementById('design-upload').files[0];
+  if (!file) { alert('Choose a file first'); return; }
+  const status = document.getElementById('upload-status');
+  status.textContent = 'Uploading…';
+  try {
+    const r = await fetch(`${API}/api/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    status.textContent = `✓ Uploaded — restarting server with new design URL`;
+    // Patch all merch listings in memory via the API
+    await fetch(`${API}/api/merch/set-design`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ designUrl: d.url }),
+    });
+    status.textContent = `✓ Done — ${d.url}`;
+    setTimeout(loadMerch, 500);
+  } catch (e) {
+    status.textContent = `Error: ${e.message}`;
+  }
+}
 </script>
 </body>
 </html>

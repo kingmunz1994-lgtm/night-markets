@@ -56,6 +56,7 @@ process.on('unhandledRejection', (r: unknown)   => console.error('Rejected:', r)
 import * as http   from 'node:http';
 import * as path   from 'node:path';
 import * as fs     from 'node:fs';
+import * as crypto from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Buffer }  from 'buffer';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -1701,6 +1702,54 @@ const server = http.createServer(async (req, res) => {
     _gameRooms.set(id, room);
     console.log(`\n  [poker/create] "${name}" id=${id} buyin=${buyin} sb=${sb}`);
     return json(res, 200, { ok: true, roomId: id, name: room.name, buyin: buyinN, sb: sbN, maxPlayers: maxN });
+  }
+
+  // ── POST /api/merch/set-design ────────────────────────────────────────────────
+  // Updates designUrl on all NM official merch listings in memory.
+  if (method === 'POST' && url === '/api/merch/set-design') {
+    let body: any;
+    try { body = await readBody(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
+    const { designUrl } = body;
+    if (!designUrl) return json(res, 400, { error: 'designUrl required' });
+    let count = 0;
+    for (const [id, listing] of _listingStore) {
+      if (listing.isNMOfficial) { listing.designUrl = designUrl; _listingStore.set(id, listing); count++; }
+    }
+    console.log(`  🎨 [merch/set-design] updated ${count} listings → ${designUrl}`);
+    return json(res, 200, { ok: true, updated: count, designUrl });
+  }
+
+  // ── POST /api/upload ──────────────────────────────────────────────────────────
+  // Accepts a raw image body (PNG/JPG). Saves to uploads/ and returns the URL.
+  if (method === 'POST' && url === '/api/upload') {
+    const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    const contentType = req.headers['content-type'] ?? 'image/jpeg';
+    const ext = contentType.includes('png') ? 'png' : 'jpg';
+    const filename = `${crypto.randomUUID()}.${ext}`;
+    const filepath = path.join(uploadsDir, filename);
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    await new Promise<void>(resolve => req.on('end', resolve));
+    const buf = Buffer.concat(chunks);
+    if (buf.length === 0) return json(res, 400, { error: 'No image data received' });
+    fs.writeFileSync(filepath, buf);
+    const fileUrl = `http://localhost:${PORT}/uploads/${filename}`;
+    console.log(`  📸 [upload] saved ${filename} (${(buf.length/1024).toFixed(1)} KB)`);
+    return json(res, 200, { ok: true, url: fileUrl, filename });
+  }
+
+  // ── GET /uploads/:filename ────────────────────────────────────────────────────
+  if (method === 'GET' && url.startsWith('/uploads/')) {
+    const filename = path.basename(url.replace('/uploads/', ''));
+    const filepath = path.resolve(__dirname, '..', 'uploads', filename);
+    if (!fs.existsSync(filepath)) return json(res, 404, { error: 'Not found' });
+    const ext = path.extname(filename).toLowerCase();
+    const mime = ext === '.png' ? 'image/png' : 'image/jpeg';
+    cors(res);
+    res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=31536000' });
+    fs.createReadStream(filepath).pipe(res);
+    return;
   }
 
   json(res, 404, { error: 'Not found' });
